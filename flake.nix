@@ -37,5 +37,19 @@
           ./hosts/geproxy/configuration.nix
         ];
       };
+      nixosConfigurations.teammachine = nixpkgs.lib.nixosSystem {
+        inherit system;
+        modules = [
+          disko.nixosModules.disko
+          ./hosts/teammachine/configuration.nix
+        ];
+      };
+      nixosConfigurations.teammachine_arm = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        modules = [
+          disko.nixosModules.disko
+          ./hosts/teammachine/configuration.nix
+        ];
+      };
     };
 }
