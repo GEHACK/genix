@@ -1,0 +1,22 @@
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    ct state { established, related } accept
+    iifname "lo" accept
+
+    # Allow everything from both geproxy
+    iifname "br-admin" accept
+    iifname "br-contest" accept
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+
+    # Allow replies
+    ct state { established, related } accept
+
+    # Admin: Route to Internet and Contest
+    iifname "br-admin" accept
+  }
+}
