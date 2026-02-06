@@ -1,22 +1,74 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+define IF_WIFI    = "wlp6s0"
+define IF_ADMIN   = "br-admin"
+define IF_CONTEST = "br-contest"
+
+define NET_CONTEST = 192.168.1.0/24
+define NET_ADMIN   = 192.168.2.0/24
+
 table inet filter {
   chain input {
     type filter hook input priority 0; policy drop;
 
-    ct state { established, related } accept
-    iifname "lo" accept
+    # --- baseline
+    iif lo accept
+    ct state established,related accept
+    ct state invalid drop
 
-    # Allow everything from both geproxy
-    iifname "br-admin" accept
-    iifname "br-contest" accept
+    # --- icmp
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # --- dnsmasq (router services) on admin/contest
+    iifname { $IF_ADMIN, $IF_CONTEST } udp dport { 67, 68 } accept   # DHCP
+    iifname { $IF_ADMIN, $IF_CONTEST } udp dport 53 accept           # DNS
+    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport 53 accept           # DNS
+
+    # --- allow router mgmt / web on admin + wifi
+    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 22 accept
+    iifname { $IF_ADMIN, $IF_WIFI } tcp dport { 80, 443 } accept
+
+    # (optional) log drops
+    # log prefix "nft input drop: " flags all counter drop
+  }
+
+  chain contest_inet {
+  # empty by default => contest has no internet
   }
 
   chain forward {
     type filter hook forward priority 0; policy drop;
 
-    # Allow replies
-    ct state { established, related } accept
+    # --- baseline
+    ct state established,related accept
+    ct state invalid drop
 
-    # Admin: Route to Internet and Contest
-    iifname "br-admin" accept
+    # --- allow admin -> internet
+    iifname $IF_ADMIN oifname $IF_WIFI accept
+
+    # --- allow admin -> contest
+    iifname $IF_ADMIN oifname $IF_CONTEST accept
+
+    # --- if contest wants internet jump to contest_inet chain
+    iifname $IF_CONTEST oifname $IF_WIFI jump contest_inet
+  }
+
+  chain output {
+    type filter hook output priority 0; policy accept;
+  }
+}
+
+table ip nat {
+  chain postrouting {
+    type nat hook postrouting priority 100; policy accept;
+
+    # NAT only admin -> wifi (internet)
+    iifname $IF_ADMIN oifname $IF_WIFI ip saddr $NET_ADMIN masquerade
+
+    # NAT contest -> wifi (internet) (only works when forwarding is enabled)
+    iifname $IF_CONTEST oifname $IF_WIFI ip saddr $NET_CONTEST masquerade
   }
 }

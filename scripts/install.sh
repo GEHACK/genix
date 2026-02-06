@@ -38,7 +38,7 @@ if [[ -n "$TARGET_HOST" ]]; then
     echo "Deploying to $TARGET_HOST using flake #$FLAKE_TARGET..."
     nixos-rebuild switch \
       --flake "../#$FLAKE_TARGET" \
-      --target-host "$TARGET_HOST" \
+      --target-host "$TARGET_HOST" 
 else
     echo "Deploying locally using flake #$FLAKE_TARGET..."
     sudo nixos-rebuild switch --flake "../#$FLAKE_TARGET"
