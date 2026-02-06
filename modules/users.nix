@@ -1,4 +1,5 @@
-_: {
+{ pkgs, ... }:
+{
   users.users.root.openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
 
   security.sudo.wheelNeedsPassword = false;
@@ -9,5 +10,8 @@ _: {
     # TODO: encrypt a strong password with sops nix
     initialPassword = "gehackgehack";
     openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
+    shell = pkgs.zsh;
   };
+
+  programs.zsh.enable = true;
 }
