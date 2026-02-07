@@ -4,7 +4,7 @@
         jetbrains.idea
         jetbrains.clion
         eclipses.eclipse-java
-        # vscode met plugins
+        vscode
         vim
         nano
         neovim
@@ -12,5 +12,6 @@
         gedit
         geany
         kdePackages.kate
+        codeblocksFull
     ];
 }
