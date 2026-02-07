@@ -4,7 +4,6 @@
         jetbrains.idea
         jetbrains.clion
         eclipses.eclipse-java
-        vscode
         vim
         nano
         neovim
