@@ -1,5 +1,5 @@
 _: {
-  imports = [ ];
+  imports = [ ./vscode.nix ];
 
   home = {
     stateVersion = "25.11";
