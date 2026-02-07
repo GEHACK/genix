@@ -41,6 +41,15 @@
         inherit system;
         modules = [
           disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.gehack = import ./users/gehack;
+              users.team = import ./users/team;
+            };
+          }
           ./hosts/teammachine/configuration.nix
         ];
       };
@@ -48,6 +57,15 @@
         system = "aarch64-linux";
         modules = [
           disko.nixosModules.disko
+          home-manager.nixosModules.home-manager
+          {
+            home-manager = {
+              useGlobalPkgs = true;
+              useUserPackages = true;
+              users.gehack = import ./users/gehack;
+              users.team = import ./users/team;
+            };
+          }
           ./hosts/teammachine/configuration.nix
         ];
       };
