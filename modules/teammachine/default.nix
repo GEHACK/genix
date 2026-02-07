@@ -3,6 +3,7 @@ _: {
     ./boot.nix
     ./gnome.nix
     ./languages.nix
+    ./ides.nix
     ./users.nix
   ];
 }
