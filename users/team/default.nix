@@ -1,8 +1,8 @@
 _: {
   imports = [ 
+    ./browser.nix
     ./gnome.nix
-    ./vscode.nix 
-    ./browser.nix 
+    ./vscode.nix  
   ];
 
   home = {
