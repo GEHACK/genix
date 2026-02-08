@@ -7,6 +7,8 @@ _: {
 
   hardware.enableRedistributableFirmware = true;
 
+  hardware.bluetooth.enable = false;
+
   time.timeZone = "Europe/Amsterdam";
   i18n.defaultLocale = "en_US.UTF-8";
 
