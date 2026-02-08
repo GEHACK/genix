@@ -1,5 +1,6 @@
 _: {
   imports = [ 
+    ./gnome.nix
     ./vscode.nix 
     ./browser.nix 
   ];
