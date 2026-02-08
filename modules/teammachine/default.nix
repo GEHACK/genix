@@ -5,6 +5,7 @@ _: {
     ./languages.nix
     ./ides.nix
     ./networking.nix
+    ./printer.nix
     ./users.nix
   ];
 }
