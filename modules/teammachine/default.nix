@@ -1,7 +1,7 @@
 _: {
   imports = [
     ./boot.nix
-    ./gnome.nix
+    ./desktop.nix
     ./languages.nix
     ./ides.nix
     ./networking.nix
