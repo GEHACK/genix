@@ -68,6 +68,7 @@
         teammachine_arm = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
           modules = [
+            contest-greeter.nixosModules.default
             disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             {
