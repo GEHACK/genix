@@ -1,12 +1,12 @@
-{ pkgs, ...}: {
-
+_: {
   dconf = {
     enable = true;
     settings = {
-        "org/gnome/desktop/background" = {
-        picture-uri = "file://${./assets/background.png}";
-        picture-uri-dark = "file://${./assets/background.png}";
-        };
+      "org/gnome/desktop/background" = {
+        picture-uri = "file://${../../assets/wallpaper.jpeg}";
+        picture-uri-dark = "file://${../../assets/wallpaper.jpeg}";
+      };
     };
-  };  
+  };
 }
+
