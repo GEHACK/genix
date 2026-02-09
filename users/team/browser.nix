@@ -1,4 +1,4 @@
-{ pkgs, ... }: 
+_:
 let
   dj_url = "https://judge.gehack.nl";
   devdocs_url = "https://devdocs.io/";
@@ -28,3 +28,4 @@ in
     };
   };
 }
+
