@@ -1,6 +1,7 @@
 { pkgs, lib, ... }:
 
 let
+  judge = "https://judge";
   domjudge-submit = pkgs.python3Packages.buildPythonApplication {
     pname = "domjudge-submit";
     version = "git";
@@ -31,7 +32,12 @@ let
   };
 in
 {
-  environment.systemPackages = [
-    domjudge-submit
-  ];
+  environment = {
+    systemPackages = [
+      domjudge-submit
+    ];
+    sessionVariables = {
+      SUBMITBASEURL = judge;
+    };
+  };
 }
