@@ -6,6 +6,7 @@ _: {
     ./ides.nix
     ./networking.nix
     ./printer.nix
+    ./submit.nix
     ./users.nix
   ];
 }
