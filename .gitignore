@@ -5,3 +5,4 @@ result-*
 # Ignore automatically generated direnv output
 .direnv
 .authorized_keys
+*.qcow2

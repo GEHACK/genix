@@ -5,10 +5,8 @@
     useDHCP = false;
     wireless = {
       enable = true;
-      # password can be hardcoded, only works with geproxy mac
       networks."iotroam".psk = "gehackgehack";
     };
-
     bridges = {
       "br-admin" = {
         interfaces = [
@@ -25,43 +23,110 @@
         ];
       };
     };
-
     interfaces = {
       "wlp6s0".useDHCP = true;
-
       "br-contest" = {
         ipv4.addresses = [
           {
-            address = "192.168.1.1";
+            address = "10.0.0.1";
             prefixLength = 24;
           }
         ];
       };
-
       "br-admin" = {
         ipv4.addresses = [
           {
-            address = "192.168.2.1";
+            address = "10.0.1.1";
             prefixLength = 24;
           }
         ];
       };
     };
-
     firewall.enable = false;
     nftables = {
       enable = true;
       checkRuleset = true;
       rulesetFile = ./assets/firewall.nft;
     };
-
   };
+
+  # dnsmasq configuration
+  services.dnsmasq = {
+    enable = true;
+    settings = {
+      # Logging
+      log-queries = true;
+      log-dhcp = true;
+
+      domain-needed = true;
+      bogus-priv = true;
+      server = [ "8.8.8.8" ];
+
+      bind-interfaces = true;
+      interface = [
+        "br-contest"
+        "br-admin"
+      ];
+      except-interface = "wlp6s0";
+
+      # DHCP
+      dhcp-authoritative = true;
+
+      # Listen addresses
+      listen-address = [
+        "10.0.0.1"
+        "10.0.1.1"
+      ];
+
+      # Domains
+      domain = [
+        "contest.local,br-contest"
+        "admin.local,br-admin"
+      ];
+
+      # DHCP ranges
+      dhcp-range = [
+        "br-contest,10.0.0.50,10.0.0.250,255.255.255.0,infinite"
+        "br-admin,10.0.1.50,10.0.1.250,255.255.255.0,infinite"
+      ];
+
+      # DHCP options
+      dhcp-option = [
+        "br-contest,3,10.0.0.1"
+        "br-contest,6,10.0.0.1"
+        "br-contest,42,10.0.0.1"
+        "br-admin,6,10.0.1.1"
+        "br-admin,42,10.0.1.1"
+      ];
+
+      # DNS addresses
+      address = [
+        "/judge.contest.local/10.0.0.1"
+        "/judge/10.0.0.1"
+        "/gehack.nl/10.0.0.1"
+      ];
+
+      # PXE/FOG boot configuration (commented out for later)
+      # dhcp-match = [
+      #   "set:bios,60,PXEClient:Arch:00000"
+      #   "set:efi32,60,PXEClient:Arch:00006"
+      #   "set:efibc,60,PXEClient:Arch:00007"
+      #   "set:efi64,60,PXEClient:Arch:00009"
+      # ];
+      # dhcp-boot = [
+      #   "tag:bios,undionly.kpxe,10.0.1.10,10.0.1.10"
+      #   "tag:efi32,i386-efi/ipxe.efi,10.0.1.10,10.0.1.10"
+      #   "tag:efibc,ipxe.efi,10.0.1.10,10.0.1.10"
+      #   "tag:efi64,ipxe.efi,10.0.1.10,10.0.1.10"
+      # ];
+    };
+  };
+
   boot.kernel.sysctl = {
     "net.ipv4.ip_forward" = 1;
     "net.ipv6.conf.all.forwarding" = 1;
   };
 
-  # add scripts to enable and disable internet for the contest brige
   environment.systemPackages = [
     (pkgs.writeShellScriptBin "enable-internet" ''
       set -euo pipefail
@@ -69,7 +134,6 @@
       nft add rule inet filter contest_inet counter accept
       echo -n "Contest internet ENABLED"
     '')
-
     (pkgs.writeShellScriptBin "disable-internet" ''
       set -euo pipefail
       nft flush chain inet filter contest_inet

@@ -6,8 +6,8 @@ define IF_WIFI    = "wlp6s0"
 define IF_ADMIN   = "br-admin"
 define IF_CONTEST = "br-contest"
 
-define NET_CONTEST = 192.168.1.0/24
-define NET_ADMIN   = 192.168.2.0/24
+define NET_CONTEST = 10.0.0.0/24
+define NET_ADMIN   = 10.0.1.0/24
 
 table inet filter {
   chain input {
