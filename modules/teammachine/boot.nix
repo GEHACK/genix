@@ -46,7 +46,10 @@ in
   boot = {
     # 1. The Console & Kernel Silence
     consoleLogLevel = 0;
-    initrd.verbose = false; # Silence the initial ramdisk
+    initrd = {
+      verbose = false; # Silence the initial ramdisk
+      kernelModules = [ "i915" ];
+    };
 
     kernelParams = [
       "quiet"
