@@ -27,17 +27,18 @@ let
     exec ${pkgs.kotlin}/bin/kotlinc -d . "$@"
   '';
 
-  pythonMirror = pkgs.runCommand "python-mirror" {} ''
-    mkdir -p $out/bin
-    ln -s ${pkgs.pypy3}/bin/pypy3 $out/bin/python
-    ln -s ${pkgs.pypy3}/bin/pypy3 $out/bin/python3
-  '';
 in
 {
   environment.systemPackages = with pkgs; [ 
     jdk21
-    pypy3  
-    pythonMirror
+    (pypy3.withPackages (pypy-pkgs: [
+    # pypy-pkgs.numpy
+    # pypy-pkgs.scipy
+    ]))  
+    (python3.withPackages (python-pkgs: [
+    # python-pkgs.numpy
+    # python-pkgs.scipy
+    ]))
     gcc
     gdb
     cmake
