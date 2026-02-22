@@ -7,6 +7,7 @@ _: {
     ./networking.nix
     ./printer.nix
     ./submit.nix
+    ./usbguard.nix
     ./users.nix
   ];
 }
