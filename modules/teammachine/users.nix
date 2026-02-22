@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+_:
 {
   users.users.team = {
     isNormalUser = true;
