@@ -30,18 +30,22 @@
     }:
     let
       system = "x86_64-linux";
+      dj_url = "https://dj.bartjan.tech";
+      specialArgs = { inherit dj_url; };
     in
     {
       nixosConfigurations = {
         geproxy = nixpkgs.lib.nixosSystem {
           inherit system;
+          inherit specialArgs;
           modules = [
             disko.nixosModules.disko
             home-manager.nixosModules.home-manager
             {
               home-manager = {
                 useGlobalPkgs = true;
-                useUserPackages = true;
+                useUserPackages = true; 
+                extraSpecialArgs = specialArgs;
                 users.gehack = import ./users/gehack;
               };
             }
@@ -50,6 +54,7 @@
         };
         teammachine = nixpkgs.lib.nixosSystem {
           inherit system;
+          inherit specialArgs;
           modules = [
             contest-greeter.nixosModules.default
             disko.nixosModules.disko
@@ -57,7 +62,8 @@
             {
               home-manager = {
                 useGlobalPkgs = true;
-                useUserPackages = true;
+                useUserPackages = true; 
+                extraSpecialArgs = specialArgs;
                 users.gehack = import ./users/gehack;
                 users.team = import ./users/team;
               };
@@ -67,6 +73,7 @@
         };
         teammachine_arm = nixpkgs.lib.nixosSystem {
           system = "aarch64-linux";
+          inherit specialArgs;
           modules = [
             contest-greeter.nixosModules.default
             disko.nixosModules.disko
@@ -74,7 +81,8 @@
             {
               home-manager = {
                 useGlobalPkgs = true;
-                useUserPackages = true;
+                useUserPackages = true; 
+                extraSpecialArgs = specialArgs;
                 users.gehack = import ./users/gehack;
                 users.team = import ./users/team;
               };
@@ -87,6 +95,7 @@
       packages.x86_64-linux.teammachine-vm =
         (nixpkgs.lib.nixosSystem {
           inherit system;
+          inherit specialArgs;
           modules = [
             contest-greeter.nixosModules.default
             disko.nixosModules.disko
@@ -94,7 +103,8 @@
             {
               home-manager = {
                 useGlobalPkgs = true;
-                useUserPackages = true;
+                useUserPackages = true; 
+                extraSpecialArgs = specialArgs;
                 users.gehack = import ./users/gehack;
                 users.team = import ./users/team;
               };
