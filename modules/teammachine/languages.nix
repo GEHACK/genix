@@ -29,16 +29,15 @@ let
 
 in
 {
+  
+  programs.java = {
+    enable = true;
+    package = pkgs.jdk21;
+  };
+
   environment.systemPackages = with pkgs; [ 
-    jdk21
-    (pypy3.withPackages (pypy-pkgs: [
-    # pypy-pkgs.numpy
-    # pypy-pkgs.scipy
-    ]))  
-    (python3.withPackages (python-pkgs: [
-    # python-pkgs.numpy
-    # python-pkgs.scipy
-    ]))
+    (pypy3.withPackages (pypy-pkgs: [ ]))  
+    (python3.withPackages (python-pkgs: [ ]))
     gcc
     gdb
     cmake
@@ -50,4 +49,5 @@ in
     myjavac
     mykotlinc
   ];
+
 }
