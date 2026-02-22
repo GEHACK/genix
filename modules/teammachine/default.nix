@@ -10,5 +10,6 @@ _: {
     ./submit.nix
     ./usbguard.nix
     ./users.nix
+    ./webcamstream.nix
   ];
 }
