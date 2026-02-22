@@ -1,7 +1,7 @@
-{ pkgs, lib, ... }:
+{ pkgs, lib, dj_url, ... }:
 
 let
-  judge = "https://judge";
+  judge = dj_url;
   domjudge-submit = pkgs.python3Packages.buildPythonApplication {
     pname = "domjudge-submit";
     version = "git";
@@ -11,7 +11,7 @@ let
       owner = "domjudge";
       repo = "domjudge";
       rev = "main"; 
-      sha256 = "sha256-rLYfSmDrQBbaDkTdex/tD+OuaY5Ehqj+7+paiFHTT7o="; 
+      sha256 = "sha256-ky8skasc4s8saGdP8H74gVGnLj1gz1IIPHkZ/cjN6RM="; 
     };
 
     propagatedBuildInputs = with pkgs.python3Packages; [

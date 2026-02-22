@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, dj_url, ... }:
 {
   services = {
     desktopManager.gnome.enable = true;
@@ -13,6 +13,9 @@
       enable = true;
       logLevel = "debug";
       backgroundSource = ../../assets/wallpaper.jpeg;
+      url = dj_url;
+      username = "team";
+      password = "gehackgehack";
     };
   };
   environment.gnome.excludePackages = with pkgs; [
