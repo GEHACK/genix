@@ -82,7 +82,22 @@
             ./hosts/teammachine/configuration.nix
           ];
         };
-      };
+        scoreboard-laptop = nixpkgs.lib.nixosSystem {
+          inherit system;
+          modules = [
+            contest-greeter.nixosModules.default
+            disko.nixosModules.disko
+            ./hosts/scoreboard-laptop/configuration.nix
+          ];
+        };
+        scoreboard-laptop_arm = nixpkgs.lib.nixosSystem {
+          system = "aarch64-linux";
+          modules = [
+            contest-greeter.nixosModules.default
+            disko.nixosModules.disko
+            ./hosts/scoreboard-laptop/configuration.nix
+          ];
+        };
 
       packages.x86_64-linux.teammachine-vm =
         (nixpkgs.lib.nixosSystem {
@@ -119,5 +134,6 @@
             )
           ];
         }).config.system.build.vm;
+    };
     };
 }
