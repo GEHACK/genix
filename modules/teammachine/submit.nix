@@ -10,8 +10,8 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "domjudge";
       repo = "domjudge";
-      rev = "main"; 
-      sha256 = "sha256-ky8skasc4s8saGdP8H74gVGnLj1gz1IIPHkZ/cjN6RM="; 
+      rev = "d8c018e4c6ec050b0089f178976ba1129307beb3"; 
+      sha256 = "sha256-I1MtfpnWwSZuVW1STeIDZacX8BUToUTVhckQRtrPoXs="; 
     };
 
     propagatedBuildInputs = with pkgs.python3Packages; [
