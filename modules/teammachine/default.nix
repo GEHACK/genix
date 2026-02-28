@@ -2,9 +2,10 @@ _: {
   imports = [
     ./boot.nix
     ./desktop.nix
-    ./languages.nix
-    ./misc_packages.nix
     ./ides.nix
+    ./languages.nix
+    ./loom.nix
+    ./misc_packages.nix
     ./networking.nix
     ./printer.nix
     ./submit.nix

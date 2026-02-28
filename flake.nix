@@ -17,7 +17,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    contest-greeter.url = "github:LuukBlankenstijn/contest-greeter";
+    loom.url = "github:LuukBlankenstijn/loom";
   };
 
   outputs =
@@ -25,91 +25,64 @@
       nixpkgs,
       disko,
       home-manager,
-      contest-greeter,
+      loom,
       ...
     }:
     let
-      system = "x86_64-linux";
       dj_url = "https://dj.bartjan.tech";
       specialArgs = { inherit dj_url; };
+
+      commonModules = [
+        disko.nixosModules.disko
+        home-manager.nixosModules.home-manager
+      ];
+
+      mkHomeManager = users: {
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          extraSpecialArgs = specialArgs;
+          inherit users;
+        };
+      };
+
+      teammachineModules = commonModules ++ [
+        loom.nixosModules.default
+        (mkHomeManager {
+          gehack = import ./users/gehack;
+          team = import ./users/team;
+        })
+        ./hosts/teammachine/configuration.nix
+      ];
+
+      mkTeammachine = system:
+        nixpkgs.lib.nixosSystem {
+          inherit system specialArgs;
+          modules = teammachineModules;
+        };
     in
     {
       nixosConfigurations = {
         geproxy = nixpkgs.lib.nixosSystem {
-          inherit system;
+          system = "x86_64-linux";
           inherit specialArgs;
-          modules = [
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true; 
-                extraSpecialArgs = specialArgs;
-                users.gehack = import ./users/gehack;
-              };
-            }
+          modules = commonModules ++ [
+            (mkHomeManager {
+              gehack = import ./users/gehack;
+            })
             ./hosts/geproxy/configuration.nix
           ];
         };
-        teammachine = nixpkgs.lib.nixosSystem {
-          inherit system;
-          inherit specialArgs;
-          modules = [
-            contest-greeter.nixosModules.default
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true; 
-                extraSpecialArgs = specialArgs;
-                users.gehack = import ./users/gehack;
-                users.team = import ./users/team;
-              };
-            }
-            ./hosts/teammachine/configuration.nix
-          ];
-        };
-        teammachine_arm = nixpkgs.lib.nixosSystem {
-          system = "aarch64-linux";
-          inherit specialArgs;
-          modules = [
-            contest-greeter.nixosModules.default
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true; 
-                extraSpecialArgs = specialArgs;
-                users.gehack = import ./users/gehack;
-                users.team = import ./users/team;
-              };
-            }
-            ./hosts/teammachine/configuration.nix
-          ];
-        };
+
+        teammachine = mkTeammachine "x86_64-linux";
+        teammachine_arm = mkTeammachine "aarch64-linux";
       };
 
       packages.x86_64-linux.teammachine-vm =
         (nixpkgs.lib.nixosSystem {
-          inherit system;
+          system = "x86_64-linux";
           inherit specialArgs;
-          modules = [
-            contest-greeter.nixosModules.default
-            disko.nixosModules.disko
-            home-manager.nixosModules.home-manager
-            {
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true; 
-                extraSpecialArgs = specialArgs;
-                users.gehack = import ./users/gehack;
-                users.team = import ./users/team;
-              };
-            }
-            ./hosts/teammachine/configuration.nix
+          modules = teammachineModules ++ [
             (
               { modulesPath, ... }:
               {

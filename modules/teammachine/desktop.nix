@@ -9,7 +9,7 @@
     };
 
     displayManager.gdm.enable = false;
-    greetd.contest-greeter = {
+    greetd.loom-greeter = {
       enable = true;
       logLevel = "debug";
       backgroundSource = ../../assets/wallpaper.jpeg;
