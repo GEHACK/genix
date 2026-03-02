@@ -55,52 +55,65 @@
         ./hosts/teammachine/configuration.nix
       ];
 
-      mkTeammachine = system:
-        nixpkgs.lib.nixosSystem {
-          inherit system specialArgs;
-          modules = teammachineModules;
-        };
-    in
-    {
-      nixosConfigurations = {
-        geproxy = nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          inherit specialArgs;
-          modules = commonModules ++ [
-            (mkHomeManager {
-              gehack = import ./users/gehack;
-            })
-            ./hosts/geproxy/configuration.nix
-          ];
+      geproxyModules = commonModules ++ [
+        (mkHomeManager {
+          gehack = import ./users/gehack;
+        })
+        ./hosts/geproxy/configuration.nix
+      ];
+
+      vm-module =
+        { modulesPath, ... }:
+        {
+          imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ];
+          virtualisation = {
+            forwardPorts = [
+              {
+                from = "host";
+                host.port = 2222;
+                guest.port = 22;
+              }
+            ];
+            memorySize = 4096;
+            cores = 4;
+          };
         };
 
-        teammachine = mkTeammachine "x86_64-linux";
-        teammachine_arm = mkTeammachine "aarch64-linux";
+      teammachine = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineModules;
       };
 
-      packages.x86_64-linux.teammachine-vm =
-        (nixpkgs.lib.nixosSystem {
-          system = "x86_64-linux";
-          inherit specialArgs;
-          modules = teammachineModules ++ [
-            (
-              { modulesPath, ... }:
-              {
-                imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ];
-                virtualisation = {
-                  forwardPorts = [
-                    {
-                      from = "host";
-                      host.port = 2222;
-                      guest.port = 22;
-                    }
-                  ];
-                  memorySize = 4096;
-                  cores = 4;
-                };
-              }
-            )
-          ];
-        }).config.system.build.vm;
+      teammachine_arm = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        inherit specialArgs;
+        modules = teammachineModules;
+      };
+
+      geproxy = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = geproxyModules;
+      };
+
+      teammachine-vm = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineModules ++ [ vm-module ];
+      };
+    in
+    {
+      nixosConfigurations = { inherit teammachine teammachine_arm geproxy; };
+
+      packages.x86_64-linux = {
+        teammachine = teammachine.config.system.build.toplevel;
+        geproxy = geproxy.config.system.build.toplevel;
+        teammachine-vm = teammachine-vm.config.system.build.vm;
+      };
+
+      packages.aarch64-linux = {
+        teammachine-arm = teammachine_arm.config.system.build.toplevel;
+      };
     };
 }
