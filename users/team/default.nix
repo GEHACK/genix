@@ -1,5 +1,6 @@
 _: {
   imports = [
+    ./autostart.nix
     ./browser.nix
     ./gnome.nix
     ./vscode.nix

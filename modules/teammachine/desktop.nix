@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, dj_url, ... }:
 {
   services = {
     desktopManager.gnome.enable = true;
@@ -9,10 +9,13 @@
     };
 
     displayManager.gdm.enable = false;
-    greetd.contest-greeter = {
+    greetd.loom-greeter = {
       enable = true;
       logLevel = "debug";
       backgroundSource = ../../assets/wallpaper.jpeg;
+      url = dj_url;
+      username = "team";
+      password = "gehackgehack";
     };
   };
   environment.gnome.excludePackages = with pkgs; [
@@ -21,7 +24,10 @@
   ];
   security.pam.services.greetd.enableGnomeKeyring = true;
   environment.systemPackages = with pkgs; [
+    file-roller
     gnome-terminal
+    gnome-calculator
+    papers
     nautilus
   ];
   systemd = {

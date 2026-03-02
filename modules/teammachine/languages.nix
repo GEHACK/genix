@@ -27,17 +27,17 @@ let
     exec ${pkgs.kotlin}/bin/kotlinc -d . "$@"
   '';
 
-  pythonMirror = pkgs.runCommand "python-mirror" {} ''
-    mkdir -p $out/bin
-    ln -s ${pkgs.pypy3}/bin/pypy3 $out/bin/python
-    ln -s ${pkgs.pypy3}/bin/pypy3 $out/bin/python3
-  '';
 in
 {
+  
+  programs.java = {
+    enable = true;
+    package = pkgs.jdk21;
+  };
+
   environment.systemPackages = with pkgs; [ 
-    jdk21
-    pypy3  
-    pythonMirror
+    (pypy3.withPackages (pypy-pkgs: [ ]))  
+    (python3.withPackages (python-pkgs: [ ]))
     gcc
     gdb
     cmake
@@ -49,4 +49,5 @@ in
     myjavac
     mykotlinc
   ];
+
 }
