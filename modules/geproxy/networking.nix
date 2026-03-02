@@ -10,7 +10,6 @@
     bridges = {
       "br-admin" = {
         interfaces = [
-          "eno1"
           "eno2"
         ];
       };
@@ -25,6 +24,7 @@
     };
     interfaces = {
       "wlp6s0".useDHCP = true;
+      "eno1".useDHCP = true;
       "br-contest" = {
         ipv4.addresses = [
           {
