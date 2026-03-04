@@ -1,7 +1,6 @@
 { dj_url, ... } :
 let
   judge_url = dj_url;
-  devdocs_url = "https://devdocs.io/";
 in
 {
   programs.firefox = {
@@ -52,7 +51,7 @@ in
         }
         {
           Title = "DevDocs";
-          URL = devdocs_url;
+          URL = "http://docs";
           Placement = "toolbar";
         }
       ];
