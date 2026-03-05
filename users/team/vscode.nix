@@ -19,4 +19,28 @@
       ];
     }; 
   }; 
+
+  xdg.desktopEntries = {
+    "code-novim" = {
+      name = "Visual Studio Code";
+      genericName = "Text Editor";
+      exec = "code --disable-extension vscodevim.vim %F";
+      icon = "vscode"; 
+      terminal = false;
+      startupNotify = true;
+      categories = [ "Utility" "TextEditor" "Development" "IDE" ];
+      mimeType = [ "text/plain" "inode/directory" ];
+    };
+
+    "code" = {
+      name = "Visual Studio Code (with vim bindings!)";
+      genericName = "Text Editor";
+      exec = "code %F"; 
+      icon = "vscode"; 
+      terminal = false;
+      startupNotify = true;
+      categories = [ "Utility" "TextEditor" "Development" "IDE" ];
+      mimeType = [ "text/plain" "inode/directory" ];
+    };
+  };
 }
