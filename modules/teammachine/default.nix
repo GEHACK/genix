@@ -8,6 +8,7 @@ _: {
     ./loom.nix
     ./misc_packages.nix
     ./networking.nix
+    ./power-management.nix
     ./printer.nix
     ./submit.nix
     ./usbguard.nix
