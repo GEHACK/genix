@@ -23,5 +23,8 @@
     htop
     iotop
     sysstat
+
+    # Version control
+    git
   ];
 }
