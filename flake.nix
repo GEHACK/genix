@@ -17,6 +17,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     loom.url = "github:LuukBlankenstijn/loom";
   };
 
@@ -26,6 +31,7 @@
       disko,
       home-manager,
       loom,
+      sops-nix,
       ...
     }:
     let
@@ -34,6 +40,7 @@
 
       commonModules = [
         disko.nixosModules.disko
+        sops-nix.nixosModules.sops
         home-manager.nixosModules.home-manager
       ];
 
@@ -117,3 +124,4 @@
       };
     };
 }
+

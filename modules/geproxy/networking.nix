@@ -52,6 +52,7 @@
 
   # dnsmasq configuration
   services.dnsmasq = {
+    resolveLocalQueries = false;
     enable = true;
     settings = {
       # Logging
