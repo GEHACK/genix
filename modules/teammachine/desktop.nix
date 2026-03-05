@@ -17,6 +17,11 @@
     gnome-tour
     gnome-user-docs
   ];
+
+  documentation.enable = false;
+  documentation.nixos.enable = false;
+  documentation.man.enable = false; 
+
   security.pam.services.greetd.enableGnomeKeyring = true;
   environment.systemPackages = with pkgs; [
     file-roller
