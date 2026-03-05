@@ -54,6 +54,10 @@ in
       "org/gnome/desktop/input-sources" = {
         sources = gnomeInputSources;
       };
+      "org/gnome/shell" = {
+        disable-user-extensions = true;
+        enabled-extensions = [];
+      };
     };
   };
 }
