@@ -31,7 +31,16 @@ let
 
   # This automatically wraps each layout in the ["xkb", "layout"] tuple format
   gnomeInputSources = builtins.map (layout: mkTuple [ "xkb" layout ]) activeKeyboards;
-in {
+in 
+{
+  xdg.desktopEntries = { 
+    "cups" = {
+      name = "Manage Printing";
+      noDisplay = true;
+      exec = "xdg-open http://localhost:631/";
+      type = "Application";
+    };
+  };
   dconf = {
     enable = true;
     settings = {
