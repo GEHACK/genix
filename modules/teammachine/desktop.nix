@@ -18,11 +18,13 @@
       password = "gehackgehack";
     };
   };
+  
   environment.gnome.excludePackages = with pkgs; [
     gnome-tour
     gnome-user-docs
+    gnome-control-center
   ];
-
+  
   documentation.enable = false;
   documentation.nixos.enable = false;
   documentation.man.enable = false; 
@@ -35,6 +37,7 @@
     papers
     nautilus
   ];
+
   systemd = {
     targets = {
       sleep.enable = false;
