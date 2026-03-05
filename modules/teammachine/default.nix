@@ -6,7 +6,7 @@ _: {
     ./ides.nix
     ./languages.nix
     ./loom.nix
-    ./misc_packages.nix
+    ./misc-packages.nix
     ./networking.nix
     ./power-management.nix
     ./printer.nix
