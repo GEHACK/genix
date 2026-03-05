@@ -1,0 +1,23 @@
+flush ruleset
+# Create a table for both IPv4 and IPv6 (inet)
+table inet filter {
+    chain input {
+        type filter hook input priority filter; policy accept;
+        iifname "lo" accept
+        ip saddr 10.0.0.1 accept
+        ip saddr 10.0.0.0/24 drop
+    }
+
+    # Forwarding rules (routing traffic through this machine)
+    chain forward {
+        type filter hook forward priority filter; policy drop;
+    }
+
+    # Outbound traffic rules
+    chain output {
+        type filter hook output priority filter; policy accept;
+        oifname "lo" accept
+        ip daddr 10.0.0.1 accept
+        ip daddr 10.0.0.0/24 drop
+    }
+}
