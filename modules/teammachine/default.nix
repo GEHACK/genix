@@ -2,6 +2,7 @@ _: {
   imports = [
     ./boot.nix
     ./desktop.nix
+    ./devdocs.nix
     ./ides.nix
     ./languages.nix
     ./loom.nix
