@@ -14,7 +14,7 @@
     nvidia = {
       modesetting.enable = true;  
       open = false;
-      nvidiaSettings = true;
+      nvidiaSettings = false;
       package = config.boot.kernelPackages.nvidiaPackages.stable;
       
       prime = {
