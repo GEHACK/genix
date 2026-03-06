@@ -34,22 +34,22 @@ let
 
 in 
 {
+  environment.systemPackages = with pkgs; [ 
+    pycharmAutoDetect 
+    jetbrains.idea
+    jetbrains.clion 
+    eclipses.eclipse-java 
+    vim 
+    nano 
+    neovim 
+    emacs 
 
-    environment.systemPackages = with pkgs; [ 
-        pycharmAutoDetect 
-        jetbrains.idea
-        jetbrains.clion 
-        eclipses.eclipse-java 
-        vim 
-        nano 
-        neovim 
-        emacs 
-        gedit 
-        
-        geany 
-        xterm #Necessary for geany
+    gedit
 
-        kdePackages.kate #Kate crashes if started from launchpad, does not crash if started from console?!
-        codeblocksFull 
-    ];
+    geany 
+    xterm #Necessary for geany
+
+    kdePackages.kate #Kate crashes if started from launchpad, does not crash if started from console?!
+    codeblocksFull 
+  ];
 }

@@ -5,6 +5,7 @@ _: {
     ./devdocs.nix
     ./ides.nix
     ./languages.nix
+    ./locale.nix
     ./loom.nix
     ./misc-packages.nix
     ./networking.nix
