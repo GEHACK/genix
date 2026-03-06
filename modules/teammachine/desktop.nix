@@ -1,4 +1,7 @@
-{ pkgs, dj_url, ... }:
+{
+  pkgs,
+  ...
+}:
 {
   services = {
     desktopManager.gnome.enable = true;
@@ -9,14 +12,6 @@
     };
 
     displayManager.gdm.enable = false;
-    greetd.loom-greeter = {
-      enable = true;
-      logLevel = "debug";
-      backgroundSource = ../../assets/wallpaper.jpeg;
-      url = dj_url;
-      username = "team";
-      password = "gehackgehack";
-    };
   };
   
   environment.gnome.excludePackages = with pkgs; [

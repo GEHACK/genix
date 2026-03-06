@@ -13,5 +13,6 @@
         prompt pure
       '';
     };
+    vim.enable = true;
   };
 }

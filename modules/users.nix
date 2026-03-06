@@ -1,16 +1,21 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
-  users.users.root.openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
+
+  sops.secrets.hashed-password.neededForUsers = true;
 
   security.sudo.wheelNeedsPassword = false;
-
-  users.users.gehack = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    # TODO: encrypt a strong password with sops nix
-    initialPassword = "gehackgehack";
-    openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
-    shell = pkgs.zsh;
+  users = {
+    mutableUsers = false;
+    users = {
+      root.openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
+      gehack = {
+        isNormalUser = true;
+        extraGroups = [ "wheel" ];
+        hashedPasswordFile = config.sops.secrets.hashed-password.path;
+        openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
+        shell = pkgs.zsh;
+      };
+    };
   };
 
   programs.zsh.enable = true;
