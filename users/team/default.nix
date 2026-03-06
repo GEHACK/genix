@@ -3,6 +3,7 @@ _: {
     ./autostart.nix
     ./browser.nix
     ./gnome.nix
+    ./nix-block.nix
     ./vscode.nix
   ];
 

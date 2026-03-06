@@ -3,11 +3,13 @@ _: {
     ./boot.nix
     ./desktop.nix
     ./greeter.nix
+    ./devdocs.nix
     ./ides.nix
     ./languages.nix
     ./loom.nix
-    ./misc_packages.nix
+    ./misc-packages.nix
     ./networking.nix
+    ./power-management.nix
     ./printer.nix
     ./submit.nix
     ./usbguard.nix
