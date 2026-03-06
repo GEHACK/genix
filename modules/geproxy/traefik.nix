@@ -6,11 +6,6 @@
     environmentFiles = [ config.sops.secrets.cloudflare-api-key-env.path ];
 
     staticConfigOptions = {
-      log = {
-        level = "DEBUG";
-        format = "common";
-      };
-
       entryPoints.websecure = {
         address = ":443";
         http.tls = {
@@ -36,21 +31,6 @@
           tls = {
             certResolver = "myresolver";
           };
-        };
-
-        # redirect "judge" to "judge.gehack.nl"
-        routers.judge-redirect = {
-          rule = "Host(`judge`) || Host(`judge.contest.internal`)";
-          entryPoints = [
-            "web"
-          ];
-          middlewares = [ "force-fqdn" ];
-          service = "noop@internal";
-        };
-        middlewares.force-fqdn.redirectRegex = {
-          regex = "^https?://judge/(.*)";
-          replacement = "https://judge.gehack.nl/$${1}";
-          permanent = true;
         };
 
         services.judge.loadBalancer.servers = [
