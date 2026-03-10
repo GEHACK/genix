@@ -79,11 +79,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1772832007,
-        "narHash": "sha256-hVQckY9VDyY/DfYQwEksLp983vQuU7SpB8pADPan43s=",
+        "lastModified": 1773001073,
+        "narHash": "sha256-SL0XU/F3AudoUeyz3x8uZSy/eOJSDatTMhghzDcIg9U=",
         "owner": "LuukBlankenstijn",
         "repo": "loom",
-        "rev": "54e9c36458526f0eb55896e6e16ffdff831c254a",
+        "rev": "47a46a262fd1612b6538875a5e22da7aee34377d",
         "type": "github"
       },
       "original": {
