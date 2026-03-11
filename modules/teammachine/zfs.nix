@@ -1,48 +1,60 @@
-{ config, pkgs, lib, ... }: 
+{ config, pkgs, lib, ... }:
 
-{ 
+{
   boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.package = pkgs.zfs;
+
+  # Ensure ZFS tools are actually inside the initrd ramdisk
+  boot.initrd.supportedFilesystems = [ "zfs" ];
 
   environment.systemPackages = [
     (pkgs.writeShellScriptBin "wipe-user-data" ''
       if [ "$(id -u)" -ne 0 ]; then
-        echo "Error: must be run as root (use sudo)" >&2
+        echo "Error: must be run as root" >&2
         exit 1
       fi
-      
-      echo "Arming the system for a total state wipe..."
+      echo "Setting wipe flag on zroot..."
+      # Use the absolute path from the package
       ${pkgs.zfs}/bin/zfs set user:wipe-on-reboot=true zroot
-      
       echo "Wipe armed! Reboot to execute."
     '')
   ];
 
-  boot.initrd.postDeviceCommands = lib.mkAfter ''
-  # Make sure the pool is imported
-  ${pkgs.zfs}/bin/zpool import -f zroot || true
+  # Using systemd in initrd is the modern, "correct" way to handle 
+  # complex boot logic like conditional rollbacks.
+  boot.initrd.systemd.enable = true;
+  boot.initrd.systemd.services.rollback-on-boot = {
+    description = "Rollback ZFS datasets if wipe flag is set";
+    wantedBy = [ "initrd-root-device.target" ];
+    after = [ "zfs-import-zroot.service" ]; # Wait for the pool import
+    before = [ "sysroot.mount" ];           # Run before mounting /
+    path = [ pkgs.zfs ];
+    unitConfig.DefaultDependencies = "no";
+    serviceConfig.Type = "oneshot";
+    script = ''
+      FLAG=$(zfs get -H -o value user:wipe-on-reboot zroot || echo "false")
+      
+      if [ "$FLAG" = "true" ]; then
+        echo "Wipe flag detected! Purging root and home..."
+        # -R ensures we destroy any snapshots created since 'blank'
+        zfs rollback -rR zroot/root@blank
+        zfs rollback -rR zroot/home@blank
+        zfs set user:wipe-on-reboot=false zroot
+        echo "Purge complete."
+      else
+        echo "No wipe flag detected. Proceeding with normal boot."
+      fi
+    '';
+  };
 
-  if [ "$(${pkgs.zfs}/bin/zfs get -H -o value user:wipe-on-reboot zroot)" = "true" ]; then
-    echo "Wipe flag detected! Purging root and home datasets..."
-    ${pkgs.zfs}/bin/zfs rollback -r zroot/root@blank
-    ${pkgs.zfs}/bin/zfs rollback -r zroot/home@blank
-    ${pkgs.zfs}/bin/zfs set user:wipe-on-reboot=false zroot
-    echo "Purge complete."
-  fi
-'';
-
+  # Rest of your config
   environment.persistence."/persist" = {
-    hideMounts = true; 
-    
-    directories = [
-      "/etc/sops"  
-    ];
-    
-    files = [ 
-      "/etc/ssh/ssh_host_ed25519_key" 
-      "/etc/ssh/ssh_host_ed25519_key.pub" 
-      "/etc/ssh/ssh_host_rsa_key" 
-      "/etc/ssh/ssh_host_rsa_key.pub" 
+    hideMounts = true;
+    #directories = [ "/etc/sops" ];
+    files = [
+      "/etc/ssh/ssh_host_ed25519_key"
+      "/etc/ssh/ssh_host_ed25519_key.pub"
+      "/etc/ssh/ssh_host_rsa_key"
+      "/etc/ssh/ssh_host_rsa_key.pub"
     ];
   };
 
@@ -50,12 +62,16 @@
     "d /home/team 0700 team users -"
     "d /home/gehack 0700 gehack users -"
   ]; 
+
+  fileSystems."/etc/sops" = {
+    device = "/persist/etc/sops";
+    options = [ "bind" ];
+    neededForBoot = true; 
+  };
   
   fileSystems."/persist".neededForBoot = true;
 
   networking.hostId = builtins.substring 0 8 (
     builtins.hashString "sha256" config.networking.hostName
   );
-  boot.zfs.forceImportRoot = true;
 }
-

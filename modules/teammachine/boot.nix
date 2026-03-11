@@ -45,6 +45,7 @@ in
 {
   boot = {
     # 1. The Console & Kernel Silence
+    supportedFilesystems = [ "zfs" ];
     consoleLogLevel = 0;
     initrd = {
       verbose = false; # Silence the initial ramdisk
