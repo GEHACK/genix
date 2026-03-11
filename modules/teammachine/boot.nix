@@ -48,8 +48,10 @@ in
     supportedFilesystems = [ "zfs" ];
     consoleLogLevel = 0;
     initrd = {
+      supportedFilesystems = [ "zfs" ];
       verbose = false; # Silence the initial ramdisk
       kernelModules = [ "i915" ];
+      systemd.enable = true;
     };
 
     kernelParams = [

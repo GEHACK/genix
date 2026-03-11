@@ -1,11 +1,6 @@
 { config, pkgs, lib, ... }:
 
 {
-  boot.supportedFilesystems = [ "zfs" ];
-
-  # Ensure ZFS tools are actually inside the initrd ramdisk
-  boot.initrd.supportedFilesystems = [ "zfs" ];
-
   environment.systemPackages = [
     (pkgs.writeShellScriptBin "wipe-user-data" ''
       if [ "$(id -u)" -ne 0 ]; then
@@ -19,14 +14,11 @@
     '')
   ];
 
-  # Using systemd in initrd is the modern, "correct" way to handle 
-  # complex boot logic like conditional rollbacks.
-  boot.initrd.systemd.enable = true;
   boot.initrd.systemd.services.rollback-on-boot = {
     description = "Rollback ZFS datasets if wipe flag is set";
     wantedBy = [ "initrd-root-device.target" ];
-    after = [ "zfs-import-zroot.service" ]; # Wait for the pool import
-    before = [ "sysroot.mount" ];           # Run before mounting /
+    after = [ "zfs-import-zroot.service" ]; 
+    before = [ "sysroot.mount" ];           
     path = [ pkgs.zfs ];
     unitConfig.DefaultDependencies = "no";
     serviceConfig.Type = "oneshot";
@@ -46,10 +38,8 @@
     '';
   };
 
-  # Rest of your config
   environment.persistence."/persist" = {
     hideMounts = true;
-    #directories = [ "/etc/sops" ];
     files = [
       "/etc/ssh/ssh_host_ed25519_key"
       "/etc/ssh/ssh_host_ed25519_key.pub"
@@ -58,6 +48,7 @@
     ];
   };
 
+  # Necessary for Homemanager
   systemd.tmpfiles.rules = [
     "d /home/team 0700 team users -"
     "d /home/gehack 0700 gehack users -"
@@ -68,7 +59,7 @@
     options = [ "bind" ];
     neededForBoot = true; 
   };
-  
+
   fileSystems."/persist".neededForBoot = true;
 
   networking.hostId = builtins.substring 0 8 (
