@@ -6,3 +6,6 @@ result-*
 .direnv
 .authorized_keys
 *.qcow2
+
+# Ignore directory tmp/ which could contain the host-key for nixos-anywhere
+tmp/

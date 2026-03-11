@@ -71,6 +71,7 @@ in
       grub = {
         enable = true;
         efiSupport = true;
+        zfsSupport = true;
         efiInstallAsRemovable = true;
         timeoutStyle = "hidden"; #If this option is set to ‘countdown’ or ‘hidden’ […] and ESC or F4 are pressed, or SHIFT is held down during that time, it will display the menu and wait for input.
         devices = [ "nodev" ];

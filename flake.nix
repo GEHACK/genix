@@ -21,6 +21,11 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    
+    impermanence = {
+      url = "github:nix-community/impermanence";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     loom.url = "github:LuukBlankenstijn/loom";
   };
@@ -32,6 +37,7 @@
       home-manager,
       loom,
       sops-nix,
+      impermanence,
       ...
     }:
     let
@@ -55,6 +61,7 @@
 
       teammachineModules = commonModules ++ [
         loom.nixosModules.default
+        impermanence.nixosModules.impermanence
         (mkHomeManager {
           gehack = import ./users/gehack;
           team = import ./users/team;

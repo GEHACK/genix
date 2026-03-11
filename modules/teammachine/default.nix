@@ -9,11 +9,12 @@ _: {
     ./loom.nix
     ./misc-packages.nix
     ./networking.nix
-    ./power-management.nix
+    #./power-management.nix
     ./printer.nix
     ./submit.nix
     ./usbguard.nix
     ./users.nix
     ./webcamstream.nix
+    ./zfs.nix
   ];
 }
