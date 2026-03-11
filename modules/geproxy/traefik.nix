@@ -7,7 +7,7 @@
 
     staticConfigOptions = {
       entryPoints.websecure = {
-        address = ":443";
+        address = "0.0.0.0:443";
         http.tls = {
           options = "strictTLS";
           certResolver = "myresolver";
@@ -33,8 +33,21 @@
           };
         };
 
+        routers.loom = {
+          rule = "Host(`loom.gehack.nl`)";
+          service = "loom";
+          entryPoints = [ "websecure" ];
+          tls = {
+            certResolver = "myresolver";
+          };
+        };
+
         services.judge.loadBalancer.servers = [
           { url = "https://judge.gehack.nl"; }
+        ];
+
+        services.loom.loadBalancer.servers = [
+          { url = "https://loom.gehack.nl"; }
         ];
       };
     };
