@@ -12,6 +12,7 @@
           options = "strictTLS";
           certResolver = "myresolver";
         };
+        transport.respondingTimeouts.readTimeout = 0;
       };
       certificatesResolvers.myresolver.acme = {
         email = "gehack@gewis.nl";
