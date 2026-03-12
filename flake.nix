@@ -86,6 +86,21 @@
           };
         };
 
+      teammachine-bare = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = commonModules ++ [
+          ./hosts/teammachine/disko.nix
+          ./modules/teammachine/boot.nix
+          ./modules
+          {
+            time.timeZone = "Europe/Amsterdam";
+            i18n.defaultLocale = "en_US.UTF-8";
+            system.stateVersion = "25.11";
+          }
+        ];
+      };
+
       teammachine = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -111,7 +126,7 @@
       };
     in
     {
-      nixosConfigurations = { inherit teammachine teammachine_arm geproxy; };
+      nixosConfigurations = { inherit teammachine teammachine-bare teammachine_arm geproxy; };
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
