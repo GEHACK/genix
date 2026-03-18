@@ -69,6 +69,10 @@
         ./hosts/geproxy/configuration.nix
       ];
 
+      scoreboard-laptopModules = commonModules ++ [
+        ./hosts/scoreboard-laptop/configuration.nix
+      ];
+
       vm-module =
         { modulesPath, ... }:
         {
@@ -104,6 +108,12 @@
         modules = geproxyModules;
       };
 
+      scoreboard-laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = scoreboard-laptopModules;
+      };
+
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -111,11 +121,12 @@
       };
     in
     {
-      nixosConfigurations = { inherit teammachine teammachine_arm geproxy; };
+      nixosConfigurations = { inherit teammachine teammachine_arm geproxy scoreboard-laptop; };
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
+        scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
       };
 
