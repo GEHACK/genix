@@ -35,8 +35,11 @@
       ...
     }:
     let
-      dj_url = "https://dj.bartjan.tech";
-      specialArgs = { inherit dj_url; };
+      dj_url = "https://judge.gehack.nl";
+      loom_url = "https://loom.gehack.nl";
+      judge_ip = "10.0.0.1";
+      contest_subnet = "10.0.0.0/24";
+      specialArgs = { inherit dj_url loom_url judge_ip contest_subnet; };
 
       commonModules = [
         disko.nixosModules.disko
