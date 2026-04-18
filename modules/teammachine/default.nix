@@ -11,6 +11,7 @@ _: {
     ./misc-packages.nix
     ./networking.nix
     ./printer.nix
+    ./pxe-boot.nix
     ./submit.nix
     ./usbguard.nix
     ./users.nix
