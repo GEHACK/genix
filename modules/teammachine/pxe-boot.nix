@@ -10,11 +10,7 @@ let
       gawk
     ];
     text = ''
-      boot_id=$(efibootmgr \
-        | grep -iE 'Boot[0-9A-F]{4}.*(IPv?4|PXE.*IP?v?4|IP?v?4.*PXE)' \
-        | head -n1 \
-        | awk '{print $1}' \
-        | sed 's/^Boot//; s/\*$//')
+      boot_id=$(efibootmgr | awk '/[iI][pP][vV]4/ && !/BBS/ {sub(/^Boot/, "", $1); sub(/\*/, "", $1); print $1; exit}')
 
       if [ -z "''${boot_id:-}" ]; then
         echo "error: no IPv4/PXE boot entry found in efibootmgr output" >&2
