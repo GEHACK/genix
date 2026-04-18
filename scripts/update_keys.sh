@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor")
+USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "zeo")
 OUTPUT_FILE="../authorized_keys"
 
 TEMP_FILE=$(mktemp)
