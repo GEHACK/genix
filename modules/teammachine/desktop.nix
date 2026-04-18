@@ -22,7 +22,15 @@
   
   documentation.enable = false;
   documentation.nixos.enable = false;
-  documentation.man.enable = false; 
+  documentation.man.enable = false;
+
+  # Disable audio output while keeping microphone input
+  services.pipewire.wireplumber.extraConfig."50-disable-audio-output" = {
+    "monitor.alsa.rules" = [{
+      matches = [{ "node.name" = "~alsa_output.*"; }];
+      actions.update-props."node.disabled" = true;
+    }];
+  };
 
   security.pam.services.greetd.enableGnomeKeyring = true;
   environment.systemPackages = with pkgs; [
