@@ -7,18 +7,18 @@
     ];
   };
 
-#hardware.printers = {
-#  ensurePrinters = [
-#    {
-#      name = "Contest_Printer";
-#      deviceUri = "ipp://10.1.0.1:631";
-#      model = "drv:///sample.drv/ipp-everywhere.ppd";
-#      ppdOptions = {
-#        PageSize = "A4";
-#      };
-#    }
-#  ];
-#  ensureDefaultPrinter = "Contest_Printer";
-#};
+hardware.printers = {
+ ensurePrinters = [
+   {
+     name = "Contest_Printer";
+     deviceUri = "ipp://10.0.0.1:631";
+     model = "raw";
+     ppdOptions = {
+       PageSize = "A4";
+     };
+   }
+ ];
+ ensureDefaultPrinter = "Contest_Printer";
+};
 
 }
