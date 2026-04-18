@@ -41,4 +41,14 @@
   };
   
   boot.blacklistedKernelModules = [ "iwlwifi" "btusb" ];
+
+  # Prevent non-root users from managing network connections via GNOME
+  security.polkit.extraConfig = ''
+    polkit.addRule(function(action, subject) {
+      if (action.id.indexOf("org.freedesktop.NetworkManager.") === 0 &&
+          subject.user !== "root") {
+        return polkit.Result.NO;
+      }
+    });
+  '';
 }
