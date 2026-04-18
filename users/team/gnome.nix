@@ -50,13 +50,15 @@ in
       };
       "org/gnome/shell" = {
         favorite-apps = ["firefox.desktop"];
+        disable-user-extensions = true;
+        enabled-extensions = [];
       };
       "org/gnome/desktop/input-sources" = {
         sources = gnomeInputSources;
       };
-      "org/gnome/shell" = {
-        disable-user-extensions = true;
-        enabled-extensions = [];
+      "org/gnome/desktop/notifications" = {
+        show-banners = false;
+        show-in-lock-screen = false;
       };
     };
   };
