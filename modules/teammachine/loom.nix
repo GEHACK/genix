@@ -5,5 +5,6 @@
     enable = true;
     server = loom_url;
     authTokenCommand = "cat ${config.sops.secrets.loom-auth.path}";
+    includeSystemPackges = true;
   };
 }
