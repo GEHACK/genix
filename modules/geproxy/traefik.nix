@@ -49,6 +49,14 @@
               certResolver = "myresolver";
             };
           };
+          cds = {
+            rule = "Host(`cds.gehack.nl`)";
+            service = "cds";
+            entryPoints = [ "websecure" ];
+            tls = {
+              certResolver = "myresolver";
+            };
+          };
           fog = {
             rule = "Host(`fog.gehack.nl`)";
             service = "fog";
@@ -64,6 +72,9 @@
 
         services = {
           judge.loadBalancer.servers = [
+            { url = "https://judge.gehack.nl"; }
+          ];
+          cds.loadBalancer.servers = [
             { url = "https://judge.gehack.nl"; }
           ];
           loom.loadBalancer.servers = [

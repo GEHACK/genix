@@ -50,6 +50,15 @@
     };
   };
 
+  users.users.dnsmasq = {
+    isSystemUser = true;
+    group = "dnsmasq";
+    uid = 995;
+  };
+  users.groups.dnsmasq = {
+    gid = 995;
+  };
+
   # dnsmasq configuration
   services.dnsmasq = {
     resolveLocalQueries = false;
@@ -61,7 +70,6 @@
 
       domain-needed = true;
       bogus-priv = true;
-      no-resolv = true;
 
       bind-interfaces = true;
       interface = [
@@ -105,7 +113,10 @@
 
       # DNS addresses
       address = [
-        "/#/10.0.0.1"
+        "/judge.gehack.nl/10.0.0.1"
+        "/fog.gehack.nl/10.0.0.1"
+        "/loom.gehack.nl/10.0.0.1"
+        "/cds.gehack.nl/10.0.0.1"
       ];
 
       # PXE/FOG boot configuration

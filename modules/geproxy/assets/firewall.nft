@@ -74,6 +74,10 @@ table inet filter {
 
   chain output {
     type filter hook output priority 0; policy accept;
+    meta skuid 995 udp dport 53 jump contest_inet
+    meta skuid 995 tcp dport 53 jump contest_inet
+    meta skuid 995 udp dport 53 drop
+    meta skuid 995 tcp dport 53 drop
   }
 }
 
