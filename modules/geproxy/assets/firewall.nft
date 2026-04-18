@@ -30,7 +30,16 @@ table inet filter {
 
     # --- allow router mgmt / web on admin + wifi
     iifname { $IF_ADMIN, $IF_WIFI, $IF_INTERNET } tcp dport 22 accept
-    iifname { $IF_ADMIN, $IF_WIFI } tcp dport { 80, 443 } accept
+    iifname { $IF_ADMIN, $IF_WIFI, $IF_CONTEST } tcp dport { 80, 443 } accept
+    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 3000 accept
+
+    # --- FOG services (TFTP, NFS, FTP) on admin + contest
+    iifname { $IF_ADMIN, $IF_CONTEST } udp dport 69 accept
+    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport { 21, 111, 2049, 32765, 32767 } accept
+    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport 21100-21110 accept
+
+    # --- FOG multicast (udpcast) on contest
+    iifname $IF_CONTEST udp dport 49152-65535 accept
 
     # (optional) log drops
     # log prefix "nft input drop: " flags all counter drop

@@ -10,7 +10,10 @@
       root.openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
       gehack = {
         isNormalUser = true;
-        extraGroups = [ "wheel" ];
+        extraGroups = [
+          "wheel"
+          "docker"
+        ];
         hashedPasswordFile = config.sops.secrets.hashed-password.path;
         openssh.authorizedKeys.keyFiles = [ ../authorized_keys ];
         shell = pkgs.zsh;

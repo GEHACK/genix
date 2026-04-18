@@ -107,19 +107,19 @@
         "/gehack.nl/10.0.0.1"
       ];
 
-      # PXE/FOG boot configuration (commented out for later)
-      # dhcp-match = [
-      #   "set:bios,60,PXEClient:Arch:00000"
-      #   "set:efi32,60,PXEClient:Arch:00006"
-      #   "set:efibc,60,PXEClient:Arch:00007"
-      #   "set:efi64,60,PXEClient:Arch:00009"
-      # ];
-      # dhcp-boot = [
-      #   "tag:bios,undionly.kpxe,10.0.1.10,10.0.1.10"
-      #   "tag:efi32,i386-efi/ipxe.efi,10.0.1.10,10.0.1.10"
-      #   "tag:efibc,ipxe.efi,10.0.1.10,10.0.1.10"
-      #   "tag:efi64,ipxe.efi,10.0.1.10,10.0.1.10"
-      # ];
+      # PXE/FOG boot configuration
+      dhcp-match = [
+        "set:bios,60,PXEClient:Arch:00000"
+        "set:efi32,60,PXEClient:Arch:00006"
+        "set:efibc,60,PXEClient:Arch:00007"
+        "set:efi64,60,PXEClient:Arch:00009"
+      ];
+      dhcp-boot = [
+        "tag:bios,undionly.kkpxe"
+        "tag:efi32,i386-efi/snponly.efi"
+        "tag:efibc,snponly.efi"
+        "tag:efi64,snponly.efi"
+      ];
     };
   };
 
