@@ -14,6 +14,13 @@
         };
         transport.respondingTimeouts.readTimeout = 0;
       };
+      entryPoints.fog = {
+        address = "0.0.0.0:3000";
+        http.tls = {
+          options = "strictTLS";
+          certResolver = "myresolver";
+        };
+      };
       certificatesResolvers.myresolver.acme = {
         email = "gehack@gewis.nl";
         dnsChallenge.provider = "cloudflare";
@@ -49,6 +56,19 @@
 
         services.loom.loadBalancer.servers = [
           { url = "https://loom.gehack.nl"; }
+        ];
+
+        routers.fog = {
+          rule = "Host(`fog.gehack.nl`)";
+          service = "fog";
+          entryPoints = [ "fog" "websecure" ];
+          tls = {
+            certResolver = "myresolver";
+          };
+        };
+
+        services.fog.loadBalancer.servers = [
+          { url = "http://127.0.0.1:3001"; }
         ];
       };
     };
