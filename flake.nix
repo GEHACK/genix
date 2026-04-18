@@ -23,6 +23,7 @@
     };
 
     loom.url = "github:LuukBlankenstijn/loom";
+    cuproxy.url = "github:LuukBlankenstijn/cuproxy/chore/nix-packaging";
   };
 
   outputs =
@@ -39,7 +40,14 @@
       loom_url = "https://loom.gehack.nl";
       judge_ip = "10.0.0.1";
       contest_subnet = "10.0.0.0/24";
-      specialArgs = { inherit dj_url loom_url judge_ip contest_subnet; };
+      specialArgs = {
+        inherit
+          dj_url
+          loom_url
+          judge_ip
+          contest_subnet
+          ;
+      };
 
       commonModules = [
         disko.nixosModules.disko
@@ -124,7 +132,14 @@
       };
     in
     {
-      nixosConfigurations = { inherit teammachine teammachine_arm geproxy scoreboard-laptop; };
+      nixosConfigurations = {
+        inherit
+          teammachine
+          teammachine_arm
+          geproxy
+          scoreboard-laptop
+          ;
+      };
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
@@ -138,4 +153,3 @@
       };
     };
 }
-

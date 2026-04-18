@@ -23,10 +23,16 @@ table inet filter {
     ip protocol icmp accept
     ip6 nexthdr icmpv6 accept
 
-    # --- dnsmasq (router services) on admin/contest
+    # --- DHCP
     iifname { $IF_ADMIN, $IF_CONTEST } udp dport { 67, 68 } accept   # DHCP
-    iifname { $IF_ADMIN, $IF_CONTEST } udp dport 53 accept           # DNS
-    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport 53 accept           # DNS
+
+    # Admin: DNS to anywhere
+    iifname $IF_ADMIN udp dport 53 accept
+    iifname $IF_ADMIN tcp dport 53 accept
+
+    # Contest: DNS only to dnsmasq (10.0.0.1)
+    iifname $IF_CONTEST ip daddr 10.0.0.1 udp dport 53 accept
+    iifname $IF_CONTEST ip daddr 10.0.0.1 tcp dport 53 accept
 
     # --- allow router mgmt / web on admin + wifi
     iifname { $IF_ADMIN, $IF_WIFI, $IF_INTERNET } tcp dport 22 accept

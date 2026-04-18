@@ -61,7 +61,7 @@
 
       domain-needed = true;
       bogus-priv = true;
-      server = [ "8.8.8.8" ];
+      no-resolv = true;
 
       bind-interfaces = true;
       interface = [
@@ -93,18 +93,19 @@
 
       # DHCP options
       dhcp-option = [
+        # Contest: captive, everything through 10.0.0.1
         "br-contest,3,10.0.0.1"
         "br-contest,6,10.0.0.1"
         "br-contest,42,10.0.0.1"
-        "br-admin,6,10.0.1.1"
+        # Admin: real gateway + public DNS so it bypasses dnsmasq
+        "br-admin,3,10.0.1.1"
+        "br-admin,6,8.8.8.8,1.1.1.1"
         "br-admin,42,10.0.1.1"
       ];
 
       # DNS addresses
       address = [
-        "/judge.contest.local/10.0.0.1"
-        "/judge/10.0.0.1"
-        "/gehack.nl/10.0.0.1"
+        "/#/10.0.0.1"
       ];
 
       # PXE/FOG boot configuration
@@ -119,6 +120,10 @@
         "tag:efi32,i386-efi/snponly.efi"
         "tag:efibc,snponly.efi"
         "tag:efi64,snponly.efi"
+      ];
+
+      dhcp-host = [
+        "18:60:24:C0:52:61,10.0.0.10,infinite"
       ];
     };
   };
