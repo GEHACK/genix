@@ -48,8 +48,7 @@ in
 
     geany 
     xterm #Necessary for geany
-
-    kdePackages.kate #Kate crashes if started from launchpad, does not crash if started from console?!
+    
     codeblocksFull 
   ];
 }
