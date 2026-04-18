@@ -6,11 +6,12 @@ _: {
     ./devdocs.nix
     ./ides.nix
     ./languages.nix
+    ./locale.nix
     ./loom.nix
     ./misc-packages.nix
     ./networking.nix
-    ./power-management.nix
     ./printer.nix
+    ./pxe-boot.nix
     ./submit.nix
     ./usbguard.nix
     ./users.nix

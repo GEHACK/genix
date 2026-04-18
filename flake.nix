@@ -35,8 +35,11 @@
       ...
     }:
     let
-      dj_url = "https://dj.bartjan.tech";
-      specialArgs = { inherit dj_url; };
+      dj_url = "https://judge.gehack.nl";
+      loom_url = "https://loom.gehack.nl";
+      judge_ip = "10.0.0.1";
+      contest_subnet = "10.0.0.0/24";
+      specialArgs = { inherit dj_url loom_url judge_ip contest_subnet; };
 
       commonModules = [
         disko.nixosModules.disko
@@ -67,6 +70,10 @@
           gehack = import ./users/gehack;
         })
         ./hosts/geproxy/configuration.nix
+      ];
+
+      scoreboard-laptopModules = commonModules ++ [
+        ./hosts/scoreboard-laptop/configuration.nix
       ];
 
       vm-module =
@@ -104,6 +111,12 @@
         modules = geproxyModules;
       };
 
+      scoreboard-laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = scoreboard-laptopModules;
+      };
+
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -111,11 +124,12 @@
       };
     in
     {
-      nixosConfigurations = { inherit teammachine teammachine_arm geproxy; };
+      nixosConfigurations = { inherit teammachine teammachine_arm geproxy scoreboard-laptop; };
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
+        scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
       };
 
