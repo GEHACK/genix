@@ -33,6 +33,7 @@
       home-manager,
       loom,
       sops-nix,
+      cuproxy,
       ...
     }:
     let
@@ -74,6 +75,7 @@
       ];
 
       geproxyModules = commonModules ++ [
+        cuproxy.nixosModules.default
         (mkHomeManager {
           gehack = import ./users/gehack;
         })

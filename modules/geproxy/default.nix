@@ -2,6 +2,7 @@
 {
   imports = [
     ./boot.nix
+    ./cuproxy.nix
     ./fog.nix
     ./networking.nix
     ./traefik.nix

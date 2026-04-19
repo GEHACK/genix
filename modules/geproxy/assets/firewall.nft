@@ -33,6 +33,9 @@ table inet filter {
     # Contest: DNS only to dnsmasq (10.0.0.1)
     iifname $IF_CONTEST ip daddr 10.0.0.1 udp dport 53 accept
     iifname $IF_CONTEST ip daddr 10.0.0.1 tcp dport 53 accept
+    
+    # Contest: IPP to cuproxy
+    iifname $IF_CONTEST ip daddr 10.0.0.1 tcp dport 631 accept
 
     # --- allow router mgmt / web on admin + wifi
     iifname { $IF_ADMIN, $IF_WIFI, $IF_INTERNET } tcp dport 22 accept

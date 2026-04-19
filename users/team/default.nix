@@ -2,7 +2,6 @@ _: {
   imports = [
     ./autostart.nix
     ./browser.nix
-    ./cuproxy.nix
     ./gnome.nix
     ./nix-block.nix
     ./vscode.nix
