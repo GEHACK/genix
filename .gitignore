@@ -13,3 +13,6 @@ tmp/
 # Ignoring LLMs
 .claude
 CLAUDE.md
+
+# Ignore Apple things
+.DS_Store
