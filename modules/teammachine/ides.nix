@@ -43,6 +43,7 @@ in
     nano 
     neovim 
     emacs 
+    netbeans
 
     gedit
 
