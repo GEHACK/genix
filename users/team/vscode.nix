@@ -22,10 +22,10 @@
 
   xdg.desktopEntries = {
     "code-novim" = {
-      name = "Visual Studio Code";
+      name = "VScode";
       genericName = "Text Editor";
       exec = "code --disable-extension vscodevim.vim %F";
-      icon = "vscode"; 
+      icon = "vscode";
       terminal = false;
       startupNotify = true;
       categories = [ "Utility" "TextEditor" "Development" "IDE" ];
@@ -33,10 +33,10 @@
     };
 
     "code" = {
-      name = "Visual Studio Code (with vim bindings!)";
+      name = "VScode (vim)";
       genericName = "Text Editor";
-      exec = "code %F"; 
-      icon = "vscode"; 
+      exec = "code %F";
+      icon = builtins.path { path = ../../assets/vscode-vim.png; name = "vscode-vim.png"; };
       terminal = false;
       startupNotify = true;
       categories = [ "Utility" "TextEditor" "Development" "IDE" ];
