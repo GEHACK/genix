@@ -10,15 +10,15 @@
 hardware.printers = {
  ensurePrinters = [
    {
-     name = "Contest_Printer";
-     deviceUri = "ipp://10.0.0.1:631";
-     model = "raw";
-     ppdOptions = {
-       PageSize = "A4";
-     };
+     name = "PSGEWIS1";
+     deviceUri = "ipp://10.0.0.1:631/ipp/print";
+     model = "everywhere";
+     # ppdOptions = {
+     #   PageSize = "A4";
+     # };
    }
  ];
- ensureDefaultPrinter = "Contest_Printer";
+ ensureDefaultPrinter = "PSGEWIS1";
 };
 
 }
