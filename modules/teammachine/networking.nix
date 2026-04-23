@@ -1,4 +1,9 @@
 { pkgs, judge_ip, contest_subnet, ... }: {
+  
+  environment.systemPackages = with pkgs; [
+    wakeonlan
+  ];
+
   networking = {
     hostName = "team";
     useDHCP = false;
@@ -8,6 +13,8 @@
         ${judge_ip} judge
       '';
 
+    interfaces.enp0s31f6.wakeOnLan.enable = true;
+
     # Disable the default iptables-based firewall manager
     firewall.enable = false;
 
@@ -15,7 +22,7 @@
     nftables = {
       enable = true;
       checkRuleset = true;
-      ruleset = ''
+      ruleset = '' 
         flush ruleset
         table inet filter {
             chain input {
