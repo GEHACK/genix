@@ -5,7 +5,6 @@ flush ruleset
 define IF_WIFI    = "wlp6s0"
 define IF_ADMIN   = "br-admin"
 define IF_CONTEST = "br-contest"
-define IF_INTERNET = "eno1"
 
 define NET_CONTEST = 10.0.0.0/24
 define NET_ADMIN   = 10.0.1.0/24
@@ -38,7 +37,7 @@ table inet filter {
     iifname $IF_CONTEST ip daddr 10.0.0.1 tcp dport 631 accept
 
     # --- allow router mgmt / web on admin + wifi
-    iifname { $IF_ADMIN, $IF_WIFI, $IF_INTERNET } tcp dport 22 accept
+    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 22 accept
     iifname { $IF_ADMIN, $IF_WIFI, $IF_CONTEST } tcp dport { 80, 443 } accept
     iifname { $IF_ADMIN, $IF_WIFI } tcp dport 3000 accept
 
