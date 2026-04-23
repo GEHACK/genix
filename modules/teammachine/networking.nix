@@ -1,9 +1,5 @@
 { pkgs, judge_ip, contest_subnet, ... }: {
   
-  environment.systemPackages = with pkgs; [
-    wakeonlan
-  ];
-
   networking = {
     hostName = "team";
     useDHCP = false;
@@ -12,8 +8,6 @@
         127.0.0.1 docs
         ${judge_ip} judge
       '';
-
-    interfaces.enp0s31f6.wakeOnLan.enable = true;
 
     # Disable the default iptables-based firewall manager
     firewall.enable = false;

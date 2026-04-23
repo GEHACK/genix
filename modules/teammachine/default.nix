@@ -15,6 +15,7 @@ _: {
     ./submit.nix
     ./usbguard.nix
     ./users.nix
+    ./wakeonlan.nix
     ./webcamstream.nix
   ];
 }

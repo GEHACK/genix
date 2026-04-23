@@ -86,6 +86,15 @@
         ./hosts/scoreboard-laptop/configuration.nix
       ];
 
+      teammachineIsoModules = [
+        home-manager.nixosModules.home-manager
+        (mkHomeManager {
+          gehack = import ./users/gehack;
+          team = import ./users/team;
+        })
+        ./hosts/teammachine-iso/configuration.nix
+      ];
+
       vm-module =
         { modulesPath, ... }:
         {
@@ -132,6 +141,12 @@
         inherit specialArgs;
         modules = teammachineModules ++ [ vm-module ];
       };
+
+      teammachine-iso = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineIsoModules;
+      };
     in
     {
       nixosConfigurations = {
@@ -148,6 +163,7 @@
         geproxy = geproxy.config.system.build.toplevel;
         scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
+        teammachine-iso = teammachine-iso.config.system.build.isoImage;
       };
 
       packages.aarch64-linux = {
