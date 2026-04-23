@@ -45,7 +45,7 @@ _: {
 
           # Reverse proxy mode: Traefik handles HTTPS
           FOG_INTERNAL_HTTPS_ENABLED = "false";
-          FOG_HTTP_PROTOCOL = "https";
+          FOG_HTTP_PROTOCOL = "http";
 
           # Network - use contest bridge IP (resolves via dnsmasq wildcard)
           FOG_STORAGE_HOST = "10.0.0.1";

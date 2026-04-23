@@ -14,6 +14,9 @@
         };
         transport.respondingTimeouts.readTimeout = 0;
       };
+      entryPoints.web = {
+        address = "0.0.0.0:80";
+      };
       entryPoints.fog = {
         address = "0.0.0.0:3000";
         http.tls = {
@@ -56,6 +59,13 @@
             tls = {
               certResolver = "myresolver";
             };
+          };
+          fog_http = {
+            rule = "Host(`fog.gehack.nl`)";
+            service = "fog";
+            entryPoints = [
+              "web"
+            ];
           };
           fog = {
             rule = "Host(`fog.gehack.nl`)";
