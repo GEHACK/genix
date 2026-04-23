@@ -23,7 +23,7 @@
     };
 
     loom.url = "github:LuukBlankenstijn/loom";
-    cuproxy.url = "github:LuukBlankenstijn/cuproxy/chore/nix-packaging";
+    cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
   };
 
   outputs =
