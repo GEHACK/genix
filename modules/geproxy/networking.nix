@@ -26,12 +26,20 @@
     interfaces = {
       "wlp6s0".useDHCP = true;
       "br-contest" = {
-        ipv4.addresses = [
-          {
-            address = "10.0.0.1";
-            prefixLength = 24;
-          }
-        ];
+        ipv4 = {
+          addresses = [
+            {
+              address = "10.0.0.1";
+              prefixLength = 24;
+            }
+          ];
+          routes = [
+            {
+              address = "255.255.255.255";
+              prefixLength = 32;
+            }
+          ];
+        };
       };
       "br-admin" = {
         ipv4.addresses = [
