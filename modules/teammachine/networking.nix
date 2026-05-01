@@ -47,6 +47,11 @@
     };
   };
   
+  services.timesyncd = {
+    enable = true;
+    servers = [ "10.0.0.1" ];
+  };
+
   boot.blacklistedKernelModules = [ "iwlwifi" "btusb" ];
 
   # Prevent non-root users from managing network connections via GNOME
