@@ -168,7 +168,7 @@
       count=0
       while read -r timestamp mac ip hostname clientid; do
         [[ -z "$mac" || "$mac" == "#"* ]] && continue
-        ${pkgs.wakeonlan}/bin/wakeonlan "$mac" > /dev/null 2>&1
+        ${pkgs.wakeonlan}/bin/wakeonlan "$mac" -i 10.0.0.255 > /dev/null 2>&1
         ((count++))
       done < "/var/lib/dnsmasq/dnsmasq.leases"
  
