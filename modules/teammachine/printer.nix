@@ -21,4 +21,15 @@ hardware.printers = {
  ensureDefaultPrinter = "PSGEWIS1";
 };
 
+  systemd.services.ensure-printers = {
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = 10;
+    };
+    unitConfig = {
+      StartLimitBurst = 10;
+      StartLimitIntervalSec = 300;
+    };
+  };
+
 }
