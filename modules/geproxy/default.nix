@@ -3,6 +3,7 @@
   imports = [
     ./boot.nix
     ./cuproxy.nix
+    ./devdocs.nix
     ./fog.nix
     ./networking.nix
     ./ntp.nix

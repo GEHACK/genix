@@ -1,5 +1,11 @@
-{ pkgs, judge_ip, contest_subnet, ... }: {
-  
+{
+  pkgs,
+  judge_ip,
+  contest_subnet,
+  ...
+}:
+{
+
   environment.systemPackages = with pkgs; [
     wakeonlan
   ];
@@ -7,11 +13,9 @@
   networking = {
     hostName = "team";
     useDHCP = false;
-    extraHosts =
-      ''
-        127.0.0.1 docs
-        ${judge_ip} judge
-      '';
+    extraHosts = ''
+      ${judge_ip} judge
+    '';
 
     interfaces.enp0s31f6.wakeOnLan.enable = true;
 
@@ -22,7 +26,7 @@
     nftables = {
       enable = true;
       checkRuleset = true;
-      ruleset = '' 
+      ruleset = ''
         flush ruleset
         table inet filter {
             chain input {
@@ -46,13 +50,16 @@
       '';
     };
   };
-  
+
   services.timesyncd = {
     enable = true;
     servers = [ "10.0.0.1" ];
   };
 
-  boot.blacklistedKernelModules = [ "iwlwifi" "btusb" ];
+  boot.blacklistedKernelModules = [
+    "iwlwifi"
+    "btusb"
+  ];
 
   # Prevent non-root users from managing network connections via GNOME
   security.polkit.extraConfig = ''

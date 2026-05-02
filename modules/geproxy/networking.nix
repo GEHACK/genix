@@ -100,6 +100,7 @@
         "/fog.gehack.nl/10.0.0.1"
         "/loom.gehack.nl/10.0.0.1"
         "/cds.gehack.nl/10.0.0.1"
+        "/docs.gehack.nl/10.0.0.1"
       ];
 
       # PXE/FOG boot configuration

@@ -44,6 +44,14 @@
               certResolver = "myresolver";
             };
           };
+          devdocs = {
+            rule = "Host(`docs.gehack.nl`)";
+            service = "docs";
+            entryPoints = [ "websecure" ];
+            tls = {
+              certResolver = "myresolver";
+            };
+          };
           loom = {
             rule = "Host(`loom.gehack.nl`)";
             service = "loom";
@@ -92,6 +100,9 @@
           ];
           fog.loadBalancer.servers = [
             { url = "http://127.0.0.1:3001"; }
+          ];
+          docs.loadBalancer.servers = [
+            { url = "http://127.0.0.1:3002"; }
           ];
         };
       };
