@@ -62,7 +62,7 @@ in
         }
         {
           Title = "DevDocs";
-          URL = "http://docs";
+          URL = "https://docs.gehack.nl";
           Placement = "toolbar";
         }
       ];
