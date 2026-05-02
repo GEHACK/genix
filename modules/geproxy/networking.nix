@@ -8,14 +8,10 @@
       networks."iotroam".psk = "gehackgehack";
     };
     bridges = {
-      "br-admin" = {
+      "br-contest" = {
         interfaces = [
           "eno1"
           "eno2"
-        ];
-      };
-      "br-contest" = {
-        interfaces = [
           "eno3"
           "eno4"
           "eno5"
@@ -26,6 +22,7 @@
     interfaces = {
       "wlp6s0".useDHCP = true;
       "br-contest" = {
+        useDHCP = false;
         ipv4 = {
           addresses = [
             {
@@ -33,21 +30,7 @@
               prefixLength = 24;
             }
           ];
-          routes = [
-            {
-              address = "255.255.255.255";
-              prefixLength = 32;
-            }
-          ];
         };
-      };
-      "br-admin" = {
-        ipv4.addresses = [
-          {
-            address = "10.0.1.1";
-            prefixLength = 24;
-          }
-        ];
       };
     };
     firewall.enable = false;
@@ -82,7 +65,6 @@
       bind-interfaces = true;
       interface = [
         "br-contest"
-        "br-admin"
       ];
       except-interface = "wlp6s0";
 
@@ -92,19 +74,16 @@
       # Listen addresses
       listen-address = [
         "10.0.0.1"
-        "10.0.1.1"
       ];
 
       # Domains
       domain = [
         "contest.local,br-contest"
-        "admin.local,br-admin"
       ];
 
       # DHCP ranges
       dhcp-range = [
         "br-contest,10.0.0.50,10.0.0.250,255.255.255.0,infinite"
-        "br-admin,10.0.1.50,10.0.1.250,255.255.255.0,infinite"
       ];
 
       # DHCP options
@@ -113,10 +92,6 @@
         "br-contest,3,10.0.0.1"
         "br-contest,6,10.0.0.1"
         "br-contest,42,10.0.0.1"
-        # Admin: real gateway + public DNS so it bypasses dnsmasq
-        "br-admin,3,10.0.1.1"
-        "br-admin,6,8.8.8.8,1.1.1.1"
-        "br-admin,42,10.0.1.1"
       ];
 
       # DNS addresses
@@ -143,6 +118,7 @@
 
       dhcp-host = [
         "b0:0c:d1:de:f0:0d,10.0.0.10,infinite"
+        "48:ba:4e:24:27:5c,10.0.0.25,infinite"
       ];
     };
   };
@@ -171,7 +147,7 @@
         ${pkgs.wakeonlan}/bin/wakeonlan "$mac" -i 10.0.0.255 > /dev/null 2>&1
         ((count++))
       done < "/var/lib/dnsmasq/dnsmasq.leases"
- 
+
       echo "Done. Sent $count WOL packet(s)."
     '')
 

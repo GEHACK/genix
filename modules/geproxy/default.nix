@@ -5,6 +5,7 @@
     ./cuproxy.nix
     ./fog.nix
     ./networking.nix
+    ./ntp.nix
     ./traefik.nix
   ];
 

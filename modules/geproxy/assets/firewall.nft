@@ -3,11 +3,9 @@
 flush ruleset
 
 define IF_WIFI    = "wlp6s0"
-define IF_ADMIN   = "br-admin"
 define IF_CONTEST = "br-contest"
 
 define NET_CONTEST = 10.0.0.0/24
-define NET_ADMIN   = 10.0.1.0/24
 
 table inet filter {
   chain input {
@@ -23,11 +21,10 @@ table inet filter {
     ip6 nexthdr icmpv6 accept
 
     # --- DHCP
-    iifname { $IF_ADMIN, $IF_CONTEST } udp dport { 67, 68 } accept   # DHCP
+    iifname { $IF_CONTEST } udp dport { 67, 68 } accept   # DHCP
 
-    # Admin: DNS to anywhere
-    iifname $IF_ADMIN udp dport 53 accept
-    iifname $IF_ADMIN tcp dport 53 accept
+    # --- NTP
+    udp dport 123 accept
 
     # Contest: DNS only to dnsmasq (10.0.0.1)
     iifname $IF_CONTEST ip daddr 10.0.0.1 udp dport 53 accept
@@ -37,14 +34,14 @@ table inet filter {
     iifname $IF_CONTEST ip daddr 10.0.0.1 tcp dport 631 accept
 
     # --- allow router mgmt / web on admin + wifi
-    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 22 accept
-    iifname { $IF_ADMIN, $IF_WIFI, $IF_CONTEST } tcp dport { 80, 443 } accept
-    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 3000 accept
+    iifname { $IF_WIFI } tcp dport 22 accept
+    iifname { $IF_WIFI, $IF_CONTEST } tcp dport { 80, 443 } accept
+    iifname { $IF_WIFI } tcp dport 3000 accept
 
     # --- FOG services (TFTP, NFS, FTP) on admin + contest
-    iifname { $IF_ADMIN, $IF_CONTEST } udp dport 69 accept
-    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport { 21, 111, 2049, 32765, 32767 } accept
-    iifname { $IF_ADMIN, $IF_CONTEST } tcp dport 21100-21110 accept
+    iifname { $IF_CONTEST } udp dport 69 accept
+    iifname { $IF_CONTEST } tcp dport { 21, 111, 2049, 32765, 32767 } accept
+    iifname { $IF_CONTEST } tcp dport 21100-21110 accept
 
     # --- FOG multicast (udpcast) on contest
     iifname $IF_CONTEST udp dport 49152-65535 accept
@@ -64,12 +61,6 @@ table inet filter {
     ct state established,related accept
     ct state invalid drop
 
-    # --- allow admin -> internet
-    iifname $IF_ADMIN oifname $IF_WIFI accept
-
-    # --- allow admin -> contest
-    iifname $IF_ADMIN oifname $IF_CONTEST accept
-
     # --- if contest wants internet jump to contest_inet chain
     iifname $IF_CONTEST oifname $IF_WIFI jump contest_inet
   }
@@ -86,9 +77,6 @@ table inet filter {
 table ip nat {
   chain postrouting {
     type nat hook postrouting priority 100; policy accept;
-
-    # NAT only admin -> wifi (internet)
-    iifname $IF_ADMIN oifname $IF_WIFI ip saddr $NET_ADMIN masquerade
 
     # NAT contest -> wifi (internet) (only works when forwarding is enabled)
     iifname $IF_CONTEST oifname $IF_WIFI ip saddr $NET_CONTEST masquerade
