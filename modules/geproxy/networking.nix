@@ -8,10 +8,14 @@
       networks."iotroam".psk = "gehackgehack";
     };
     bridges = {
-      "br-contest" = {
+      "br-admin" = {
         interfaces = [
           "eno1"
           "eno2"
+        ];
+      };
+      "br-contest" = {
+        interfaces = [
           "eno3"
           "eno4"
           "eno5"
@@ -27,6 +31,17 @@
           addresses = [
             {
               address = "10.0.0.1";
+              prefixLength = 24;
+            }
+          ];
+        };
+      };
+      "br-admin" = {
+        useDHCP = false;
+        ipv4 = {
+          addresses = [
+            {
+              address = "10.0.1.1";
               prefixLength = 24;
             }
           ];
@@ -65,6 +80,7 @@
       bind-interfaces = true;
       interface = [
         "br-contest"
+        "br-admin"
       ];
       except-interface = "wlp6s0";
 
@@ -74,6 +90,7 @@
       # Listen addresses
       listen-address = [
         "10.0.0.1"
+        "10.0.1.1"
       ];
 
       # Domains
@@ -84,6 +101,7 @@
       # DHCP ranges
       dhcp-range = [
         "br-contest,10.0.0.50,10.0.0.250,255.255.255.0,infinite"
+        "br-admin,10.0.1.50,10.0.1.250,255.255.255.0,infinite"
       ];
 
       # DHCP options
@@ -92,6 +110,10 @@
         "br-contest,3,10.0.0.1"
         "br-contest,6,10.0.0.1"
         "br-contest,42,10.0.0.1"
+        # Admin: real gateway + public DNS so it bypasses dnsmasq
+        "br-admin,3,10.0.1.1"
+        "br-admin,6,8.8.8.8,1.1.1.1"
+        "br-admin,42,10.0.1.1"
       ];
 
       # DNS addresses
