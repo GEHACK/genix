@@ -1,5 +1,6 @@
 _: {
   boot = {
+    kernelParams = [ "video=eDP-1:d" ];
     loader = {
       systemd-boot.enable = false;
       grub = {

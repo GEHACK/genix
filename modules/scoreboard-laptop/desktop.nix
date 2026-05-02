@@ -1,8 +1,8 @@
 { config, lib, pkgs, ... }:
 let
   icpc-presentation = pkgs.callPackage ./scoreboard.nix {};
-  cdsURL = "https://cds.bartjan.tech/api/contests/";
-  contestID = "demo";
+  cdsURL = "https://cds.gehack.nl/api/contests/";
+  contestID = "testsession";
 
   start-presentation = pkgs.writeShellScript "start-presentation" ''
     # Read the contents of the sops-nix secret files
