@@ -2,7 +2,7 @@
 let
   icpc-presentation = pkgs.callPackage ./scoreboard.nix {};
   cdsURL = "https://cds.gehack.nl/api/contests/";
-  contestID = "testsession";
+  contestID = "fpcs2026";
 
   start-presentation = pkgs.writeShellScript "start-presentation" ''
     # Read the contents of the sops-nix secret files
