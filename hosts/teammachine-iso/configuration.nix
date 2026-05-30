@@ -8,19 +8,34 @@
   imports = [
     (modulesPath + "/installer/cd-dvd/iso-image.nix")
 
-    ../../modules/nix.nix
-    ../../modules/security.nix
-    ../../modules/ssh.nix
+    ../../modules
 
+    # Full teammachine module set minus boot.nix (ISO provides its own bootloader)
     ../../modules/teammachine/desktop.nix
+    ../../modules/teammachine/greeter.nix
     ../../modules/teammachine/ides.nix
     ../../modules/teammachine/languages.nix
     ../../modules/teammachine/locale.nix
+    ../../modules/teammachine/loom.nix
     ../../modules/teammachine/misc-packages.nix
+    ../../modules/teammachine/networking.nix
     ../../modules/teammachine/printer.nix
+    ../../modules/teammachine/pxe-boot.nix
     ../../modules/teammachine/submit.nix
+    ../../modules/teammachine/usbguard.nix
+    ../../modules/teammachine/users.nix
     ../../modules/teammachine/webcamstream.nix
   ];
+
+  # Decrypt secrets-iso.yaml using the iso-key baked into the image
+  sops = {
+    defaultSopsFile = lib.mkForce ../../secrets-iso.yaml;
+    age.keyFile = lib.mkForce "/etc/sops/hostkey";
+  };
+  environment.etc."sops/hostkey" = {
+    source = ../../iso-key;
+    mode = "0400";
+  };
 
   image.fileName = lib.mkForce "gehack-teammachine.iso";
   isoImage = {
@@ -36,56 +51,13 @@
   hardware = {
     graphics = {
       enable = true;
-      enable32Bit = pkgs.stdenv.hostPlatform.isx86_64;
+      enable32Bit = true;
     };
     enableRedistributableFirmware = true;
   };
 
-  networking = {
-    hostName = "gehack-iso";
-    useDHCP = lib.mkDefault true;
-    networkmanager.enable = true;
-    wireless.enable = lib.mkForce false;
-    firewall.enable = lib.mkForce false;
-  };
+  networking.hostName = lib.mkForce "gehack-iso";
 
-  users = {
-    mutableUsers = true;
-    users = {
-      root.initialPassword = "root";
-      gehack = {
-        isNormalUser = true;
-        initialPassword = "gehack";
-        extraGroups = [
-          "wheel"
-          "networkmanager"
-          "video"
-          "audio"
-        ];
-        shell = pkgs.zsh;
-      };
-      team = {
-        isNormalUser = true;
-        initialPassword = "team";
-        extraGroups = [
-          "networkmanager"
-          "video"
-          "audio"
-        ];
-      };
-    };
-  };
-
-  programs.zsh.enable = true;
-  security.sudo.wheelNeedsPassword = false;
-
-  services.displayManager = {
-    gdm.enable = lib.mkForce true;
-    autoLogin = {
-      enable = true;
-      user = "team";
-    };
-  };
-
-  services.openssh.settings.PermitRootLogin = lib.mkForce "yes";
+  # Allow wifi/bluetooth on the live image
+  boot.blacklistedKernelModules = lib.mkForce [ "algif_aead" ];
 }

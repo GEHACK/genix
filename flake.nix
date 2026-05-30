@@ -110,8 +110,8 @@
         ./hosts/scoreboard-laptop/configuration.nix
       ];
 
-      teammachine-isoModules = [
-        home-manager.nixosModules.home-manager
+      teammachine-isoModules = commonModules ++ [
+        loom.nixosModules.default
         (mkHomeManager {
           users = {
             gehack = import ./users/gehack;
@@ -179,12 +179,6 @@
         inherit specialArgs;
         modules = teammachine-isoModules;
       };
-
-      teammachine-iso-arm = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        inherit specialArgs;
-        modules = teammachine-isoModules;
-      };
     in
     {
       nixosConfigurations = {
@@ -194,7 +188,6 @@
           geproxy
           scoreboard-laptop
           teammachine-iso
-          teammachine-iso-arm
           ;
       };
 
@@ -209,7 +202,6 @@
 
       packages.aarch64-linux = {
         teammachine-arm = teammachine_arm.config.system.build.toplevel;
-        teammachine-iso = teammachine-iso-arm.config.system.build.isoImage;
       };
     };
 }
