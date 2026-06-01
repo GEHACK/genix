@@ -141,7 +141,7 @@
 
       dhcp-host = [
         "b0:0c:d1:de:f0:0d,10.0.0.10,infinite"
-        "48:ba:4e:24:27:5c,10.0.0.25,infinite"
+        "02:20:d7:6f:20:cc,10.0.0.11,infinite"
       ];
     };
   };
