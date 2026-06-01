@@ -37,16 +37,16 @@ in
 {
   options.teammachine.languages = {
     c.enable = lib.mkEnableOption "C toolchain" // {
-      default = false;
+      default = true;
     };
     cpp.enable = lib.mkEnableOption "C++ toolchain" // {
-      default = false;
+      default = true;
     };
     python.enable = lib.mkEnableOption "Python toolchain" // {
-      default = false;
+      default = true;
     };
     java.enable = lib.mkEnableOption "Java toolchain" // {
-      default = false;
+      default = true;
     };
     kotlin.enable = lib.mkEnableOption "Kotlin toolchain" // {
       default = false;
