@@ -2,6 +2,7 @@ _: {
   imports = [
     ./boot.nix
     ./desktop.nix
+    ./games.nix
     ./greeter.nix
     ./ides.nix
     ./languages.nix
