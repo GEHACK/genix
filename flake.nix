@@ -24,6 +24,7 @@
 
     loom.url = "github:LuukBlankenstijn/loom";
     cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
+    balloons.url = "github:GEHACK/balloons";
   };
 
   outputs =
@@ -34,6 +35,7 @@
       loom,
       sops-nix,
       cuproxy,
+      balloons,
       ...
     }:
     let
@@ -79,6 +81,7 @@
         (mkHomeManager {
           gehack = import ./users/gehack;
         })
+        ({ ... }: { _module.args.balloons-pkg = balloons.packages.x86_64-linux.default; })
         ./hosts/geproxy/configuration.nix
       ];
 

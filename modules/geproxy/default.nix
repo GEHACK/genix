@@ -1,6 +1,7 @@
 { pkgs, ... }:
 {
   imports = [
+    ./balloons.nix
     ./boot.nix
     ./cuproxy.nix
     ./devdocs.nix
