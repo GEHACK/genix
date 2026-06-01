@@ -17,8 +17,15 @@
       entryPoints.web = {
         address = "0.0.0.0:80";
       };
-      entryPoints.fog = {
+      entryPoints.public = {
         address = "0.0.0.0:3000";
+        http.tls = {
+          options = "strictTLS";
+          certResolver = "myresolver";
+        };
+      };
+      entryPoints.admin-net-secure = {
+        address = "10.0.1.1:433";
         http.tls = {
           options = "strictTLS";
           certResolver = "myresolver";
@@ -68,24 +75,6 @@
               certResolver = "myresolver";
             };
           };
-          fog_http = {
-            rule = "Host(`fog.gehack.nl`)";
-            service = "fog";
-            entryPoints = [
-              "web"
-            ];
-          };
-          fog = {
-            rule = "Host(`fog.gehack.nl`)";
-            service = "fog";
-            entryPoints = [
-              "fog"
-              "websecure"
-            ];
-            tls = {
-              certResolver = "myresolver";
-            };
-          };
         };
 
         services = {
@@ -97,9 +86,6 @@
           ];
           loom.loadBalancer.servers = [
             { url = "https://loom.gehack.nl"; }
-          ];
-          fog.loadBalancer.servers = [
-            { url = "http://127.0.0.1:3001"; }
           ];
           docs.loadBalancer.servers = [
             { url = "http://127.0.0.1:3002"; }

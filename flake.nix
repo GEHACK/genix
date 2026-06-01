@@ -89,7 +89,7 @@
         ./hosts/scoreboard-laptop/configuration.nix
       ];
 
-      vm-module =
+      mkVmModule = hostPort:
         { modulesPath, ... }:
         {
           imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ];
@@ -97,7 +97,7 @@
             forwardPorts = [
               {
                 from = "host";
-                host.port = 2222;
+                host.port = hostPort;
                 guest.port = 22;
               }
             ];
@@ -133,7 +133,13 @@
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = teammachineModules ++ [ vm-module ];
+        modules = teammachineModules ++ [ (mkVmModule 2222) ];
+      };
+
+      geproxy-vm = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = geproxyModules ++ [ (mkVmModule 2223) ];
       };
     in
     {
@@ -151,6 +157,7 @@
         geproxy = geproxy.config.system.build.toplevel;
         scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
+        geproxy-vm = geproxy-vm.config.system.build.vm;
       };
 
       packages.aarch64-linux = {

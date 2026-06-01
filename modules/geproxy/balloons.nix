@@ -53,7 +53,7 @@ in
 
     serviceConfig = {
       ExecStart = lib.getExe balloons-pkg;
-      EnvironmentFile = config.sops.secrets.balloons-env.path;
+      EnvironmentFile = config.sops.templates."balloons.env".path;
       User = "balloons";
       Group = "balloons";
       StateDirectory = "balloons";
@@ -71,10 +71,10 @@ in
   services.traefik.dynamicConfigOptions.http.routers.balloons = {
     rule = "Host(`${publicHost}`)";
     service = "balloons";
-    entryPoints = [ "websecure" ];
+    entryPoints = [ "admin-net-secure" ];
     tls.certResolver = "myresolver";
   };
   services.traefik.dynamicConfigOptions.http.services.balloons.loadBalancer.servers = [
-    { url = "http://${listenAddr}"; }
+    { url = "https://${listenAddr}"; }
   ];
 }
