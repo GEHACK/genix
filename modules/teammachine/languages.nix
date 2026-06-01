@@ -1,6 +1,12 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
+  cfg = config.teammachine.languages;
   staticGlibc = pkgs.glibc.static;
 
   mygcc = pkgs.writeShellScriptBin "mygcc" ''
@@ -29,25 +35,55 @@ let
 
 in
 {
-  
-  programs.java = {
-    enable = true;
-    package = pkgs.jdk21;
+  options.teammachine.languages = {
+    c.enable = lib.mkEnableOption "C toolchain" // {
+      default = false;
+    };
+    cpp.enable = lib.mkEnableOption "C++ toolchain" // {
+      default = false;
+    };
+    python.enable = lib.mkEnableOption "Python toolchain" // {
+      default = false;
+    };
+    java.enable = lib.mkEnableOption "Java toolchain" // {
+      default = false;
+    };
+    kotlin.enable = lib.mkEnableOption "Kotlin toolchain" // {
+      default = false;
+    };
   };
 
-  environment.systemPackages = with pkgs; [ 
-    (pypy3.withPackages (pypy-pkgs: [ ]))  
-    (python3.withPackages (python-pkgs: [ ]))
-    gcc
-    gdb
-    cmake
-    kotlin
-
-    mygcc
-    mygpp
-    mypython
-    myjavac
-    mykotlinc
+  config = lib.mkMerge [
+    (lib.mkIf cfg.java.enable {
+      programs.java = {
+        enable = true;
+        package = pkgs.jdk21;
+      };
+    })
+    {
+      environment.systemPackages =
+        lib.optionals cfg.c.enable [
+          pkgs.gcc
+          pkgs.gdb
+          pkgs.cmake
+          mygcc
+        ]
+        ++ lib.optionals cfg.cpp.enable [
+          pkgs.gcc
+          pkgs.gdb
+          pkgs.cmake
+          mygpp
+        ]
+        ++ lib.optionals cfg.python.enable [
+          (pkgs.pypy3.withPackages (pypy-pkgs: [ ]))
+          (pkgs.python3.withPackages (python-pkgs: [ ]))
+          mypython
+        ]
+        ++ lib.optionals cfg.java.enable [ myjavac ]
+        ++ lib.optionals cfg.kotlin.enable [
+          pkgs.kotlin
+          mykotlinc
+        ];
+    }
   ];
-
 }
