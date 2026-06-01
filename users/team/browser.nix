@@ -1,10 +1,11 @@
-{ dj_url, ... }:
+{ config, dj_url, ... }:
 let
   judge_url = dj_url;
 in
 {
   programs.firefox = {
     enable = true;
+    configPath = "${config.xdg.configHome}/mozilla/firefox";
 
     policies = {
       DisableTelemetry = true;
