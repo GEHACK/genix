@@ -11,7 +11,7 @@ in
   options.gehack.teammachine.games.enable =
     lib.mkEnableOption "downtime games on the teammachine"
     // {
-      default = false;
+      default = true;
     };
 
   config = lib.mkIf cfg.enable {
@@ -49,20 +49,7 @@ in
       };
       "org/gnome/desktop/app-folders/folders/Games" = {
         name = "Games";
-        apps = [
-          "sol.desktop"
-          "org.gnome.Mines.desktop"
-          "org.gnome.Mahjongg.desktop"
-          "org.gnome.Sudoku.desktop"
-          "org.gnome.Quadrapassel.desktop"
-          "org.gnome.TwentyFortyEight.desktop"
-          "org.gnome.five-or-more.desktop"
-          "org.gnome.Four-in-a-row.desktop"
-          "sgt-puzzles.desktop"
-          "supertux2.desktop"
-          "supertuxkart.desktop"
-          "neverball.desktop"
-        ];
+        categories = [ "Game" ];
       };
     };
   };
