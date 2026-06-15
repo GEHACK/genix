@@ -49,6 +49,8 @@ in
       STATE_DB = "/var/lib/balloons/balloons.db";
       CONTEST_TZ = "Europe/Amsterdam";
       SCAN_BASE_URL = "https://${publicHost}";
+      # typst downloads @preview/* packages into XDG_CACHE_HOME at runtime.
+      XDG_CACHE_HOME = "/var/cache/balloons";
     };
 
     serviceConfig = {
@@ -57,24 +59,22 @@ in
       User = "balloons";
       Group = "balloons";
       StateDirectory = "balloons";
+      CacheDirectory = "balloons";
       Restart = "on-failure";
       RestartSec = 5;
     };
   };
 
-  # DNS: resolve the public host to geproxy on the contest network.
-  services.dnsmasq.settings.address = [
-    "/${publicHost}/10.0.0.1"
-  ];
-
   # Traefik: route balloons.gehack.nl -> local balloons server.
+  # Public DNS (Cloudflare) already points balloons.gehack.nl at geproxy's WAN
+  # IP, so we ride the public `websecure` entryPoint like judge/loom/cds/docs.
   services.traefik.dynamicConfigOptions.http.routers.balloons = {
     rule = "Host(`${publicHost}`)";
     service = "balloons";
-    entryPoints = [ "admin-net-secure" ];
+    entryPoints = [ "websecure" ];
     tls.certResolver = "myresolver";
   };
   services.traefik.dynamicConfigOptions.http.services.balloons.loadBalancer.servers = [
-    { url = "https://${listenAddr}"; }
+    { url = "http://${listenAddr}"; }
   ];
 }

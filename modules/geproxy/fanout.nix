@@ -88,11 +88,10 @@ let
       export -f deploy_one
       export systemPath action
 
-      # Fan out in parallel; xargs returns non-zero if any child failed.
-      rc=0
+      # Fan out in parallel; failures are recorded in $failFile (checked below).
       printf '%s\n' "''${hosts[@]}" \
         | xargs -r -P ${toString cfg.parallel} -I{} \
-            bash -c 'deploy_one "$@"' _ {} || rc=$?
+            bash -c 'deploy_one "$@"' _ {} || true
 
       if [ -s "$failFile" ]; then
         failed=$(wc -l < "$failFile")
