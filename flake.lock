@@ -6,11 +6,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1780335221,
-        "narHash": "sha256-m0pK32zNKtd6to54yCn4gEXnRpY8o29mgKXeqNNblBs=",
+        "lastModified": 1781546727,
+        "narHash": "sha256-ExBo+3yPRyoXlwDLMci3ooNJAZZmLn4EoN1uGT1+khs=",
         "owner": "GEHACK",
         "repo": "balloons",
-        "rev": "9a90ef9e14e9832f0169d4d19597e2cfef3d23a8",
+        "rev": "c9c6bac358fc2101edc5379356d75be44d088465",
         "type": "github"
       },
       "original": {
