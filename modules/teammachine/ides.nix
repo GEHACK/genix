@@ -36,7 +36,6 @@ in
     (with pkgs; [
       vim
       nano
-      neovim
       emacs
       gedit
       geany

@@ -6,15 +6,16 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1781546727,
-        "narHash": "sha256-ExBo+3yPRyoXlwDLMci3ooNJAZZmLn4EoN1uGT1+khs=",
+        "lastModified": 1782928070,
+        "narHash": "sha256-qXAk7D3V8Xo/lL9zoewTzhr9LV+pwKL/CQiKSCi3GP4=",
         "owner": "GEHACK",
         "repo": "balloons",
-        "rev": "c9c6bac358fc2101edc5379356d75be44d088465",
+        "rev": "35e877bb99883bd9fb22f378fba353c92cb88f2b",
         "type": "github"
       },
       "original": {
         "owner": "GEHACK",
+        "ref": "main",
         "repo": "balloons",
         "type": "github"
       }
@@ -69,6 +70,27 @@
       "original": {
         "owner": "nix-community",
         "repo": "disko",
+        "type": "github"
+      }
+    },
+    "flake-parts": {
+      "inputs": {
+        "nixpkgs-lib": [
+          "nixvim",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1778716662,
+        "narHash": "sha256-m1Yf0wZ8j1OHjTc2UwHwyQRSnNeSgLJOd7q5Y45hzi4=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "f7c1a2d347e4c52d5fb8d10cb4d94b5884e546fb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
         "type": "github"
       }
     },
@@ -247,6 +269,29 @@
         "type": "github"
       }
     },
+    "nixvim": {
+      "inputs": {
+        "flake-parts": "flake-parts",
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "systems": "systems_4"
+      },
+      "locked": {
+        "lastModified": 1782919967,
+        "narHash": "sha256-pRwjfB5HQJ3m8J8bOR43pPHtHI7VUJSqwLA3P06cOY0=",
+        "owner": "nix-community",
+        "repo": "nixvim",
+        "rev": "667c8471f4a0fb24d702d1a61af8609f1a5f1ba6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "nixos-26.05",
+        "repo": "nixvim",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "balloons": "balloons",
@@ -255,6 +300,7 @@
         "home-manager": "home-manager",
         "loom": "loom",
         "nixpkgs": "nixpkgs_5",
+        "nixvim": "nixvim",
         "sops-nix": "sops-nix"
       }
     },
@@ -309,6 +355,21 @@
       }
     },
     "systems_3": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_4": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",

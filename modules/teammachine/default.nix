@@ -10,6 +10,7 @@ _: {
     ./loom.nix
     ./misc-packages.nix
     ./networking.nix
+    ./neovim.nix
     ./printer.nix
     ./pxe-boot.nix
     ./submit.nix

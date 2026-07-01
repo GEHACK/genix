@@ -24,7 +24,12 @@
 
     loom.url = "github:LuukBlankenstijn/loom";
     cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
-    balloons.url = "github:GEHACK/balloons";
+    balloons.url = "github:GEHACK/balloons/main";
+
+    nixvim = {
+      url = "github:nix-community/nixvim/nixos-26.05";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -36,6 +41,7 @@
       sops-nix,
       cuproxy,
       balloons,
+      nixvim,
       ...
     }:
     let
@@ -69,6 +75,7 @@
 
       teammachineModules = commonModules ++ [
         loom.nixosModules.default
+        nixvim.nixosModules.nixvim
         (mkHomeManager {
           gehack = import ./users/gehack;
           team = import ./users/team;
