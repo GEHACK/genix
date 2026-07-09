@@ -1,6 +1,12 @@
-{ pkgs, ... }:
-
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
+  cfg = config.teammachine.pxe-boot;
+
   pxe-reboot = pkgs.writeShellApplication {
     name = "pxe-reboot";
     runtimeInputs = with pkgs; [
@@ -26,5 +32,10 @@ let
   };
 in
 {
-  environment.systemPackages = [ pxe-reboot ];
+  options.teammachine.pxe-boot.enable =
+    lib.mkEnableOption "pxe-reboot helper (reboot into network boot)";
+
+  config = lib.mkIf cfg.enable {
+    environment.systemPackages = [ pxe-reboot ];
+  };
 }

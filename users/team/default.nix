@@ -1,9 +1,13 @@
 _: {
   imports = [
     ./autostart.nix
-    ./browser.nix
+    ./games.nix
     ./gnome.nix
+    ./ides.nix
+    ./languages.nix
+    ./misc-packages.nix
     ./nix-block.nix
+    ./submit.nix
     ./vscode.nix
   ];
 

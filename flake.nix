@@ -64,21 +64,33 @@
         home-manager.nixosModules.home-manager
       ];
 
-      mkHomeManager = users: {
-        home-manager = {
-          useGlobalPkgs = true;
-          useUserPackages = true;
-          extraSpecialArgs = specialArgs;
-          inherit users;
+      mkHomeManager =
+        {
+          users,
+          sharedModules ? [ ],
+        }:
+        {
+          home-manager = {
+            useGlobalPkgs = true;
+            useUserPackages = true;
+            extraSpecialArgs = specialArgs;
+            inherit users sharedModules;
+          };
         };
-      };
 
       teammachineModules = commonModules ++ [
         loom.nixosModules.default
-        nixvim.nixosModules.nixvim
         (mkHomeManager {
-          gehack = import ./users/gehack;
-          team = import ./users/team;
+          users = {
+            gehack = import ./users/gehack;
+            team = import ./users/team;
+          };
+          # Shared "default" profile applied to every user on the teammachine:
+          # neovim + firefox live here. nixvim's HM module is required for it.
+          sharedModules = [
+            nixvim.homeModules.nixvim
+            ./users/common
+          ];
         })
         ./hosts/teammachine/configuration.nix
       ];
@@ -86,7 +98,9 @@
       geproxyModules = commonModules ++ [
         cuproxy.nixosModules.default
         (mkHomeManager {
-          gehack = import ./users/gehack;
+          users = {
+            gehack = import ./users/gehack;
+          };
         })
         ({ ... }: { _module.args.balloons-pkg = balloons.packages.x86_64-linux.default; })
         ./hosts/geproxy/configuration.nix
