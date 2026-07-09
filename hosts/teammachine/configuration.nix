@@ -5,6 +5,28 @@
     ../../modules/teammachine
   ];
 
+  teammachine = {
+    users.team = {
+      languages = {
+        c.enable = true;
+        cpp.enable = true;
+        python.enable = true;
+        java.enable = true;
+        kotlin.enable = false;
+      };
+      neovim.enable = true;
+      ides.enable = true;
+      ides.jetbrains.enable = true; 
+      submit.enable = true; 
+      games.enable = true;
+      misc-packages.enable = true; 
+    };
+
+    users.gehack = {
+      neovim.enable = true;
+    };
+  };
+
   hardware = {
     graphics = {
       enable = true;

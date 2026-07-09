@@ -1,8 +1,19 @@
-_ : {
-  services.usbguard = {
-    enable = true;
-    presentDevicePolicy = "allow"; 
-    ## Additional configuration is required here 
-    ## For now presentDevicePolicy is done but at the contest we need to be more strict
+{
+  config,
+  lib,
+  ...
+}:
+let
+  cfg = config.teammachine.usbguard;
+in
+{
+  options.teammachine.usbguard.enable =
+    lib.mkEnableOption "USBGuard device policy enforcement";
+
+  config = lib.mkIf cfg.enable {
+    services.usbguard = {
+      enable = true;
+      presentDevicePolicy = "allow";
+    };
   };
 }

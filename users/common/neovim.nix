@@ -6,29 +6,40 @@
 }:
 
 let
-  cfg = config.teammachine.languages;
+  langs = config.teammachine.languages;
 
   anyLangEnabled =
-    cfg.c.enable
-    || cfg.cpp.enable
-    || cfg.python.enable
-    || cfg.java.enable
-    || cfg.kotlin.enable;
+    langs.c.enable
+    || langs.cpp.enable
+    || langs.python.enable
+    || langs.java.enable
+    || langs.kotlin.enable;
 
-  grammars = with pkgs.vimPlugins.nvim-treesitter.builtGrammars;
-    lib.optional (cfg.c.enable) c
-    ++ lib.optional (cfg.cpp.enable) cpp
-    ++ lib.optional (cfg.python.enable) python
-    ++ lib.optional (cfg.java.enable) java
-    ++ lib.optional (cfg.kotlin.enable) kotlin;
+  grammars =
+    with pkgs.vimPlugins.nvim-treesitter.builtGrammars;
+    lib.optional (langs.c.enable) c
+    ++ lib.optional (langs.cpp.enable) cpp
+    ++ lib.optional (langs.python.enable) python
+    ++ lib.optional (langs.java.enable) java
+    ++ lib.optional (langs.kotlin.enable) kotlin;
 in
 {
-  programs.nixvim = {
+  options.teammachine.neovim.enable =
+    lib.mkEnableOption "Neovim (nixvim) with contest LSP/treesitter";
+
+  config.programs.nixvim = lib.mkIf config.teammachine.neovim.enable {
     enable = true;
     nixpkgs.source = pkgs.path;
 
     viAlias = false;
     vimAlias = false;
+
+    extraPackages = [ pkgs.tree-sitter ];
+
+    globals = {
+      mapleader = " ";
+      maplocalleader = " ";
+    };
 
     opts = {
       number = true;
@@ -45,10 +56,10 @@ in
       lsp = lib.mkIf anyLangEnabled {
         enable = true;
         servers = {
-          clangd.enable = cfg.c.enable || cfg.cpp.enable;
-          pyright.enable = cfg.python.enable;
-          jdtls.enable = cfg.java.enable;
-          kotlin_language_server = lib.mkIf cfg.kotlin.enable {
+          clangd.enable = langs.c.enable || langs.cpp.enable;
+          pyright.enable = langs.python.enable;
+          jdtls.enable = langs.java.enable;
+          kotlin_language_server = lib.mkIf langs.kotlin.enable {
             enable = true;
             package = pkgs.kotlin-language-server;
           };
@@ -67,7 +78,15 @@ in
 
     keymaps =
       [
-        { mode = "n"; key = "<leader>e"; action = "<cmd>Neotree toggle<cr>"; options = { silent = true; desc = "Toggle file tree"; }; }
+        {
+          mode = "n";
+          key = "<leader>e";
+          action = "<cmd>Neotree toggle<cr>";
+          options = {
+            silent = true;
+            desc = "Toggle file tree";
+          };
+        }
       ]
       ++ lib.optionals anyLangEnabled [
         { mode = "n"; key = "gd"; action.__raw = "vim.lsp.buf.definition"; options.silent = true; }

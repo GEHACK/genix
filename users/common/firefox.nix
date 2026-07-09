@@ -1,8 +1,10 @@
-{ config, dj_url, ... }:
-let
-  judge_url = dj_url;
-in
 {
+  config,
+  dj_url,
+  ...
+}:
+{
+  # Shared, contest-hardened Firefox for every user on the teammachine.
   programs.firefox = {
     enable = true;
     configPath = "${config.xdg.configHome}/mozilla/firefox";
@@ -10,20 +12,21 @@ in
     policies = {
       DisableTelemetry = true;
       DisableFirefoxStudies = true;
+      NoDefaultBookmarks = true;
+      DisplayBookmarksToolbar = "always";
+
       OverrideFirstRunPage = "";
       OverridePostUpdatePage = "";
       DisableProfileImport = true;
+
       ExtensionSettings = {
         "*" = {
           installation_mode = "blocked";
-          # Optional: Custom message shown when an install is blocked
           blocked_install_message = "Extension installation has been disabled.";
         };
       };
 
-      InstallAddonsPermission = {
-        Default = false;
-      };
+      InstallAddonsPermission.Default = false;
 
       UserMessaging = {
         ExtensionRecommendations = false;
@@ -35,10 +38,23 @@ in
         Locked = true;
       };
 
+      Bookmarks = [
+        {
+          Title = "DOMjudge";
+          URL = dj_url;
+          Placement = "toolbar";
+        }
+        {
+          Title = "DevDocs";
+          URL = "https://docs.gehack.nl";
+          Placement = "toolbar";
+        }
+      ];
+
       Homepage = {
-        URL = judge_url;
-        Locked = true;
+        URL = dj_url;
         StartPage = "homepage";
+        Locked = true;
       };
 
       Preferences = {
@@ -51,22 +67,6 @@ in
           Status = "locked";
         };
       };
-
-      NoDefaultBookmarks = true;
-      DisplayBookmarksToolbar = "always";
-
-      Bookmarks = [
-        {
-          Title = "DOMjudge";
-          URL = judge_url;
-          Placement = "toolbar";
-        }
-        {
-          Title = "DevDocs";
-          URL = "https://docs.gehack.nl";
-          Placement = "toolbar";
-        }
-      ];
     };
 
     profiles.default = {
