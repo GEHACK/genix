@@ -25,7 +25,7 @@
         cpp.enable = true;
         python.enable = true;
         java.enable = true;
-        kotlin.enable = false;
+        kotlin.enable = true;
       };
       neovim.enable = true;
       ides.enable = true;

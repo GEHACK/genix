@@ -58,6 +58,12 @@
           ;
       };
 
+      isoSpecialArgs = specialArgs // {
+        # Live demo image points at the public DOMjudge demo instance instead of
+        # the contest judge (judge.gehack.nl is only reachable on the contest network).
+        dj_url = "https://www.domjudge.org/demoweb/";
+      };
+
       commonModules = [
         disko.nixosModules.disko
         sops-nix.nixosModules.sops
@@ -68,13 +74,13 @@
         {
           users,
           sharedModules ? [ ],
+          extraSpecialArgs ? specialArgs,
         }:
         {
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
-            extraSpecialArgs = specialArgs;
-            inherit users sharedModules;
+            inherit extraSpecialArgs users sharedModules;
           };
         };
 
@@ -122,6 +128,7 @@
             nixvim.homeModules.nixvim
             ./users/common
           ];
+          extraSpecialArgs = isoSpecialArgs;
         })
         ./hosts/teammachine-iso/configuration.nix
       ];
@@ -181,7 +188,7 @@
 
       teammachine-iso = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        inherit specialArgs;
+        specialArgs = isoSpecialArgs;
         modules = teammachine-isoModules;
       };
     in

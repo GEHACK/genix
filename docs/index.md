@@ -26,8 +26,7 @@ to set up.
 | C++ | GCC (g++) | `gnu++20` standard; `gdb` and `cmake` included |
 | Python | CPython 3 & PyPy 3 | Both interpreters installed; PyPy for speed |
 | Java | JDK 21 | `JAVA_HOME` preset |
-
-*Kotlin support exists in the image but is disabled for this contest.*
+| Kotlin | Kotlin compiler | JVM-based; runs on JDK 21 |
 
 ## Compile helpers
 
@@ -40,6 +39,7 @@ remember them. Each takes the source basename.
 | `mygpp sol` | g++ `-std=gnu++20 -Wall -O2 -static` → `sol.cpp` to `sol` |
 | `mypython sol.py` | PyPy 3 interpreter |
 | `myjavac Sol.java` | javac (JDK 21, UTF-8) |
+| `mykotlinc Sol.kt` | kotlinc (JDK 21) → JVM classes in the current dir |
 
 ```console
 $ mygpp solution      # compiles solution.cpp → ./solution
@@ -81,5 +81,5 @@ You can also submit from the DOMjudge web interface in Firefox.
 
 | | |
 |---|---|
-| Offline docs | Available in-browser at `http://docs` |
+| Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror served in-browser at `http://docs` — no internet needed |
 | Games | GNOME games (Sudoku, Mines, Mahjongg…), SuperTux, plus terminal classics |

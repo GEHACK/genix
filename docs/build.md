@@ -8,15 +8,9 @@ the same **NixOS 26.05** system as a real team machine — same GNOME desktop, c
 editors and tooling — packaged as a live USB so you can boot it on almost any PC without
 installing anything.
 
+<p><a class="download-btn" href="https://gehack.gewis.nl/teammachine.iso">Download the ISO</a></p>
+
 > Looking for what's *on* the machine? See the **[Contest Environment](index.md)**.
-
-## How it's built
-
-The whole system — desktop, compilers, editors, firewall, users — is declared as code in a
-[NixOS](https://nixos.org/) flake and evaluated into one reproducible image. The same
-configuration always produces the same machine, with no imperative package installs. You
-don't build it yourself: the ready-made `gehack-teammachine.iso` is produced from the flake
-and handed to you.
 
 ## Writing the ISO to a USB stick
 
@@ -65,8 +59,25 @@ Two accounts exist, both with the password **`password`**:
 | `team` | contest user (auto-logged in) | `password` |
 | `gehack` | administrator (`sudo`/`wheel`) | `password` |
 
-`sudo` does not prompt for a password on the live image, so you can run admin commands
-without typing it.
+`sudo` runs without a password prompt — but only as the `gehack` user, which is the only
+administrator. The auto-logged-in `team` user is a plain contest account: it **cannot**
+`sudo`, and `su` to another user is blocked as well. Log in as `gehack` for anything that
+needs root.
+
+## The judge website
+
+On the live image Firefox opens the public **DOMjudge demo** at
+[www.domjudge.org/demoweb](https://www.domjudge.org/demoweb/) as its homepage (real team
+machines point at the contest judge instead, which is only reachable on the contest
+network). Log in to that demo instance with:
+
+| Field | Value |
+|----------|--------|
+| Username | `team` |
+| Password | `team` |
+
+The `submit` command is pointed at the same demo instance, so you can try the full
+submit-and-judge flow end to end.
 
 ## Good to know
 
@@ -75,3 +86,6 @@ without typing it.
 - **Nothing persists.** The live session runs from RAM/USB; anything you create is gone
   after a reboot.
 - **Hostname** is `gehack-iso`.
+- **This is NixOS, not Debian/Ubuntu.** Software is managed declaratively and everything you
+  need is already installed — package-manager commands like `apt`, `apt-get` and `dpkg` are
+  not present and will not work.
