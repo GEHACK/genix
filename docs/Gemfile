@@ -1,0 +1,4 @@
+source "https://rubygems.org"
+
+# Mirrors the exact Jekyll + theme + plugin versions GitHub Pages runs.
+gem "github-pages", group: :jekyll_plugins
