@@ -7,7 +7,7 @@ A standard **GNOME desktop on NixOS 26.05**. Firefox is the browser and sits in 
 dock by default. Everything below is installed and ready the moment you log in — nothing
 to set up.
 
-> Curious how these machines are built? See the **[Image Build Instructions](build.md)**.
+> Want to run this environment yourself? See **[The GEHACK Live Image](build.md)**.
 
 ## Desktop
 
