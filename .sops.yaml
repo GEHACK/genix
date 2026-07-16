@@ -2,7 +2,6 @@ keys:
   - &luuk age14aaw06ykpmrzgp56gyfhu2c0eh4w0k4aavq594tpym7j978hl5cs7qvccc
   - &bartjan age1n0k4lj6n3hkxr6kssrnjf3u6tckk7vfmgqgex3y34w9d6gz4pdwqw4aqg9
   - &host-key age10rxt6w552lyznl336qlk5xhq7p9dys5tsthgfqypsa7x5egn7g7sjmx936
-  - &iso-key age1k7yceg9j2ywcs0ueuh7cfxg638rllhws6tkytlszzmzpmh9zvf6qlvksqz
 
 creation_rules:
   - path_regex: secrets.yaml
@@ -11,10 +10,3 @@ creation_rules:
           - *luuk
           - *bartjan
           - *host-key
-
-  - path_regex: secrets-iso.yaml
-    key_groups:
-      - age:
-          - *luuk
-          - *bartjan
-          - *iso-key
