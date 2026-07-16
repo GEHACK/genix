@@ -117,6 +117,12 @@
             gehack = import ./users/gehack;
             team = import ./users/team;
           };
+          # Mirror the teammachine profile: neovim + firefox live in ./users/common
+          # and the teammachine.* home-manager options are defined there.
+          sharedModules = [
+            nixvim.homeModules.nixvim
+            ./users/common
+          ];
         })
         ./hosts/teammachine-iso/configuration.nix
       ];

@@ -13,19 +13,40 @@
     # Full teammachine module set minus boot.nix (ISO provides its own bootloader)
     ../../modules/teammachine/desktop.nix
     ../../modules/teammachine/greeter.nix
-    ../../modules/teammachine/ides.nix
-    ../../modules/teammachine/languages.nix
     ../../modules/teammachine/locale.nix
     ../../modules/teammachine/loom.nix
-    ../../modules/teammachine/misc-packages.nix
     ../../modules/teammachine/networking.nix
     ../../modules/teammachine/printer.nix
     ../../modules/teammachine/pxe-boot.nix
-    ../../modules/teammachine/submit.nix
     ../../modules/teammachine/usbguard.nix
+    ../../modules/teammachine/user-tools.nix
     ../../modules/teammachine/users.nix
     ../../modules/teammachine/webcamstream.nix
   ];
+
+  # Mirror the teammachine host: per-user contest tooling is toggled via
+  # teammachine.users.<name> and forwarded to home-manager by user-tools.nix.
+  teammachine = {
+    users.team = {
+      languages = {
+        c.enable = true;
+        cpp.enable = true;
+        python.enable = true;
+        java.enable = true;
+        kotlin.enable = false;
+      };
+      neovim.enable = true;
+      ides.enable = true;
+      ides.jetbrains.enable = true;
+      submit.enable = true;
+      games.enable = true;
+      misc-packages.enable = true;
+    };
+
+    users.gehack = {
+      neovim.enable = true;
+    };
+  };
 
   # Decrypt secrets-iso.yaml using the iso-key baked into the image
   sops = {
