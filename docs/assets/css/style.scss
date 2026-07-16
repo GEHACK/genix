@@ -1,0 +1,19 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+// Background photo in the site header, with a translucent brand-gradient
+// overlay so the white heading and tagline stay legible on any image.
+.page-header {
+  background-image:
+    linear-gradient(
+      120deg,
+      rgba(21, 87, 153, 0.85),
+      rgba(21, 153, 87, 0.7)
+    ),
+    url("../img/background.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
