@@ -111,7 +111,6 @@
       ];
 
       teammachine-isoModules = commonModules ++ [
-        loom.nixosModules.default
         (mkHomeManager {
           users = {
             gehack = import ./users/gehack;
