@@ -32,7 +32,12 @@
             chain input {
                 type filter hook input priority filter; policy accept;
                 iifname "lo" accept
+                ct state established,related accept
                 ip saddr ${judge_ip} accept
+                # Minecraft: accept sessions other contest machines open to a
+                # server hosted here (vanilla /publish 25565 or a dedicated server).
+                tcp dport 25565 accept
+                udp dport 25565 accept
                 ip saddr ${contest_subnet} drop
             }
 
@@ -44,6 +49,12 @@
                 type filter hook output priority filter; policy accept;
                 oifname "lo" accept
                 ip daddr ${judge_ip} accept
+                # Replies on sessions the input chain already accepted, so a
+                # Minecraft server hosted here can answer contest-subnet clients.
+                ct state established,related accept
+                # Minecraft: reach servers hosted on other contest machines.
+                tcp dport 25565 accept
+                udp dport 25565 accept
                 ip daddr ${contest_subnet} drop
             }
         }

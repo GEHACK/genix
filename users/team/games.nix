@@ -9,6 +9,7 @@
 
   config = lib.mkIf config.teammachine.games.enable {
     home.packages = with pkgs; [
+      prismlauncher
       ninvaders
       nsnake
       moon-buggy
