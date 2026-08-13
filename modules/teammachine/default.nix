@@ -5,6 +5,7 @@ _: {
     ./greeter.nix
     ./locale.nix
     ./loom.nix
+    ./minecraft-player.nix
     ./networking.nix
     ./printer.nix
     ./pxe-boot.nix

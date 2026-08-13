@@ -10,6 +10,7 @@
     ../../modules
     ../../modules/teammachine/desktop.nix
     ../../modules/teammachine/locale.nix
+    ../../modules/teammachine/minecraft-player.nix
     ../../modules/teammachine/networking.nix
     ../../modules/teammachine/printer.nix
     ../../modules/teammachine/pxe-boot.nix
