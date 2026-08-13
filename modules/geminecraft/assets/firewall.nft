@@ -6,6 +6,7 @@ define IF_LAN = "br-lan"
 define IF_DOCKER = "docker0"
 
 define NET_LAN = 10.0.0.0/24
+define NET_DOCKER = 172.17.0.0/16
 
 table inet filter {
   chain input {
@@ -66,5 +67,8 @@ table ip nat {
     type nat hook postrouting priority 100; policy accept;
 
     iifname $IF_LAN oifname "wl*" ip saddr $NET_LAN masquerade
+
+    # docker's own nat rules are lost on every ruleset flush
+    oifname "wl*" ip saddr $NET_DOCKER masquerade
   }
 }
