@@ -84,6 +84,10 @@
       ];
       except-interface = "wlp6s0";
 
+      # TFTP chainloads iPXE; iPXE then fetches the imaged boot script over HTTP.
+      enable-tftp = true;
+      tftp-root = "${pkgs.ipxe}";
+
       # DHCP
       dhcp-authoritative = true;
 
@@ -119,13 +123,14 @@
       # DNS addresses
       address = [
         "/judge.gehack.nl/10.0.0.1"
-        "/fog.gehack.nl/10.0.0.1"
+        "/imaged.gehack.nl/10.0.0.1"
         "/loom.gehack.nl/10.0.0.1"
         "/cds.gehack.nl/10.0.0.1"
         "/docs.gehack.nl/10.0.0.1"
       ];
 
-      # PXE/FOG boot configuration
+      # PXE/imaged boot configuration
+      dhcp-userclass = "set:ipxe,iPXE";
       dhcp-match = [
         "set:bios,60,PXEClient:Arch:00000"
         "set:efi32,60,PXEClient:Arch:00006"
@@ -133,10 +138,11 @@
         "set:efi64,60,PXEClient:Arch:00009"
       ];
       dhcp-boot = [
-        "tag:bios,undionly.kkpxe"
-        "tag:efi32,i386-efi/snponly.efi"
-        "tag:efibc,snponly.efi"
-        "tag:efi64,snponly.efi"
+        "tag:!ipxe,tag:bios,undionly.kpxe,,10.0.0.1"
+        "tag:!ipxe,tag:efi32,ipxe.efi,,10.0.0.1"
+        "tag:!ipxe,tag:efibc,ipxe.efi,,10.0.0.1"
+        "tag:!ipxe,tag:efi64,ipxe.efi,,10.0.0.1"
+        "tag:ipxe,http://10.0.0.1:8080/boot/boot.ipxe"
       ];
 
       dhcp-host = [

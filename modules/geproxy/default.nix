@@ -14,7 +14,7 @@ in
     ./cuproxy.nix
     ./devdocs.nix
     ./fanout.nix
-    ./fog.nix
+    ./imaged.nix
     ./networking.nix
     ./ntp.nix
     ./traefik.nix

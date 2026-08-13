@@ -39,7 +39,7 @@ The primary machine used by contestants during a competition. Available for both
 - [Devdocs](github.com/GEHACK/devdocs) served locally via Docker at `http://docs` (port 80)
 - Printing via CUPS, pre-configured to IPP printer on geproxy (`10.0.0.1:631`)
 - Webcam HTTP stream on port 8080 via VLC (`webcamstream.nix`) - by default disabled
-- `pxe-reboot` command — sets EFI next-boot to the PXE/IPv4 entry and reboots (for FOG reimaging)
+- `pxe-reboot` command — sets EFI next-boot to the PXE/IPv4 entry and reboots for imaged deployment
 - USBGuard enabled (currently allows all present devices)
 - Firewall drops all traffic to `contest_subnet` except to/from `judge_ip`
 - Sleep, hibernate, and suspend are all disabled
@@ -59,10 +59,10 @@ Acts as the contest network router. Runs on hardware with multiple NICs bridged 
 
 - `wlp6s0` and `eno1` use DHCP for upstream connectivity
 - dnsmasq provides DHCP and DNS on both bridges
-- Contest DNS resolves `judge.gehack.nl`, `loom.gehack.nl`, `cds.gehack.nl`, `fog.gehack.nl` to `10.0.0.1`
-- PXE/FOG boot configured for BIOS and EFI clients via dnsmasq `dhcp-boot`
+- Contest DNS resolves `judge.gehack.nl`, `loom.gehack.nl`, `cds.gehack.nl`, `imaged.gehack.nl`, and `docs.gehack.nl` to `10.0.0.1`
+- PXE/imaged boot configured for BIOS and EFI clients via dnsmasq `dhcp-boot`
 
-**FOG imaging server** runs as a Docker container (`fog-server` + `fog-db` MariaDB) for disk imaging and deployment of teammachines over the contest network. Accessible at `fog.gehack.nl` via Traefik.
+**imaged** runs as native NixOS services (`imaged-server` + `imaged-tftp`) for disk imaging and deployment of teammachines over the contest network. The web UI is accessible at `imaged.gehack.nl` via Traefik; PXE clients use `http://10.0.0.1:8080/boot/boot.ipxe` directly.
 
 **cuproxy** — CUPS print proxy that forwards print jobs from the contest network to the physical printer at `10.0.0.10:631`.
 
@@ -76,7 +76,7 @@ disable-internet  # flushes chain — contest network is isolated
 - `judge.gehack.nl` → DOMjudge
 - `loom.gehack.nl` → Loom contest platform
 - `cds.gehack.nl` → Contest Data Server
-- `fog.gehack.nl` → FOG imaging server (port 3000 / 443)
+- `imaged.gehack.nl` → imaged UI/API (port 8080)
 
 Disk layout uses RAID1 mdadm with dual GRUB mirrors.
 

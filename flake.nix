@@ -2,9 +2,13 @@
   description = "GEHACK NixOS configurations";
 
   nixConfig = {
-    extra-substituters = [ "https://luukblankenstijn.cachix.org" ];
+    extra-substituters = [
+      "https://luukblankenstijn.cachix.org"
+      "https://gehack.cachix.org"
+    ];
     extra-trusted-public-keys = [
       "luukblankenstijn.cachix.org-1:gRz/ypm8zdDizcdAuWD6UKLVBDeObfHsNDWoAka2WSw="
+      "gehack.cachix.org-1:sjN0jwnXGRvA8lzoxc5bVkoSEW6VfjZuJL96vikglqc="
     ];
   };
 
@@ -25,6 +29,7 @@
     loom.url = "github:LuukBlankenstijn/loom";
     cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
     balloons.url = "github:GEHACK/balloons/main";
+    imaged.url = "github:LuukBlankenstijn/imaged";
 
     nixvim = {
       url = "github:nix-community/nixvim/nixos-26.05";
@@ -41,6 +46,7 @@
       sops-nix,
       cuproxy,
       balloons,
+      imaged,
       nixvim,
       ...
     }:
@@ -85,6 +91,7 @@
 
       geproxyModules = commonModules ++ [
         cuproxy.nixosModules.default
+        imaged.nixosModules.default
         (mkHomeManager {
           gehack = import ./users/gehack;
         })

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor")
-OUTPUT_FILE="authorized_keys"
+# Resolve to this script's directory so relative paths work from any CWD.
+cd "$(dirname "$(readlink -f "$0")")"
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     echo "Usage: $0 <FLAKE_TARGET> [root@IP_OR_HOSTNAME]"
