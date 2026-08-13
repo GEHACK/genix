@@ -99,11 +99,20 @@
         ./hosts/geproxy/configuration.nix
       ];
 
+      geminecraftModules = commonModules ++ [
+        imaged.nixosModules.default
+        (mkHomeManager {
+          gehack = import ./users/gehack;
+        })
+        ./hosts/geminecraft/configuration.nix
+      ];
+
       scoreboard-laptopModules = commonModules ++ [
         ./hosts/scoreboard-laptop/configuration.nix
       ];
 
-      mkVmModule = hostPort:
+      mkVmModule =
+        hostPort:
         { modulesPath, ... }:
         {
           imports = [ (modulesPath + "/virtualisation/qemu-vm.nix") ];
@@ -138,6 +147,12 @@
         modules = geproxyModules;
       };
 
+      geminecraft = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = geminecraftModules;
+      };
+
       scoreboard-laptop = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -163,12 +178,14 @@
           teammachine_arm
           geproxy
           scoreboard-laptop
+          geminecraft
           ;
       };
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
+        geminecraft = geminecraft.config.system.build.toplevel;
         scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;

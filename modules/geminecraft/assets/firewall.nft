@@ -1,0 +1,70 @@
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+define IF_LAN = "br-lan"
+define IF_DOCKER = "docker0"
+
+define NET_LAN = 10.0.0.0/24
+
+table inet filter {
+  chain input {
+    type filter hook input priority 0; policy drop;
+
+    # --- baseline
+    iif lo accept
+    ct state established,related accept
+    ct state invalid drop
+
+    # --- icmp
+    ip protocol icmp accept
+    ip6 nexthdr icmpv6 accept
+
+    # --- DHCP and DNS for LAN clients
+    iifname $IF_LAN udp dport { 67, 68 } accept
+    iifname $IF_LAN udp dport 53 accept
+    iifname $IF_LAN tcp dport 53 accept
+
+    # --- ssh from LAN and the wifi uplink
+    iifname $IF_LAN tcp dport 22 accept
+    iifname "wl*" tcp dport 22 accept
+
+    # --- imaged web UI (Traefik `public`)
+    iifname $IF_LAN tcp dport 3000 accept
+    iifname "wl*" tcp dport 3000 accept
+
+    # --- imaged PXE boot and direct client API
+    iifname $IF_LAN udp dport 69 accept
+    iifname $IF_LAN tcp dport 8080 accept
+
+    # --- imaged multicast (udpcast)
+    iifname $IF_LAN udp dport 49152-65535 accept
+  }
+
+  chain lan_inet {
+  # empty by default => LAN has no internet
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+
+    # --- baseline
+    ct state established,related accept
+    ct state invalid drop
+
+    # --- published container ports and container egress
+    iifname $IF_DOCKER accept
+    oifname $IF_DOCKER accept
+
+    # --- if the LAN wants internet jump to lan_inet chain
+    iifname $IF_LAN oifname "wl*" jump lan_inet
+  }
+}
+
+table ip nat {
+  chain postrouting {
+    type nat hook postrouting priority 100; policy accept;
+
+    iifname $IF_LAN oifname "wl*" ip saddr $NET_LAN masquerade
+  }
+}
