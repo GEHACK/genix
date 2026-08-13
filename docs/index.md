@@ -83,3 +83,4 @@ You can also submit from the DOMjudge web interface in Firefox.
 |---|---|
 | Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror served in-browser at `http://docs` — no internet needed |
 | Games | GNOME games (Sudoku, Mines, Mahjongg…), SuperTux, plus terminal classics |
+| Minecraft | PrismLauncher on the separate `minecraft` account (same password as `team`); needs a Microsoft account that owns Minecraft |

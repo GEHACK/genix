@@ -52,11 +52,12 @@ UEFI systems.
 There is **no login screen**: GDM auto-logs the `team` user straight into GNOME. You land on
 the desktop ready to work.
 
-Two accounts exist, both with the password **`password`**:
+Three accounts exist, all with the password **`password`**:
 
 | User | Role | Password |
 |--------|-------------------------------|------------|
 | `team` | contest user (auto-logged in) | `password` |
+| `minecraft` | downtime gaming session: PrismLauncher on a stock GNOME desktop | `password` |
 | `gehack` | administrator (`sudo`/`wheel`) | `password` |
 
 `sudo` runs without a password prompt — but only as the `gehack` user, which is the only

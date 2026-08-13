@@ -58,6 +58,12 @@
     openssh.authorizedKeys.keyFiles = [ ../../authorized_keys ];
   };
 
+  # Downtime gaming account, same password as team.
+  users.users.minecraft = {
+    isNormalUser = true;
+    hashedPassword = "$y$j9T$GKsBsZ1X7y96QWFjU8j1x0$VaXm4KxSISIUZk49R7QQXc6opKxDKHOiXPA27zl6Zw8";
+  };
+
   users.users.gehack = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];

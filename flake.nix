@@ -87,16 +87,27 @@
       teammachineModules = commonModules ++ [
         loom.nixosModules.default
         (mkHomeManager {
+          # ./users/common (neovim + firefox + the teammachine.* option
+          # definitions) is imported per user instead of through sharedModules:
+          # the minecraft account is a bare GNOME session with Minecraft and
+          # nothing else. nixvim's HM module stays shared, it is inert unless
+          # ./users/common turns neovim on.
           users = {
-            gehack = import ./users/gehack;
-            team = import ./users/team;
+            gehack = {
+              imports = [
+                ./users/common
+                ./users/gehack
+              ];
+            };
+            team = {
+              imports = [
+                ./users/common
+                ./users/team
+              ];
+            };
+            minecraft = import ./users/minecraft;
           };
-          # Shared "default" profile applied to every user on the teammachine:
-          # neovim + firefox live here. nixvim's HM module is required for it.
-          sharedModules = [
-            nixvim.homeModules.nixvim
-            ./users/common
-          ];
+          sharedModules = [ nixvim.homeModules.nixvim ];
         })
         ./hosts/teammachine/configuration.nix
       ];
@@ -118,16 +129,23 @@
 
       teammachine-isoModules = commonModules ++ [
         (mkHomeManager {
+          # Mirror the teammachine profile, see the comment there.
           users = {
-            gehack = import ./users/gehack;
-            team = import ./users/team;
+            gehack = {
+              imports = [
+                ./users/common
+                ./users/gehack
+              ];
+            };
+            team = {
+              imports = [
+                ./users/common
+                ./users/team
+              ];
+            };
+            minecraft = import ./users/minecraft;
           };
-          # Mirror the teammachine profile: neovim + firefox live in ./users/common
-          # and the teammachine.* home-manager options are defined there.
-          sharedModules = [
-            nixvim.homeModules.nixvim
-            ./users/common
-          ];
+          sharedModules = [ nixvim.homeModules.nixvim ];
           extraSpecialArgs = isoSpecialArgs;
         })
         ./hosts/teammachine-iso/configuration.nix
