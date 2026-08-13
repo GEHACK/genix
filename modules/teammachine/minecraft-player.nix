@@ -101,15 +101,26 @@ let
     NOUNS = ${pyList nouns}
 
 
-    def machine_seed():
+    def candidate_macs():
+        # Onboard PCI NICs first: a USB dock or a replaced wifi card must not
+        # rename the machine. Virtual interfaces have no "device" link at all.
         net = pathlib.Path("/sys/class/net")
-        for iface in sorted(p.name for p in net.iterdir()):
-            device = net / iface
-            if iface == "lo" or not (device / "device").exists():
-                continue
-            mac = (device / "address").read_text().strip()
-            if mac and mac != "00:00:00:00:00:00":
-                return mac
+        for usb in (False, True):
+            for iface in sorted(p.name for p in net.iterdir()):
+                device = net / iface / "device"
+                if iface == "lo" or not device.exists():
+                    continue
+                if ("/usb" in str(device.resolve())) != usb:
+                    continue
+                mac = (net / iface / "address").read_text().strip()
+                if mac and mac != "00:00:00:00:00:00":
+                    yield mac
+
+
+    def machine_seed():
+        for mac in candidate_macs():
+            return mac
+        # No NIC at all: fall back to the (image-wide, so not unique) machine id.
         return pathlib.Path("/etc/machine-id").read_text().strip()
 
 
