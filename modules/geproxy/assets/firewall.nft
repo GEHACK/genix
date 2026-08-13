@@ -42,14 +42,13 @@ table inet filter {
     # --- allow router mgmt / web on admin + wifi
     iifname { $IF_ADMIN, $IF_WIFI } tcp dport 22 accept
     iifname { $IF_ADMIN, $IF_WIFI, $IF_CONTEST } tcp dport { 80, 443 } accept
-    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 3000 accept
+    iifname { $IF_ADMIN, $IF_WIFI } tcp dport 3000 accept   # imaged web UI (Traefik `public`) — admin + public uplink
 
-    # --- FOG services (TFTP, NFS, FTP) on admin + contest
-    iifname { $IF_CONTEST } udp dport 69 accept
-    iifname { $IF_CONTEST } tcp dport { 21, 111, 2049, 32765, 32767 } accept
-    iifname { $IF_CONTEST } tcp dport 21100-21110 accept
+    # --- imaged PXE boot and direct client API on contest
+    iifname $IF_CONTEST udp dport 69 accept
+    iifname $IF_CONTEST tcp dport 8080 accept
 
-    # --- FOG multicast (udpcast) on contest
+    # --- imaged multicast (udpcast) on contest
     iifname $IF_CONTEST udp dport 49152-65535 accept
 
     # (optional) log drops

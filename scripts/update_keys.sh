@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "zeo")
+USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "mexdeloo")
 OUTPUT_FILE="../authorized_keys"
 
 TEMP_FILE=$(mktemp)
@@ -9,7 +9,7 @@ trap 'rm -f "$TEMP_FILE"' EXIT
 
 for USER in "${USERS[@]}"; do
     echo "Fetching keys for $USER..."
-    KEYS=$(curl -sf "https://github.com/${USER}.keys")
+    KEYS=$(curl -sf "https://github.com/${USER}.keys" || true)
 
     if [[ -z "$KEYS" || ! "$KEYS" == *"ssh-"* ]]; then
         echo "ERROR: No public keys found for user: $USER" >&2
