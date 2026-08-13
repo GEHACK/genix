@@ -31,18 +31,33 @@
 #   systemd-run wrapper), but log $SSH_ORIGINAL_COMMAND from one real rebuild and
 #   confirm the four cases below actually fire for YOUR version before relying on it.
 
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.buildFanout;
 
   # ssh options used both for plain `ssh` and (via NIX_SSHOPTS) for `nix copy`.
-  sshOpts = cfg.sshOpts ++ [ "-i" cfg.sshKeyFile ];
+  sshOpts = cfg.sshOpts ++ [
+    "-i"
+    cfg.sshKeyFile
+  ];
 
   # ---- the actual fanout: discover live hosts, copy deltas, activate ----
   fanout-deploy = pkgs.writeShellApplication {
     name = "fanout-deploy";
-    runtimeInputs = with pkgs; [ nix openssh curl jq coreutils findutils ];
+    runtimeInputs = with pkgs; [
+      nix
+      openssh
+      curl
+      jq
+      coreutils
+      findutils
+    ];
     text = ''
       systemPath="''${1:-}"
       action="''${2:-switch}"
@@ -107,7 +122,11 @@ let
   # ---- forced-command dispatcher: classify $SSH_ORIGINAL_COMMAND ----
   fanout-dispatch = pkgs.writeShellApplication {
     name = "fanout-dispatch";
-    runtimeInputs = with pkgs; [ nix coreutils gnugrep ];
+    runtimeInputs = with pkgs; [
+      nix
+      coreutils
+      gnugrep
+    ];
     text = ''
       cmd="''${SSH_ORIGINAL_COMMAND:-}"
       stateDir="$HOME/.local/state/fanout"
@@ -217,7 +236,12 @@ in
 
     sshOpts = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "-o" "BatchMode=yes" "-o" "StrictHostKeyChecking=accept-new" ];
+      default = [
+        "-o"
+        "BatchMode=yes"
+        "-o"
+        "StrictHostKeyChecking=accept-new"
+      ];
       description = "Extra ssh options for reaching the laptops.";
     };
 
@@ -247,9 +271,10 @@ in
       createHome = true;
       shell = pkgs.bashInteractive;
       # every operator key is pinned to the dispatcher; no shell, no forwarding.
-      openssh.authorizedKeys.keys = map
-        (k: ''command="${lib.getExe fanout-dispatch}",no-port-forwarding,no-x11-forwarding,no-agent-forwarding,no-pty ${k}'')
-        cfg.authorizedKeys;
+      openssh.authorizedKeys.keys = map (
+        k:
+        ''command="${lib.getExe fanout-dispatch}",no-port-forwarding,no-x11-forwarding,no-agent-forwarding,no-pty ${k}''
+      ) cfg.authorizedKeys;
     };
 
     # deploy must be trusted so it can write to the store via the daemon
@@ -257,6 +282,9 @@ in
     nix.settings.trusted-users = [ "deploy" ];
 
     # expose the scripts for manual runs / debugging
-    environment.systemPackages = [ fanout-deploy fanout-dispatch ];
+    environment.systemPackages = [
+      fanout-deploy
+      fanout-dispatch
+    ];
   };
 }

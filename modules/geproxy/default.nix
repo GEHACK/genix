@@ -1,4 +1,10 @@
-{ pkgs, lib, config, loom_url, ... }:
+{
+  pkgs,
+  lib,
+  config,
+  loom_url,
+  ...
+}:
 let
   operatorKeys = lib.pipe ../../authorized_keys [
     builtins.readFile
@@ -13,7 +19,6 @@ in
     ./boot.nix
     ./cuproxy.nix
     ./devdocs.nix
-    ./fanout.nix
     ./imaged.nix
     ./networking.nix
     ./ntp.nix

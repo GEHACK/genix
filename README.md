@@ -115,6 +115,14 @@ A single-network host for LAN events: every ethernet NIC is enslaved to one brid
 
 Mods are downloaded from Modrinth at container start (`fabric-api`, `lithium`, `ferrite-core`, `krypton`, `simple-voice-chat`, `spark`), and the Minecraft version is derived from what those mods support. World data lives in `/var/lib/minecraft`.
 
+**Build fanout** is enabled here too, so `nixos-rebuild --target-host deploy@geminecraft` mirrors a closure to every LAN client (see `modules/fanout.nix`).
+
+**Internet toggle** (run as root on geminecraft):
+```bash
+enable-internet   # opens nftables chain — LAN clients can reach the internet
+disable-internet  # flushes chain — LAN is isolated
+```
+
 Disk layout uses RAID1 mdadm with dual GRUB mirrors.
 
 ---
@@ -222,7 +230,7 @@ nix flake update
 hosts/<host>/configuration.nix   # Host entry point — hardware config and module imports
 hosts/<host>/disko.nix           # Disk partitioning layout
 modules/<host>/                  # Host-specific modules
-modules/                         # Shared modules (nix, sops, ssh, users)
+modules/                         # Shared modules (fanout, nix, sops, ssh, users)
 users/<user>/                    # Home-manager configurations per user
 scripts/                         # Deployment helper scripts
 assets/                          # Shared assets (wallpaper, boot logo)

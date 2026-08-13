@@ -1,5 +1,6 @@
 _: {
   imports = [
+    ./fanout.nix
     ./nix.nix
     ./security.nix
     ./sops.nix
