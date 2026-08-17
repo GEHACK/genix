@@ -1,0 +1,16 @@
+config-version = "2.8"
+
+bind = "0.0.0.0:25565"
+motd = "GEHACK"
+show-max-players = 50
+online-mode = false
+force-key-authentication = false
+player-info-forwarding-mode = "none"
+
+[servers]
+survival = "survival:25565"
+bedwars = "bedwars:25565"
+creative = "creative:25565"
+try = [ "survival" ]
+
+[forced-hosts]

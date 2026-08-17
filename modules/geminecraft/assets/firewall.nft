@@ -1,12 +1,9 @@
 #!/usr/sbin/nft -f
 
-flush ruleset
-
 define IF_LAN = "br-lan"
-define IF_DOCKER = "docker0"
+define IF_DOCKER = "mc0"
 
 define NET_LAN = 10.0.0.0/24
-define NET_DOCKER = 172.17.0.0/16
 
 table inet filter {
   chain input {
@@ -55,20 +52,17 @@ table inet filter {
 
     # --- published container ports and container egress
     iifname $IF_DOCKER accept
-    oifname $IF_DOCKER accept
+    oifname $IF_DOCKER ct status dnat accept
 
     # --- if the LAN wants internet jump to lan_inet chain
     iifname $IF_LAN oifname "wl*" jump lan_inet
   }
 }
 
-table ip nat {
+table ip lanparty {
   chain postrouting {
-    type nat hook postrouting priority 100; policy accept;
+    type nat hook postrouting priority 110; policy accept;
 
     iifname $IF_LAN oifname "wl*" ip saddr $NET_LAN masquerade
-
-    # docker's own nat rules are lost on every ruleset flush
-    oifname "wl*" ip saddr $NET_DOCKER masquerade
   }
 }

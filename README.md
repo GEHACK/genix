@@ -106,14 +106,28 @@ A single-network host for LAN events: every ethernet NIC is enslaved to one brid
 
 **imaged** runs as a native NixOS service bound to `10.0.0.1:8080`; the UI is served through Traefik on `https://imaged.gehack.nl:3000`.
 
-**Minecraft** runs as the `itzg/minecraft-server:java25` Docker container (Fabric, offline mode, no whitelist), published on the bridge only:
+**Minecraft** is a Velocity proxy (`itzg/mc-proxy:java25`) in front of four backends (`itzg/minecraft-server:java25`), all containers on the `minecraft` Docker network. Only the proxy is published on the bridge, on 25565/tcp; every player lands in `lobby` and picks a game from there:
 
-| Port | Purpose |
-|------|---------|
-| 25565/tcp | Minecraft |
-| 24454/udp | Simple Voice Chat |
+| Server | Loader | World | Gamemode | Extra content | Slots | Heap |
+|--------|--------|-------|----------|---------------|-------|------|
+| `lobby` | Fabric | superflat, bedrock layer | adventure (forced), peaceful | `lobby-menu` datapack | 50 | 6% of RAM |
+| `bedwars` | **Paper** | superflat `arena`, bedrock layer | survival, easy | `screamingbedwars` plugin | 8 | 18% of RAM |
+| `survival` | Fabric | normal | survival, normal | — | 50 | 35% of RAM |
+| `creative` | Fabric | normal | creative (forced), peaceful | `worldedit` | 50 | 12% of RAM |
 
-Mods are downloaded from Modrinth at container start (`fabric-api`, `lithium`, `ferrite-core`, `krypton`, `simple-voice-chat`, `spark`), and the Minecraft version is derived from what those mods support. World data lives in `/var/lib/minecraft`.
+Every server runs Minecraft 26.2 — `VERSION` is pinned so proxy and backends can never drift apart — in offline mode and without whitelist. The Fabric backends also get `fabric-api`, `lithium`, `ferrite-core`, `krypton`, `spark`; the Paper backend gets none of those (they are Fabric mods), which is why `worlds.<name>.type` selects the loader and only Fabric worlds receive the shared mod list. Mixing loaders behind one proxy is fine because `player-info-forwarding-mode = "none"` asks nothing of the backend beyond `online-mode=false`. `MEMORY` is a percentage, so heaps scale with the host's RAM (`-XX:MaxRAMPercentage`); the four backends total 71%, the proxy takes a flat 512M. World data lives in `/var/lib/minecraft/<server>`, proxy state in `/var/lib/minecraft/proxy`.
+
+**Routing.** `try = [ "lobby" ]` sends every joining player to the lobby, and any backend kick fails them back there. Switching servers is Velocity's own `/server <name>`, which the proxy intercepts before it reaches a backend — bare `/server` also prints a clickable list. The lobby datapack (`modules/geminecraft/assets/lobby-menu`) greets each player once with a clickable menu whose entries run `/server bedwars|survival|creative`; `/trigger lobby_menu` reopens it. This is all vanilla text components, so unmodified clients work — no client mod, and no hub mod exists for 26.2.
+
+**BedWars** is ScreamingBedWars (`screamingbedwars`, Paper). The plugin owns the whole round cycle — waiting lobby with countdown, start when an arena's minimum player count is reached, teams, shops, upgrades, spectators, and arena rebuilding after every match — so there is no queue datapack and no AI bots. Arenas are authored once in-game with `/bw admin <name> …` following <https://docs.screamingsandals.org/BedWars/latest/arena/>; build the map on the creative server and copy it in, or build it directly in the `arena` world. Minimum/maximum players and team size are per-arena settings, not server-wide ones.
+
+That arena definition and `plugins/BedWars/config.yml` are **runtime state**, not declarative: the plugin rewrites its own config, so it lives in `/var/lib/minecraft/bedwars/plugins/BedWars/` and is not managed by Nix. Two knobs worth setting there by hand: `bungee.enabled: true` with `bungee.server: lobby` returns players to the lobby when a match ends, and `allow-spectator-join` decides whether latecomers can watch.
+
+Consoles are per backend: `docker exec -it <server> rcon-cli` (`bedwars`, `survival`, `creative`, `lobby`). The `minecraft` container is the proxy and has no RCON.
+
+Both flat worlds are a single bedrock layer under a void biome, so there is solid ground to stand on and nothing else in the way of an arena; a pure void (`"layers":[]`) would drop players into nothing. The lobby datapack is installed by a `minecraft-datapacks` oneshot unit that copies it into `<world>/datapacks` with writable modes before the container starts — `systemd.tmpfiles`' `C+` was tried first and only copies the top level of a read-only store path. Regenerate a world with `rm -rf /var/lib/minecraft/bedwars/arena`.
+
+**Adding backends on other hosts.** A `[servers]` entry takes any `host:port`, so `arena2 = "10.0.0.5:25565"` is enough; add the name to the lobby menu function to make it clickable. With forwarding mode `none` the remote backend only needs `online-mode=false` plus a firewall limiting its port to the proxy — otherwise players can bypass the proxy and pick any username. Velocity runs `player-info-forwarding-mode = "none"` (`modules/geminecraft/assets/velocity.toml`), which is why the local backends publish no ports and the nftables forward chain only admits LAN traffic that a published port DNAT'ed (`ct status dnat`).
 
 **Build fanout** is enabled here too, so `nixos-rebuild --target-host deploy@geminecraft` mirrors a closure to every LAN client (see `modules/fanout.nix`).
 
@@ -265,3 +279,5 @@ To add a new team member's key, add their age public key to `.sops.yaml` and re-
 ### Firewall
 
 The project uses nftables exclusively — do not introduce iptables rules. Geproxy rules live in `modules/geproxy/assets/firewall.nft`, geminecraft rules in `modules/geminecraft/assets/firewall.nft`. Teammachine rules are written inline in `modules/teammachine/networking.nix` using the `contest_subnet` and `judge_ip` specialArgs variables.
+
+Hosts that run Docker must not `flush ruleset`: Docker keeps its own chains in the same ruleset and only rebuilds them when the daemon starts, so a flush breaks port publishing until the next `systemctl restart docker`. Geminecraft therefore sets `networking.nftables.flushRuleset = false` and lists its own tables in `extraDeletions`.

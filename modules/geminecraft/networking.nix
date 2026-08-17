@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 let
   bridge = "br-lan";
   bridgeAddress = "10.0.0.1";
@@ -10,14 +10,28 @@ in
     useNetworkd = true;
     wireless = {
       enable = true;
-      networks."iotroam".psk = "gehackgehack";
+      secretsFile = config.sops.secrets.wireless-uplink.path;
+      networks."Wifi1301-5GHz".pskRaw = "ext:psk_uplink";
     };
     firewall.enable = false;
     nftables = {
       enable = true;
       checkRuleset = true;
+      flushRuleset = false;
       rulesetFile = ./assets/firewall.nft;
+      extraDeletions = ''
+        table inet filter
+        delete table inet filter
+        table ip lanparty
+        delete table ip lanparty
+      '';
     };
+  };
+
+  sops.secrets.wireless-uplink = {
+    group = "wpa_supplicant";
+    mode = "0440";
+    restartUnits = [ "wpa_supplicant.service" ];
   };
 
   systemd.network = {
