@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 let
   bridge = "br-lan";
   bridgeAddress = "10.0.0.1";
@@ -10,8 +10,7 @@ in
     useNetworkd = true;
     wireless = {
       enable = true;
-      secretsFile = config.sops.secrets.wireless-uplink.path;
-      networks."Wifi1301-5GHz".pskRaw = "ext:psk_uplink";
+      networks."iotroam".psk = "gehackgehack";
     };
     firewall.enable = false;
     nftables = {
