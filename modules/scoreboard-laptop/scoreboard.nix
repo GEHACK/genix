@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "icpc-presentation";
-  version = "2.7.1352";
+  version = "2.7.1396";
 
   src = fetchurl {
-    url = "https://github.com/icpctools/icpctools/releases/download/v2.7.1352/resolver-2.7.1352.zip";
-    sha256 = "sha256-XfkcJQUwNLSVNv8EKqHDTl6ssY+HKyAvgiSqK0qYH88=";
+    url = "https://github.com/icpctools/icpctools/releases/download/v${version}/resolver-${version}.zip";
+    sha256 = "sha256-0xvHFH3QDAa52+I3x4DwYvfmuSaRD9h7K313sqkcSdA=";
   };
 
   nativeBuildInputs = [ unzip makeWrapper ];
