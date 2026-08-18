@@ -5,6 +5,8 @@ _: {
     ../../modules/scoreboard-laptop
   ];
 
+  scoreboard.contestId = "ipc2026";
+
   hardware.enableRedistributableFirmware = true;
 
   time.timeZone = "Europe/Amsterdam";

@@ -1,51 +1,66 @@
 { config, lib, pkgs, ... }:
 let
+  cfg = config.scoreboard;
   icpc-presentation = pkgs.callPackage ./scoreboard.nix {};
-  cdsURL = "https://cds.gehack.nl/api/contests/";
-  contestID = "fpcs2026";
 
   start-presentation = pkgs.writeShellScript "start-presentation" ''
-    # Read the contents of the sops-nix secret files
     USERNAME=$(cat ${config.sops.secrets."cds.presentation-client.username".path})
     PASSWORD=$(cat ${config.sops.secrets."cds.presentation-client.password".path})
-    
-    # Execute the client, replacing the shell process
-    exec ${icpc-presentation}/bin/presentation-client "${cdsURL}${contestID}" "$USERNAME" "$PASSWORD"
+
+    exec ${icpc-presentation}/bin/presentation-client "${cfg.cdsUrl}/api/contests/${cfg.contestId}" "$USERNAME" "$PASSWORD"
   '';
-in  
+in
 {
-  sops.secrets = { 
-    "cds.presentation-client.username" = {
-      owner = config.services.cage.user; 
+  options.scoreboard = {
+    cdsUrl = lib.mkOption {
+      type = lib.types.str;
+      default = "https://cds.gehack.nl";
+      description = "Base URL of the Contest Data Server, without trailing slash.";
     };
-    "cds.presentation-client.password" = {
-      owner = config.services.cage.user; 
-    };
-  };
 
-  systemd.network.wait-online.enable = true;
-
-  services.cage = {
-    enable = true;
-    user = "kiosk";
-    
-    program = "${start-presentation}";
-    
-    environment = {
-      WL_DISPLAY = "wayland-0";
-      XDG_SESSION_TYPE = "wayland";
-      XDG_CURRENT_DESKTOP = "cage";
+    contestId = lib.mkOption {
+      type = lib.types.str;
+      example = "fpcs2026";
+      description = "CDS contest ID the presentation client connects to. Set this per contest.";
     };
   };
 
-  systemd.services."cage-tty1" = {
-    wants = [ "network-online.target" ];
-    after = [ "network-online.target" ];
-    
-    serviceConfig = {
-      Restart = "always";
-      RestartSec = "5s";
-      PrivateTmp = true;
+  config = {
+    fonts.enableDefaultPackages = true;
+
+    sops.secrets = {
+      "cds.presentation-client.username" = {
+        owner = config.services.cage.user;
+      };
+      "cds.presentation-client.password" = {
+        owner = config.services.cage.user;
+      };
+    };
+
+    systemd.network.wait-online.enable = true;
+
+    services.cage = {
+      enable = true;
+      user = "kiosk";
+
+      program = "${start-presentation}";
+
+      environment = {
+        WL_DISPLAY = "wayland-0";
+        XDG_SESSION_TYPE = "wayland";
+        XDG_CURRENT_DESKTOP = "cage";
+      };
+    };
+
+    systemd.services."cage-tty1" = {
+      wants = [ "network-online.target" ];
+      after = [ "network-online.target" ];
+
+      serviceConfig = {
+        Restart = "always";
+        RestartSec = "5s";
+        PrivateTmp = true;
+      };
     };
   };
 }
