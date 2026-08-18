@@ -174,6 +174,12 @@
         modules = scoreboard-laptopModules;
       };
 
+      scoreboard-laptop_arm = nixpkgs.lib.nixosSystem {
+        system = "aarch64-linux";
+        inherit specialArgs;
+        modules = scoreboard-laptopModules;
+      };
+
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -199,6 +205,7 @@
           teammachine_arm
           geproxy
           scoreboard-laptop
+          scoreboard-laptop_arm
           teammachine-iso
           ;
       };
@@ -214,6 +221,7 @@
 
       packages.aarch64-linux = {
         teammachine-arm = teammachine_arm.config.system.build.toplevel;
+        scoreboard-laptop-arm = scoreboard-laptop_arm.config.system.build.toplevel;
       };
     };
 }
