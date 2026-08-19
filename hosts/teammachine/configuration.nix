@@ -16,11 +16,12 @@
       };
       neovim.enable = true;
       ides.enable = true;
-      ides.jetbrains.enable = true; 
-      submit.enable = true; 
+      ides.jetbrains.enable = true;
+      submit.enable = true;
       games.enable = true;
-      misc-packages.enable = true; 
+      misc-packages.enable = true;
     };
+    pxe-boot.enable = true;
 
     users.gehack = {
       neovim.enable = true;
@@ -34,15 +35,15 @@
     };
     enableRedistributableFirmware = true;
     nvidia = {
-      modesetting.enable = true;  
+      modesetting.enable = true;
       open = false;
       nvidiaSettings = false;
       package = config.boot.kernelPackages.nvidiaPackages.stable;
-      
+
       prime = {
         intelBusId = "PCI:0:2:0";
         nvidiaBusId = "PCI:1:0:0";
-        
+
         offload = {
           enable = true;
           enableOffloadCmd = true;
@@ -50,9 +51,9 @@
       };
     };
   };
-  
+
   services.xserver.videoDrivers = [ "nvidia" ];
-  
+
   nixpkgs.config.allowUnfree = true;
 
   system.stateVersion = "25.11";

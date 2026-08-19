@@ -2,7 +2,8 @@
 set -euo pipefail
 
 USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "mexdeloo")
-OUTPUT_FILE="../authorized_keys"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+OUTPUT_FILE="$REPO_ROOT/authorized_keys"
 
 TEMP_FILE=$(mktemp)
 trap 'rm -f "$TEMP_FILE"' EXIT
@@ -25,7 +26,7 @@ done
 
 mv "$TEMP_FILE" "$OUTPUT_FILE"
 
-if [ -d .git ]; then
-    git add "$OUTPUT_FILE"
+if [ -d "$REPO_ROOT/.git" ]; then
+    git -C "$REPO_ROOT" add "$OUTPUT_FILE"
     echo "Staged $OUTPUT_FILE in Git."
 fi
