@@ -6,7 +6,7 @@
   ...
 }:
 let
-  version = "9.0.0";
+  version = "bleeding";
 
   # Pinned by manifest digest so a re-pushed tag can never change what we judge on.
   # Refresh both fields together with:
@@ -14,8 +14,8 @@ let
   #     --arch amd64 --os linux
   image = pkgs.dockerTools.pullImage {
     imageName = "domjudge/judgehost";
-    imageDigest = "sha256:45856f678a77b3395331daf1c4ea870fce72446fad8605ec3913d2213b52eac5";
-    hash = "sha256-N0vU+jJdxaclMJ/fHFM8WrQvCE2C4loMlPQ35KxM7ZE=";
+    imageDigest = "sha256:18f6ba5edd334759056c78b3c5ebd199bce033b7333d8dcde30d9dff73733ab8";
+    hash = "sha256-Y055eeleaOGvnAhuiZWdjjiyR8NVGfRjlKoZZYvWfz0=";
     finalImageName = "domjudge/judgehost";
     finalImageTag = version;
     os = "linux";
