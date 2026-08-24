@@ -24,7 +24,12 @@ let
 
   runUserBaseId = 62860;
 
-  ordering = [ "judgehost-tune-cpu.service" ];
+  # Requires= as well as After=, so a failed prerequisite keeps the daemons from
+  # registering under a wrong name or judging on an untuned CPU.
+  ordering = [
+    "judgehost-hostname.service"
+    "judgehost-tune-cpu.service"
+  ];
 
   container = core: lib.nameValuePair "judgehost-${toString core}" {
     imageFile = image;
