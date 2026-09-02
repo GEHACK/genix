@@ -1,4 +1,9 @@
-{ pkgs, lib, config, loom_url, ... }:
+{
+  lib,
+  config,
+  loom_url,
+  ...
+}:
 let
   operatorKeys = lib.pipe ../../authorized_keys [
     builtins.readFile
@@ -32,16 +37,4 @@ in
     sshKeyFile = config.sops.secrets.fanout-ssh-key.path;
     authorizedKeys = operatorKeys;
   };
-
-  environment.systemPackages = with pkgs; [
-    wget
-
-    zip
-    unzip
-
-    btop
-    htop
-
-    git
-  ];
 }

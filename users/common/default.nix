@@ -1,7 +1,8 @@
 {
   pkgs,
   ...
-}: {
+}:
+{
   imports = [
     ./options.nix
     ./firefox.nix
@@ -10,5 +11,10 @@
   home.packages = with pkgs; [
     btop
     htop
+    git
+    wget
+    curl
+    zip
+    unzip
   ];
 }
