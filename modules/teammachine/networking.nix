@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   judge_ip,
   contest_subnet,
@@ -52,7 +53,7 @@
   };
 
   services.timesyncd = {
-    enable = true;
+    enable = lib.mkForce true;
     servers = [ "10.0.0.1" ];
   };
 
