@@ -15,8 +15,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-    nixpkgs-clion.url = "github:NixOS/nixpkgs/5880666fd9eb563038431edb35c2d0aa595884e6";
-
     disko.url = "github:nix-community/disko";
 
     home-manager = {
@@ -43,7 +41,6 @@
   outputs =
     {
       nixpkgs,
-      nixpkgs-clion,
       disko,
       home-manager,
       loom,
@@ -74,20 +71,6 @@
         dj_url = "https://www.domjudge.org/demoweb/";
       };
 
-      clionPin = _: {
-        nixpkgs.overlays = [
-          (_: prev: {
-            jetbrains = prev.jetbrains // {
-              clion =
-                (import nixpkgs-clion {
-                  inherit (prev.stdenv.hostPlatform) system;
-                  config.allowUnfree = true;
-                }).jetbrains.clion;
-            };
-          })
-        ];
-      };
-
       commonModules = [
         disko.nixosModules.disko
         sops-nix.nixosModules.sops
@@ -109,7 +92,6 @@
         };
 
       teammachineModules = commonModules ++ [
-        clionPin
         loom.nixosModules.default
         (mkHomeManager {
           users = {
@@ -145,7 +127,6 @@
       ];
 
       teammachine-isoModules = commonModules ++ [
-        clionPin
         (mkHomeManager {
           users = {
             gehack = import ./users/gehack;

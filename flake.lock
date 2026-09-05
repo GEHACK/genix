@@ -259,22 +259,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-clion": {
-      "locked": {
-        "lastModified": 1787204541,
-        "narHash": "sha256-OURZPknrTjQrlNyxPdqzyqmU/81Wes1CUP/Ft1Rv/YI=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "5880666fd9eb563038431edb35c2d0aa595884e6",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "5880666fd9eb563038431edb35c2d0aa595884e6",
-        "type": "github"
-      }
-    },
     "nixpkgs_2": {
       "locked": {
         "lastModified": 1775710090,
@@ -387,7 +371,6 @@
         "imaged": "imaged",
         "loom": "loom",
         "nixpkgs": "nixpkgs_6",
-        "nixpkgs-clion": "nixpkgs-clion",
         "nixvim": "nixvim",
         "sops-nix": "sops-nix"
       }
