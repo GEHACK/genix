@@ -8,6 +8,23 @@ let
   cfg = config.teammachine.ides;
   langs = config.teammachine.languages;
 
+  clionKeyDir = ".config/JetBrains/CLion${lib.versions.majorMinor pkgs.jetbrains.clion.version}";
+  clionKeySecret = "/run/secrets/clion-license-key";
+
+  writeClionKey = pkgs.writeShellScript "write-clion-key" ''
+    set -euo pipefail
+    if [ ! -r ${clionKeySecret} ] || [ ! -s ${clionKeySecret} ]; then
+      exit 0
+    fi
+    umask 077
+    install -d -m 700 "$1"
+    {
+      printf '\xFF\xFF'
+      printf '<certificate-key>\n%s' "$(cat ${clionKeySecret})" \
+        | ${pkgs.glibc.bin}/bin/iconv -f UTF-8 -t UCS2 -
+    } > "$1/clion.key"
+  '';
+
   pycharmAutoDetect = pkgs.buildFHSEnv {
     name = "pycharm-with-python";
 
@@ -63,5 +80,12 @@ in
       ])
       ++ lib.optionals langs.cpp.enable [ pkgs.codeblocksFull ]
       ++ lib.optionals langs.c.enable [ pkgs.codeblocksFull ];
+
+    # Only when CLion is actually installed; the script itself skips a missing key.
+    home.activation = lib.optionalAttrs (langs.cpp.enable && cfg.jetbrains.enable) {
+      clionLicense = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        run ${writeClionKey} "$HOME/${clionKeyDir}"
+      '';
+    };
   };
 }
