@@ -211,7 +211,18 @@
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = teammachineModules ++ [ (mkVmModule 2222) ];
+        modules = teammachineModules ++ [
+          (mkVmModule 2222)
+          {
+            virtualisation.forwardPorts = [
+              {
+                from = "host";
+                host.port = 13389;
+                guest.port = 3389;
+              }
+            ];
+          }
+        ];
       };
 
       geproxy-vm = nixpkgs.lib.nixosSystem {
@@ -245,6 +256,12 @@
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
+      };
+
+      checks.x86_64-linux.teammachine-rdp = import ./tests/teammachine-rdp.nix {
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
+        sopsModule = sops-nix.nixosModules.sops;
+        inherit (nixpkgs) lib;
       };
 
       packages.aarch64-linux = {

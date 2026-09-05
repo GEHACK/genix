@@ -8,6 +8,7 @@ _: {
     ./networking.nix
     ./printer.nix
     ./pxe-boot.nix
+    ./remote-desktop.nix
     ./usbguard.nix
     ./user-tools.nix
     ./users.nix

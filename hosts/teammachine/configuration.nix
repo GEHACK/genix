@@ -23,6 +23,7 @@
       misc-packages.enable = true;
     };
     pxe-boot.enable = true;
+    remoteDesktop.enable = true;
 
     users.gehack = {
       neovim.enable = true;
