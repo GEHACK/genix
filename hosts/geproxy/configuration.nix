@@ -5,6 +5,8 @@ _: {
     ../../modules/geproxy
   ];
 
+  home-manager.users.gehack.teammachine.neovim.enable = true;
+
   hardware.enableRedistributableFirmware = true;
 
   hardware.bluetooth.enable = false;

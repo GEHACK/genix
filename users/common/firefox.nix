@@ -1,11 +1,14 @@
 {
   config,
   dj_url,
+  lib,
   ...
 }:
 {
-  # Shared, contest-hardened Firefox for every user on the teammachine.
-  programs.firefox = {
+  options.teammachine.firefox.enable =
+    lib.mkEnableOption "contest-hardened Firefox";
+
+  config.programs.firefox = lib.mkIf config.teammachine.firefox.enable {
     enable = true;
     configPath = "${config.xdg.configHome}/mozilla/firefox";
 

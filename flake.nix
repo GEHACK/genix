@@ -116,8 +116,6 @@
             gehack = import ./users/gehack;
             team = import ./users/team;
           };
-          # Shared "default" profile applied to every user on the teammachine:
-          # neovim + firefox live here. nixvim's HM module is required for it.
           sharedModules = [
             nixvim.homeModules.nixvim
             ./users/common
@@ -133,6 +131,10 @@
           users = {
             gehack = import ./users/gehack;
           };
+          sharedModules = [
+            nixvim.homeModules.nixvim
+            ./users/common
+          ];
         })
         ({ ... }: { _module.args.balloons-pkg = balloons.packages.x86_64-linux.default; })
         ./hosts/geproxy/configuration.nix
@@ -149,8 +151,6 @@
             gehack = import ./users/gehack;
             team = import ./users/team;
           };
-          # Mirror the teammachine profile: neovim + firefox live in ./users/common
-          # and the teammachine.* home-manager options are defined there.
           sharedModules = [
             nixvim.homeModules.nixvim
             ./users/common

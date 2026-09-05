@@ -28,6 +28,7 @@
         kotlin.enable = true;
       };
       neovim.enable = true;
+      firefox.enable = true;
       ides.enable = true;
       ides.jetbrains.enable = true;
       submit.enable = true;
@@ -37,6 +38,7 @@
 
     users.gehack = {
       neovim.enable = true;
+      firefox.enable = true;
     };
   };
 
