@@ -57,10 +57,11 @@ in
     ]
     ++ lib.optionals cfg.kotlin.enable [
       pkgs.kotlin
+      pkgs.jdk21
       mykotlinc
     ];
 
-  home.sessionVariables = lib.mkIf cfg.java.enable {
-    JAVA_HOME = "${pkgs.jdk21}";
+  home.sessionVariables = lib.mkIf (cfg.java.enable || cfg.kotlin.enable) {
+    JAVA_HOME = "${pkgs.jdk21.home}";
   };
 }

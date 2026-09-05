@@ -4,6 +4,7 @@ _: {
     ./games.nix
     ./gnome.nix
     ./ides.nix
+    ./intellij.nix
     ./languages.nix
     ./misc-packages.nix
     ./nix-block.nix
