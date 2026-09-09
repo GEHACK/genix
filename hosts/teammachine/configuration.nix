@@ -21,7 +21,12 @@
       submit.enable = true;
       games.enable = true;
       misc-packages.enable = true;
+
+      streams = {
+        enable = true;
+      };
     };
+
     pxe-boot.enable = true;
     remoteDesktop.enable = true;
 
