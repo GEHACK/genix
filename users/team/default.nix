@@ -10,6 +10,7 @@ _: {
     ./nix-block.nix
     ./submit.nix
     ./vscode.nix
+    ./streams.nix
   ];
 
   home = {

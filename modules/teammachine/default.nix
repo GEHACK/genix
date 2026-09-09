@@ -12,6 +12,5 @@ _: {
     ./usbguard.nix
     ./user-tools.nix
     ./users.nix
-    ./webcamstream.nix
   ];
 }

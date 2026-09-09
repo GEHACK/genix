@@ -15,7 +15,7 @@
     ../../modules/teammachine/pxe-boot.nix
     ../../modules/teammachine/usbguard.nix
     ../../modules/teammachine/user-tools.nix
-    ../../modules/teammachine/webcamstream.nix
+    ../../modules/teammachine/streams.nix
   ];
 
   teammachine = {
