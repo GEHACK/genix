@@ -3,23 +3,30 @@
 # From your laptop:
 #
 #   # all online hosts from the inventory API:
-#   nixos-rebuild switch --flake .#contestlaptop --target-host deploy@geproxy
+#   nixos-rebuild switch --flake .#teammachine --target-host deploy@geproxy
+#
+#   # build on geproxy too, so your laptop only evaluates and ships the .drv:
+#   nixos-rebuild switch --flake .#teammachine \
+#     --build-host deploy@geproxy --target-host deploy@geproxy
 #
 #   # target a specific subset — set the list, then deploy as usual.
 #   # The targets file is sticky: it overrides the inventory until cleared.
 #   ssh deploy@geproxy targets 10.0.0.50 10.0.0.51
-#   nixos-rebuild switch --flake .#contestlaptop --target-host deploy@geproxy
+#   nixos-rebuild switch --flake .#teammachine --target-host deploy@geproxy
 #
 #   # clear and go back to inventory mode:
 #   ssh deploy@geproxy targets
 #
 # What happens:
-#   1. nixos-rebuild builds on your laptop and copies the closure to `fanout`.
-#      A forced-command dispatcher hands the transfer to the fanout's real
-#      nix-daemon, so the closure lands in its store (ONE transfer in).
-#   2. nixos-rebuild's `nix-env --set` is captured (the system path is recorded;
+#   1. nixos-rebuild builds on your laptop (or, with --build-host, evaluates
+#      locally and ships only the derivation) and copies the closure to
+#      `fanout`. A forced-command dispatcher hands the transfer to the fanout's
+#      real nix-daemon, so the closure lands in its store (ONE transfer in).
+#   2. nixos-rebuild's `nix build <drv>^*` is rebuilt from the derivation named
+#      in the command and run against the fanout's own store.
+#   3. nixos-rebuild's `nix-env --set` is captured (the system path is recorded;
 #      the fanout's own system profile is left untouched).
-#   3. nixos-rebuild's `switch-to-configuration <action>` is intercepted and,
+#   4. nixos-rebuild's `switch-to-configuration <action>` is intercepted and,
 #      instead of activating the fanout, mirrors the closure to every laptop your
 #      inventory API reports as online — each receiving only its missing paths —
 #      and runs `switch-to-configuration <action>` on each, in parallel.
@@ -29,7 +36,7 @@
 #   script and nixos-rebuild-ng, and between ssh:// and ssh-ng://. The dispatcher
 #   below matches on substrings so it tolerates flag/wrapper drift (incl. ng's
 #   systemd-run wrapper), but log $SSH_ORIGINAL_COMMAND from one real rebuild and
-#   confirm the four cases below actually fire for YOUR version before relying on it.
+#   confirm the cases below actually fire for YOUR version before relying on it.
 
 { config, lib, pkgs, ... }:
 
@@ -148,6 +155,15 @@ let
           path="$(printf '%s' "$cmd" | grep -oE '/nix/store/[^[:space:]"'"'"']+/nixos-version' | head -n1 || true)"
           [ -n "$path" ] || { log "no /nix/store nixos-version path in: $cmd"; exit 1; }
           exec test -f "$path" ;;
+
+        *"build"*"--print-out-paths"*)
+          drv="$(printf '%s' "$cmd" | grep -oE '/nix/store/[^[:space:]"'"'"']+\.drv' | head -n1 || true)"
+          [ -n "$drv" ] || { log "no derivation in build command: $cmd"; exit 1; }
+          dryRun=()
+          case "$cmd" in *"--dry-run"*) dryRun=(--dry-run) ;; esac
+          log "building $drv"
+          exec nix --extra-experimental-features 'nix-command flakes' \
+            build "$drv^*" --print-out-paths --no-link --print-build-logs "''${dryRun[@]}" ;;
 
         # --- profile set: capture the path, leave system profile alone ---
         *"nix-env"*"--set"*)
