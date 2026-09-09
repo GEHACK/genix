@@ -78,6 +78,13 @@ in
       description = "V4L2 webcam capture device to stream.";
     };
 
+    encoder = lib.mkOption {
+      type = lib.types.str;
+      default = "x264enc key-int-max=12 ! h264parse";
+      example = "vah265lpenc rate-control=vbr key-int-max=12 ! h265parse";
+      description = "A gstreamer pipeline for encoding video.";
+    };
+
     startOnBoot = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -95,7 +102,7 @@ in
       };
 
       Service = {
-        ExecStart = "${streams}/bin/streams";
+        ExecStart = "${streams}/bin/streams -p ${toString cfg.port} -w '${cfg.webcam}' -e '${cfg.encoder}'";
         Restart = "always";
         RestartSec = "5s";
         PrivateDevices = false;

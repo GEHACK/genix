@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import asyncio
 import gi
 
@@ -26,6 +27,14 @@ STREAM_IFACE = "org.gnome.Mutter.ScreenCast.Stream"
 PROPERTIES_IFACE = "org.freedesktop.DBus.Properties"
 DISPLAYCONFIG_IFACE = "org.gnome.Mutter.DisplayConfig"
 
+parser = argparse.ArgumentParser(
+                    prog='streams',
+                    description='Stream screencast and webcam using MPEG-TS')
+
+parser.add_argument('-p', '--port', type=int, default=8080)
+parser.add_argument('-w', '--webcam', default='/dev/video0')
+parser.add_argument('-e', '--encoder', default='x264enc key-int-max=12 ! h264parse')
+args = parser.parse_args()
 
 async def get_primary_monitor_name():
     bus = await MessageBus(bus_type=BusType.SESSION).connect()
@@ -124,7 +133,7 @@ def on_new_sample(queues, sink):
 
 def create_pipeline(
     src: str,
-    encoder: str = "x264enc key-int-max=12 ! h264parse",
+    encoder: str,
     audio: bool = False,
 ) -> (Gst.Pipeline, set[asyncio.Queue]):
 
@@ -190,7 +199,8 @@ app = web.Application()
 
 pipewire_node_id = asyncio.run(start_screencast())
 (screencast_pipeline, screencast_queues) = create_pipeline(
-    f"pipewiresrc path={pipewire_node_id}"
+    src=f"pipewiresrc path={pipewire_node_id}",
+    encoder=args.encoder
 )
 app.router.add_get(
     "/screencast.ts",
@@ -198,11 +208,12 @@ app.router.add_get(
 )
 
 (webcam_pipeline, webcam_queues) = create_pipeline(
-    src="v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080"
+    src=f"v4l2src device={args.webcam} ! video/x-raw,width=1920,height=1080",
+    encoder=args.encoder
 )
 app.router.add_get(
     "/webcam.ts",
     lambda request: handle_stream_request(request, webcam_queues)
 )
 
-web.run_app(app, port=8080, loop=loop)
+web.run_app(app, port=args.port, loop=loop)
