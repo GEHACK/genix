@@ -6,17 +6,17 @@
   ...
 }:
 let
-  version = "bleeding";
+  version = "bleeding-gehack.1";
 
   # Pinned by manifest digest so a re-pushed tag can never change what we judge on.
   # Refresh both fields together with:
-  #   nix-prefetch-docker --image-name domjudge/judgehost --image-tag <version> \
+  #   nix-prefetch-docker --image-name ghcr.io/gehack/judgehost --image-tag <version> \
   #     --arch amd64 --os linux
   image = pkgs.dockerTools.pullImage {
-    imageName = "domjudge/judgehost";
-    imageDigest = "sha256:18f6ba5edd334759056c78b3c5ebd199bce033b7333d8dcde30d9dff73733ab8";
-    hash = "sha256-Y055eeleaOGvnAhuiZWdjjiyR8NVGfRjlKoZZYvWfz0=";
-    finalImageName = "domjudge/judgehost";
+    imageName = "ghcr.io/gehack/judgehost";
+    imageDigest = "sha256:9f4c60c06f62ac04d2eb89474e3b79e10d62b0defd3c3976bb147dee08a0f920";
+    hash = "sha256-+RnZ+BFC91Yc+12ZFdqoySndW8MSfVWX/mbheO60Fu0=";
+    finalImageName = "ghcr.io/gehack/judgehost";
     finalImageTag = version;
     os = "linux";
     arch = "amd64";
@@ -31,45 +31,49 @@ let
     "judgehost-tune-cpu.service"
   ];
 
-  container = core: lib.nameValuePair "judgehost-${toString core}" {
-    imageFile = image;
-    image = "domjudge/judgehost:${version}";
-    autoStart = true;
+  container =
+    core:
+    lib.nameValuePair "judgehost-${toString core}" {
+      imageFile = image;
+      image = "ghcr.io/gehack/judgehost:${version}";
+      autoStart = true;
 
-    environment = {
-      DAEMON_ID = toString core;
-      RUN_USER_UID_GID = toString (runUserBaseId + core);
-      DOMSERVER_BASEURL = "${dj_url}/";
-      JUDGEDAEMON_USERNAME = "judgehost";
-      CONTAINER_TIMEZONE = config.time.timeZone;
+      environment = {
+        DAEMON_ID = toString core;
+        RUN_USER_UID_GID = toString (runUserBaseId + core);
+        DOMSERVER_BASEURL = "${dj_url}/";
+        JUDGEDAEMON_USERNAME = "judgehost";
+        CONTAINER_TIMEZONE = config.time.timeZone;
+      };
+
+      environmentFiles = [ config.sops.templates."judgehost.env".path ];
+
+      # create_cgroups writes to the root cgroup.subtree_control, so the mount must be
+      # writable and the host cgroup namespace must be visible. runguard additionally
+      # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
+      volumes = [ "/sys/fs/cgroup:/sys/fs/cgroup" ];
+      extraOptions = [
+        "--privileged"
+        "--cgroupns=host"
+        "--network=host"
+        "--uts=host"
+      ];
     };
 
-    environmentFiles = [ config.sops.templates."judgehost.env".path ];
-
-    # create_cgroups writes to the root cgroup.subtree_control, so the mount must be
-    # writable and the host cgroup namespace must be visible. runguard additionally
-    # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
-    volumes = [ "/sys/fs/cgroup:/sys/fs/cgroup" ];
-    extraOptions = [
-      "--privileged"
-      "--cgroupns=host"
-      "--network=host"
-      "--uts=host"
-    ];
-  };
-
-  unit = core: lib.nameValuePair "docker-judgehost-${toString core}" {
-    after = ordering;
-    requires = ordering;
-    serviceConfig = {
-      Slice = "judgehost.slice";
-      Restart = lib.mkForce "always";
-      RestartSec = lib.mkForce 3;
-      # judgedaemon needs time to finish the judging it is holding, as upstream's
-      # own domjudge-judgedaemon@.service allows.
-      TimeoutStopSec = lib.mkForce 180;
+  unit =
+    core:
+    lib.nameValuePair "docker-judgehost-${toString core}" {
+      after = ordering;
+      requires = ordering;
+      serviceConfig = {
+        Slice = "judgehost.slice";
+        Restart = lib.mkForce "always";
+        RestartSec = lib.mkForce 3;
+        # judgedaemon needs time to finish the judging it is holding, as upstream's
+        # own domjudge-judgedaemon@.service allows.
+        TimeoutStopSec = lib.mkForce 180;
+      };
     };
-  };
 in
 {
   sops.secrets."judgehost.password" = { };
