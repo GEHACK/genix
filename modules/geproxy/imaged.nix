@@ -16,16 +16,21 @@ in
       dataDir = "/var/lib/imaged";
       logLevel = "info";
     };
-
-    traefik.dynamicConfigOptions.http.routers.imaged = {
-      rule = "Host(`${publicHost}`)";
-      service = "imaged";
-      entryPoints = [ "public" ];
-      tls.certResolver = "myresolver";
+    traefik = {
+      dynamicConfigOptions = {
+        http = {
+          routers.imaged = {
+            rule = "Host(`${publicHost}`)";
+            service = "imaged";
+            entryPoints = [ "public" ];
+            tls.certResolver = "myresolver";
+          };
+          services.imaged.loadBalancer.servers = [
+            { url = "http://${webAddr}"; }
+          ];
+        };
+      };
     };
-    traefik.dynamicConfigOptions.http.services.imaged.loadBalancer.servers = [
-      { url = "http://${webAddr}"; }
-    ];
   };
 
   systemd.services.imaged-server.environment = {

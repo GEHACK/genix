@@ -7,7 +7,7 @@ _: {
     ./loom.nix
     ./networking.nix
     ./printer.nix
-    ./pxe-boot.nix
+    ./netboot.nix
     ./remote-desktop.nix
     ./usbguard.nix
     ./user-tools.nix

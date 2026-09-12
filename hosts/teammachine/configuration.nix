@@ -27,7 +27,10 @@
       };
     };
 
-    pxe-boot.enable = true;
+    netboot = {
+      pxe.enable = true;
+      imaged.enable = true;
+    };
     remoteDesktop.enable = true;
 
     users.gehack = {
