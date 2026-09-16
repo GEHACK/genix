@@ -35,7 +35,6 @@
   security.pam.services.greetd.enableGnomeKeyring = true;
   environment.systemPackages = with pkgs; [
     file-roller
-    gnomeExtensions.no-overview
     gnome-terminal
     gnome-calculator
     papers

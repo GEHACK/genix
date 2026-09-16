@@ -50,8 +50,8 @@ in
       };
       "org/gnome/shell" = {
         favorite-apps = ["firefox.desktop"];
-        disable-user-extensions = false;
-        enabled-extensions = [ "no-overview@fthx" ];
+        disable-user-extensions = true;
+        enabled-extensions = [];
       };
       "org/gnome/desktop/input-sources" = {
         sources = gnomeInputSources;
