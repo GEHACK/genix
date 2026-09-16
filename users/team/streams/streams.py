@@ -199,7 +199,7 @@ app = web.Application()
 
 pipewire_node_id = asyncio.run(start_screencast())
 (screencast_pipeline, screencast_queues) = create_pipeline(
-    src=f"pipewiresrc path={pipewire_node_id}",
+    src=f"pipewiresrc path={pipewire_node_id} keepalive-time=100",
     encoder=args.encoder
 )
 app.router.add_get(
