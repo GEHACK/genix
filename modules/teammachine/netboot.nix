@@ -37,19 +37,20 @@ let
       kexec-tools
       curl
       coreutils
+      systemd
     ];
     text = ''
-      set -euo pipefail
-
-      SERVER="http://10.0.0.1:8000"
+      SERVER="http://10.0.0.1:8080"
       WORKDIR="$(mktemp -d)"
       trap 'rm -rf "$WORKDIR"' EXIT
 
       curl -fsSL "$SERVER/boot/vmlinuz" -o "$WORKDIR/vmlinuz"
-      curl -fsSL "$SERVER/boot/initramfs" -o "$WORKDIR/initramfs"
+      curl -fsSL "$SERVER/boot/initramfs.cpio.gz" -o "$WORKDIR/initramfs.cpio.gz"
 
-      kexec -l "$WORKDIR/vmlinuz" --initrd="$WORKDIR/initramfs" \
-        --command-line="$(cat /proc/cmdline)"
+      kexec -s -l "$WORKDIR/vmlinuz" \
+        --initrd="$WORKDIR/initramfs.cpio.gz" \
+        --command-line="img_srv=$SERVER console=ttyS0,115200n8 console=tty0 ignore_loglevel"
+
       systemctl kexec
     '';
   };

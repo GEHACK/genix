@@ -12,6 +12,10 @@ usage() {
     echo "  TARGET_HOST    (Required) The ssh destination (e.g., root@1.1.1.1)"
     echo ""
     echo "Options:"
+    echo "  -B, --build-host <ssh-host>       Run the installer from this host, so the closure"
+    echo "                                    is built there and copied to the target directly."
+    echo "                                    Ssh options then describe build host -> target,"
+    echo "                                    and the ssh agent is forwarded to the build host."
     echo "  -J, --jump <ssh-host>              Proxy jump through this host, can be repeated"
     echo "  -o, --ssh-option <k=v>            Extra ssh option without '-o', can be repeated"
     echo "  -p, --ssh-port <port>             Ssh port of the target host"
@@ -40,12 +44,22 @@ require_two_values() {
 
 EXTRA_ARGS=()
 POSITIONAL=()
+BUILD_HOST=""
+IDENTITY=""
+EXTRA_FILES=""
+DISK_KEY_REMOTE=()
+DISK_KEY_LOCAL=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h | --help)
             usage
             exit 0
+            ;;
+        -B | --build-host)
+            require_value "$@"
+            BUILD_HOST="$2"
+            shift 2
             ;;
         -J | --jump)
             require_value "$@"
@@ -68,13 +82,13 @@ while [[ $# -gt 0 ]]; do
             ;;
         -i | --identity)
             require_value "$@"
-            EXTRA_ARGS+=(-i "$2")
+            IDENTITY="$2"
             shift 2
             ;;
         --extra-files)
             require_value "$@"
             [[ -d "$2" ]] || die "--extra-files needs a directory, got '$2'."
-            EXTRA_ARGS+=(--extra-files "$2")
+            EXTRA_FILES="$2"
             shift 2
             ;;
         --chown)
@@ -85,7 +99,8 @@ while [[ $# -gt 0 ]]; do
         --disk-encryption-keys)
             require_two_values "$@"
             [[ -f "$3" ]] || die "--disk-encryption-keys needs a local file, got '$3'."
-            EXTRA_ARGS+=(--disk-encryption-keys "$2" "$3")
+            DISK_KEY_REMOTE+=("$2")
+            DISK_KEY_LOCAL+=("$3")
             shift 3
             ;;
         --debug)
@@ -109,6 +124,11 @@ TARGET_HOST="${POSITIONAL[1]}"
 
 [[ "$TARGET_HOST" == *@* ]] || die "TARGET_HOST '$TARGET_HOST' must be <user>@<host>."
 
+if [[ -n "$IDENTITY" ]]; then
+    [[ -z "$BUILD_HOST" ]] || die "--identity cannot be combined with --build-host, forward your ssh agent instead."
+    EXTRA_ARGS+=(-i "$IDENTITY")
+fi
+
 "$SCRIPT_DIR/update_keys.sh"
 
 echo "DANGER: This will partition $TARGET_HOST and install NixOS configuration #$FLAKE_TARGET."
@@ -118,8 +138,38 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-echo "Starting deployment to $TARGET_HOST..."
-nix run github:nix-community/nixos-anywhere -- \
-    --flake "$REPO_ROOT#$FLAKE_TARGET" \
-    "${EXTRA_ARGS[@]}" \
-    "$TARGET_HOST"
+if [[ -z "$BUILD_HOST" ]]; then
+    [[ -z "$EXTRA_FILES" ]] || EXTRA_ARGS+=(--extra-files "$EXTRA_FILES")
+    for i in "${!DISK_KEY_LOCAL[@]}"; do
+        EXTRA_ARGS+=(--disk-encryption-keys "${DISK_KEY_REMOTE[$i]}" "${DISK_KEY_LOCAL[$i]}")
+    done
+
+    echo "Starting deployment to $TARGET_HOST..."
+    nix run github:nix-community/nixos-anywhere -- \
+        --flake "$REPO_ROOT#$FLAKE_TARGET" \
+        "${EXTRA_ARGS[@]}" \
+        "$TARGET_HOST"
+    exit 0
+fi
+
+REMOTE_ROOT="$(ssh "$BUILD_HOST" 'mktemp -d')"
+trap 'ssh "$BUILD_HOST" "rm -rf -- $REMOTE_ROOT"' EXIT
+
+echo "Copying the working tree to $BUILD_HOST:$REMOTE_ROOT/flake..."
+tar -C "$REPO_ROOT" --exclude=./.git --exclude=./tmp -czf - . |
+    ssh "$BUILD_HOST" "mkdir -p $REMOTE_ROOT/flake && tar -xzf - -C $REMOTE_ROOT/flake"
+
+if [[ -n "$EXTRA_FILES" ]]; then
+    tar -C "$EXTRA_FILES" -czf - . |
+        ssh "$BUILD_HOST" "mkdir -p $REMOTE_ROOT/extra-files && tar -xzf - -C $REMOTE_ROOT/extra-files"
+    EXTRA_ARGS+=(--extra-files "$REMOTE_ROOT/extra-files")
+fi
+
+for i in "${!DISK_KEY_LOCAL[@]}"; do
+    ssh "$BUILD_HOST" "mkdir -p $REMOTE_ROOT/disk-keys && cat > $REMOTE_ROOT/disk-keys/$i" <"${DISK_KEY_LOCAL[$i]}"
+    EXTRA_ARGS+=(--disk-encryption-keys "${DISK_KEY_REMOTE[$i]}" "$REMOTE_ROOT/disk-keys/$i")
+done
+
+echo "Starting deployment to $TARGET_HOST, building on $BUILD_HOST..."
+ssh -A -t "$BUILD_HOST" "$(printf '%q ' nix run github:nix-community/nixos-anywhere -- \
+    --flake "$REMOTE_ROOT/flake#$FLAKE_TARGET" "${EXTRA_ARGS[@]}" "$TARGET_HOST")"
