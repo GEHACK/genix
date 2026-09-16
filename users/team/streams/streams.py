@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import gi
+import signal
 
 from aiohttp import web
 from dbus_next import Variant
@@ -13,7 +14,6 @@ from gi.repository import GLib, Gst
 
 Gst.init(None)
 
-screencast_queues = set()
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 
@@ -208,7 +208,7 @@ app.router.add_get(
 )
 
 (webcam_pipeline, webcam_queues) = create_pipeline(
-    src=f"v4l2src device={args.webcam} ! video/x-raw,width=1920,height=1080",
+    src=f"v4l2src device={args.webcam} ! decodebin",
     encoder=args.encoder
 )
 app.router.add_get(
@@ -216,4 +216,16 @@ app.router.add_get(
     lambda request: handle_stream_request(request, webcam_queues)
 )
 
-web.run_app(app, port=args.port, loop=loop)
+
+def terminate(*_):
+    print("Terminating stream service...")
+    for pipeline in [screencast_pipeline, webcam_pipeline]:
+        if pipeline is not None:
+            pipeline.set_state(Gst.State.NULL)
+    loop.stop()
+    exit(0)
+
+signal.signal(signal.SIGINT, terminate)
+signal.signal(signal.SIGTERM, terminate)
+
+web.run_app(app, port=args.port, loop=loop, handle_signals=False)

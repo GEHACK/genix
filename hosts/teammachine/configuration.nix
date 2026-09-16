@@ -1,4 +1,4 @@
-{ config, ... }: {
+{ config, pkgs, ... }: {
   imports = [
     ./disko.nix
     ../../modules
@@ -24,6 +24,8 @@
 
       streams = {
         enable = true;
+        encoder = "vah264enc rate-control=vbr key-int-max=12 ! h264parse";
+        webcam = "/dev/video0";
       };
     };
 
@@ -43,6 +45,7 @@
     graphics = {
       enable = true;
       enable32Bit = true;
+      extraPackages = [ pkgs.intel-media-driver ];
     };
     enableRedistributableFirmware = true;
     nvidia = {

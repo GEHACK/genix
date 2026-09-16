@@ -110,6 +110,7 @@ in
         Environment = [
           "GI_TYPELIB_PATH=${giTypelibPath}"
           "GST_PLUGIN_PATH=${gstPluginPath}"
+          "GST_DEBUG=0"
         ];
       };
 
