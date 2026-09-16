@@ -71,8 +71,7 @@ in
         xterm
       ])
       ++ lib.optionals (langs.python.enable && cfg.jetbrains.enable) [ pycharmAutoDetect ]
-      ++ lib.optionals (langs.java.enable && cfg.jetbrains.enable) [ pkgs.jetbrains.idea ]
-      ++ lib.optionals (langs.kotlin.enable && cfg.jetbrains.enable) [ pkgs.jetbrains.idea ]
+      ++ lib.optionals ((langs.java.enable || langs.kotlin.enable) && cfg.jetbrains.enable) [ pkgs.jetbrains.idea ]
       ++ lib.optionals (langs.cpp.enable && cfg.jetbrains.enable) [ pkgs.jetbrains.clion ]
       ++ lib.optionals langs.java.enable (with pkgs; [
         eclipses.eclipse-java
