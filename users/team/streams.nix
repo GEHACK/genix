@@ -98,7 +98,11 @@ in
     systemd.user.services.streams = {
       Unit = {
         Description = "Python stream service";
-        After = [ "network.target" ];
+        After = [
+          "network.target"
+          "dbus.socket"
+        ];
+        PartOf = "gnome-session.target";
       };
 
       Service = {
@@ -115,7 +119,7 @@ in
       };
 
       Install = {
-        WantedBy = lib.optional cfg.startOnBoot "default.target";
+        WantedBy = lib.optional cfg.startOnBoot "gnome-session.target";
       };
     };
   };

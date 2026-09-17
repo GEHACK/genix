@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import argparse
+import signal
+from asyncio.queues import QueueShutDown
+
 import asyncio
 import gi
-import signal
-
 from aiohttp import web
 from dbus_next import Variant
 from dbus_next.aio import MessageBus
@@ -78,7 +79,7 @@ async def start_screencast():
     session = proxy.get_interface(SESSION_IFACE)
 
     monitor_name = await get_primary_monitor_name()
-    print(f"Casting monitor: {monitor_name}")
+    print(f"Casting monitor: {monitor_name}", flush=True)
     stream_path = await session.call_record_monitor(
         monitor_name,
         {
@@ -96,7 +97,7 @@ async def start_screencast():
 
     def pipewire_stream_added(node_id):
         node_id = int(node_id)
-        print("PipeWire node:", node_id)
+        print("PipeWire node:", node_id, flush=True)
 
         if not node_id_future.done():
             node_id_future.set_result(node_id)
@@ -105,7 +106,7 @@ async def start_screencast():
 
     # This causes Mutter to create the PipeWire stream and emit the signal.
     await session.call_start()
-    print("Screencast started")
+    print("Screencast started", flush=True)
 
     node_id = await node_id_future
 
@@ -150,7 +151,7 @@ def create_pipeline(
     """
     if audio:
         launch = launch + """
-        pipewiresrc !
+        pipewiresrc on-disconnect=eos !
         audioconvert !
         avenc_aac !
         aacparse !
@@ -187,7 +188,7 @@ async def handle_stream_request(request, queues):
         while True:
             data = await queue.get()
             await response.write(data)
-    except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError):
+    except (asyncio.CancelledError, ConnectionResetError, BrokenPipeError, QueueShutDown):
         pass
     finally:
         queues.discard(queue)
@@ -199,7 +200,7 @@ app = web.Application()
 
 pipewire_node_id = asyncio.run(start_screencast())
 (screencast_pipeline, screencast_queues) = create_pipeline(
-    src=f"pipewiresrc path={pipewire_node_id} keepalive-time=100",
+    src=f"pipewiresrc on-disconnect=eos path={pipewire_node_id} keepalive-time=100",
     encoder=args.encoder
 )
 app.router.add_get(
@@ -219,10 +220,12 @@ app.router.add_get(
 
 
 def terminate(*_):
-    print("Terminating stream service...")
-    for pipeline in [screencast_pipeline, webcam_pipeline]:
+    print("Terminating stream service...", flush=True)
+    for (pipeline, queues) in [(screencast_pipeline, screencast_queues), (webcam_pipeline, webcam_queues)]:
         if pipeline is not None:
             pipeline.set_state(Gst.State.NULL)
+            for queue in queues:
+                queue.shutdown(immediate=True)
     loop.stop()
     exit(0)
 
