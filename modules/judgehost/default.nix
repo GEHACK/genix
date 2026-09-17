@@ -2,6 +2,7 @@
 {
   imports = [
     ./boot.nix
+    ./console.nix
     ./cpu-tuning.nix
     ./judgedaemon.nix
     ./networking.nix
