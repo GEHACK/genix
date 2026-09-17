@@ -150,7 +150,7 @@ def create_pipeline(
     """
     if audio:
         launch = launch + """
-        alsasrc !
+        pipewiresrc !
         audioconvert !
         avenc_aac !
         aacparse !
@@ -209,7 +209,8 @@ app.router.add_get(
 
 (webcam_pipeline, webcam_queues) = create_pipeline(
     src=f"v4l2src device={args.webcam} ! decodebin",
-    encoder=args.encoder
+    encoder=args.encoder,
+    audio=True
 )
 app.router.add_get(
     "/webcam.ts",
