@@ -142,18 +142,18 @@ def create_pipeline(
     {src} !
     videoconvert !
     {encoder} !
+    queue !
     mpegtsmux name=mux !
     appsink name=ts_sink
             emit-signals=true
             sync=false
             max-buffers=100
-            drop=true
     """
     if audio:
         launch = launch + """
         pipewiresrc on-disconnect=eos !
         audioconvert !
-        avenc_aac !
+        fdkaacenc !
         aacparse !
         queue !
         mux.
