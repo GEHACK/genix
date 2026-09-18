@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import signal
-from asyncio.queues import QueueShutDown
+from asyncio.queues import QueueFull, QueueShutDown
 
 import asyncio
 import gi
@@ -127,16 +127,23 @@ def on_new_sample(queues, sink):
 
         # Wake all HTTP clients from the GStreamer thread.
         for queue in set(queues):
-            loop.call_soon_threadsafe(queue.put_nowait, data)
+            def put_nowait_drop(data):
+                try:
+                    queue.put_nowait(data)
+                except (QueueShutDown, QueueFull):
+                    # Silently drop packets for full queue, MPEG-TS is resilient
+                    pass
+            loop.call_soon_threadsafe(put_nowait_drop, data)
 
     return Gst.FlowReturn.OK
 
 
 def create_pipeline(
+    queues: set[asyncio.Queue],
     src: str,
     encoder: str,
     audio: bool = False,
-) -> (Gst.Pipeline, set[asyncio.Queue]):
+) -> Gst.Pipeline:
 
     launch = f"""
     {src} !
@@ -167,11 +174,9 @@ def create_pipeline(
         pipeline.use_clock(Gst.SystemClock.obtain())
         pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
 
-    queues = set()
     sink = pipeline.get_by_name("ts_sink")
     sink.connect("new-sample", lambda sink: on_new_sample(queues, sink))
-    pipeline.set_state(Gst.State.PLAYING)
-    return (pipeline, queues)
+    return pipeline
 
 
 async def handle_stream_request(request, queues):
@@ -204,36 +209,121 @@ async def handle_stream_request(request, queues):
 
 app = web.Application()
 
-pipewire_node_id = asyncio.run(start_screencast())
-(screencast_pipeline, screencast_queues) = create_pipeline(
-    src=f"pipewiresrc on-disconnect=eos path={pipewire_node_id} keepalive-time=100",
-    encoder=args.encoder
-)
+
+def on_pipeline_bus_message(name, ended, bus):
+    while True:
+        message = bus.pop()
+        if message is None:
+            break
+
+        if message.type == Gst.MessageType.ERROR:
+            error, debug = message.parse_error()
+
+            print(f"{name}: ERROR: {error}", flush=True)
+            if debug:
+                print(f"{name}: {debug}", flush=True)
+
+            if not ended.done():
+                ended.set_exception(
+                    RuntimeError(f"{name}: {error}")
+                )
+            return
+
+        if message.type == Gst.MessageType.EOS:
+            print(f"{name}: EOS", flush=True)
+
+            if not ended.done():
+                ended.set_exception(
+                    RuntimeError(f"{name}: pipeline ended")
+                )
+            return
+
+
+async def run_pipeline_forever(name, build_pipeline):
+    while True:
+        pipeline = None
+        print(f"Starting the {name} pipeline...", flush=True)
+        try:
+            pipeline = await asyncio.wait_for(build_pipeline(), 3)
+            bus = pipeline.get_bus()
+            ended = loop.create_future()
+            fd = bus.get_pollfd().fd
+            loop.add_reader(fd, lambda: on_pipeline_bus_message(name, ended, bus))
+            print(f"Playing the {name} pipeline...", flush=True)
+            pipeline.set_state(Gst.State.PLAYING)
+            try:
+                await ended
+            finally:
+                loop.remove_reader(fd)
+        except Exception as error:
+            print("Pipeline error:", error, flush=True)
+        finally:
+            if pipeline is not None:
+                pipeline.set_state(Gst.State.NULL)
+
+        await asyncio.sleep(3)
+
+
+async def build_screencast_pipeline():
+    pipewire_node_id = await start_screencast()
+    pipeline = create_pipeline(
+        queues=screencast_queues,
+        src=f"pipewiresrc on-disconnect=eos path={pipewire_node_id} keepalive-time=100",
+        encoder=args.encoder
+    )
+    return pipeline
+
+
+async def build_webcam_pipeline():
+    pipeline = create_pipeline(
+        queues=webcam_queues,
+        src=f"v4l2src device={args.webcam} ! decodebin",
+        encoder=args.encoder,
+        audio=True
+    )
+    return pipeline
+
+
+async def start_pipelines(app):
+    screencast_task = loop.create_task(run_pipeline_forever("screencast", build_screencast_pipeline))
+    webcam_task = loop.create_task(run_pipeline_forever("webcam", build_webcam_pipeline))
+    app["pipeline_tasks"] = [screencast_task, webcam_task]
+
+
+async def stop_pipelines(app):
+    tasks = app.get("pipeline_tasks", [])
+    if tasks:
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    for pipeline in app.get("pipelines", []):
+        pipeline.set_state(Gst.State.NULL)
+
+
+def terminate(*_):
+    print("Terminating stream service...", flush=True)
+    tasks = app.get("pipeline_tasks", [])
+    for task in tasks:
+        task.cancel()
+    for queues in [screencast_queues, webcam_queues]:
+        for queue in queues:
+            queue.shutdown(immediate=True)
+    loop.stop()
+    exit(0)
+
+
+screencast_queues = set()
 app.router.add_get(
     "/screencast.ts",
     lambda request: handle_stream_request(request, screencast_queues)
 )
-
-(webcam_pipeline, webcam_queues) = create_pipeline(
-    src=f"v4l2src device={args.webcam} ! decodebin",
-    encoder=args.encoder,
-    audio=True
-)
+webcam_queues = set()
 app.router.add_get(
     "/webcam.ts",
     lambda request: handle_stream_request(request, webcam_queues)
 )
 
-
-def terminate(*_):
-    print("Terminating stream service...", flush=True)
-    for (pipeline, queues) in [(screencast_pipeline, screencast_queues), (webcam_pipeline, webcam_queues)]:
-        if pipeline is not None:
-            pipeline.set_state(Gst.State.NULL)
-            for queue in queues:
-                queue.shutdown(immediate=True)
-    loop.stop()
-    exit(0)
+app.on_startup.append(start_pipelines)
+app.on_cleanup.append(stop_pipelines)
 
 signal.signal(signal.SIGINT, terminate)
 signal.signal(signal.SIGTERM, terminate)
