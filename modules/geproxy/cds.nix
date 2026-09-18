@@ -11,8 +11,8 @@ in
 {
   options.geproxy.cds.url = lib.mkOption {
     type = lib.types.str;
-    default = "https://cds.local:8443";
-    example = "https://cds.local:8443";
+    default = "https://cds.local:${toString cds_port}";
+    example = "https://10.0.1.2:8443";
     description = ''
       Upstream Contest Data Server that `cds.gehack.nl` is proxied to.
 
