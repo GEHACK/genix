@@ -20,8 +20,13 @@ in
 
     contestId = lib.mkOption {
       type = lib.types.str;
-      example = "fpcs2026";
-      description = "CDS contest ID the presentation client connects to. Set this per contest.";
+      default = "__CONTEST__";
+      description = ''
+        CDS contest id the presentation client connects to. The default is a
+        placeholder that geproxy's contest-placeholder middleware rewrites to the
+        contest id declared in flake.nix, so the laptop never needs a rebuild
+        between contests.
+      '';
     };
   };
 

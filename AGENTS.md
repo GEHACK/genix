@@ -206,6 +206,6 @@ Non-obvious traps, all verified against source:
 - **`users.mutableUsers = false`** everywhere: `passwd` on a host is a no-op.
 - **No `hardware-configuration.nix` exists anywhere.** Hardware facts (PCI bus IDs, NIC names, disk paths) are hand-written into `hosts/<host>/configuration.nix` and `disko.nix`. Never "regenerate" one.
 - **Hostname ≠ flake attribute**: `teammachine` produces `networking.hostName = "team"`; `scoreboard-laptop` sets none.
-- **Two contest IDs live in two layers**: `contestId = "fpcs2026"` in `modules/geproxy/balloons.nix` and `scoreboard.contestId = "ipc2026"` in `hosts/scoreboard-laptop/configuration.nix`. A new contest touches both.
+- **The contest id lives only in `flake.nix`** as the `contest_id` specialArg. Balloons consumes it directly; the scoreboard laptop ships the literal `__CONTEST__`, which geproxy's `contest-placeholder` Traefik middleware (`modules/geproxy/traefik.nix`, attached to the `judge` and `cds` routers) rewrites in the request path. A new contest therefore rebuilds geproxy only.
 - **`README.md` is stale in specifics**: its `authorized_keys` member list omits `mexdeloo`/`kevinjil` and lists a non-existent `zeo`; it cites `modules/teammachine/languages.nix` which does not exist (real path: `users/team/languages.nix`); it places DevDocs on the teammachine when it is a container on geproxy; it lists one cachix substituter when there are two; and it never mentions `scripts/nixos-anywhere.sh`. Trust the source.
 - **`.gitignore` covers `CLAUDE.md` and `.claude` but not `AGENTS.md`** — this file is tracked.

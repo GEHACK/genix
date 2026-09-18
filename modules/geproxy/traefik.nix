@@ -1,4 +1,4 @@
-{ config, admin_ip, ... }:
+{ config, admin_ip, contest_id, ... }:
 {
   sops.secrets.cloudflare-api-key-env = { };
   services.traefik = {
@@ -46,6 +46,7 @@
           judge = {
             rule = "Host(`judge.gehack.nl`)";
             service = "judge";
+            middlewares = [ "contest-placeholder" ];
             entryPoints = [ "websecure" ];
             tls = {
               certResolver = "myresolver";
@@ -70,11 +71,17 @@
           cds = {
             rule = "Host(`cds.gehack.nl`)";
             service = "cds";
+            middlewares = [ "contest-placeholder" ];
             entryPoints = [ "websecure" ];
             tls = {
               certResolver = "myresolver";
             };
           };
+        };
+
+        middlewares.contest-placeholder.replacePathRegex = {
+          regex = "__CONTEST__";
+          replacement = contest_id;
         };
 
         services = {

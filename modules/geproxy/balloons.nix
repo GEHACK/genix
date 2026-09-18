@@ -3,11 +3,10 @@
   lib,
   balloons-pkg,
   dj_url,
+  contest_id,
   ...
 }:
 let
-  # Edit these for your contest.
-  contestId = "fpcs2026";
   escposAddr = "10.0.0.11:9100";
   escposWidth = "576";
   publicHost = "balloons.gehack.nl";
@@ -42,12 +41,12 @@ in
     environment = {
       ADDR = listenAddr;
       DOMJUDGE_URL = dj_url;
-      DOMJUDGE_CONTEST_ID = contestId;
+      DOMJUDGE_CONTEST_ID = contest_id;
       PRINTER_KIND = "escpos";
       PRINTER_ESCPOS_ADDR = escposAddr;
       PRINTER_ESCPOS_WIDTH = escposWidth;
       STATE_DB = "/var/lib/balloons/balloons.db";
-      CONTEST_TZ = "Europe/Amsterdam";
+      CONTEST_TZ = config.time.timeZone;
       SCAN_BASE_URL = "https://${publicHost}";
       # typst downloads @preview/* packages into XDG_CACHE_HOME at runtime.
       XDG_CACHE_HOME = "/var/cache/balloons";

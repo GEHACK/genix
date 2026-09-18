@@ -59,6 +59,7 @@
       admin_ip = "10.0.1.1";
       admin_subnet = "10.0.1.0/24";
       imaged_port = 8080;
+      contest_id = "fpcs2026";
       specialArgs = {
         inherit
           dj_url
@@ -68,6 +69,7 @@
           admin_ip
           admin_subnet
           imaged_port
+          contest_id
           ;
       };
 
