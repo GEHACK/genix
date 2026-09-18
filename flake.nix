@@ -59,7 +59,7 @@
       admin_ip = "10.0.1.1";
       admin_subnet = "10.0.1.0/24";
       imaged_port = 8080;
-      contest_id = "prelims";
+      contest_id = "prelims-test-session";
       specialArgs = {
         inherit
           dj_url
