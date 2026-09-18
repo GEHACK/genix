@@ -1,20 +1,26 @@
-{ config, ... }:
 {
+  config,
+  ...
+}:
+{
+
   config = {
     sops.secrets = {
       "cds.ccs.password" = { };
       "cds.admin.password" = { };
       "cds.presadmin.password" = { };
       "cds.presentation-client.password" = { };
+      "cds.analyst.password" = { };
     };
 
     sops.templates."cds.env".content = ''
-      CCS_URL=https://judge.gehack.nl/api/contests
+      CCS_URL=https://judge.gehack.nl/api/contests/__CONTEST__
       CCS_USER=admin
       CCS_PASSWORD=${config.sops.placeholder."cds.ccs.password"}
       ADMIN_PASSWORD=${config.sops.placeholder."cds.admin.password"}
       PRESADMIN_PASSWORD=${config.sops.placeholder."cds.presadmin.password"}
       PRESENTATION_PASSWORD=${config.sops.placeholder."cds.presentation-client.password"}
+      LIVE_PASSWORD=${config.sops.placeholder."cds.analyst.password"}
     '';
 
     virtualisation.oci-containers = {

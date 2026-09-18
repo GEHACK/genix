@@ -6,7 +6,6 @@ _: {
   ];
 
   networking.hostName = "cds";
-  cds.contestId = "eapc2025";
 
   hardware.enableRedistributableFirmware = true;
 
