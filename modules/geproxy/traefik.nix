@@ -88,9 +88,13 @@
           judge.loadBalancer.servers = [
             { url = "https://judge.gehack.nl"; }
           ];
-          cds.loadBalancer.servers = [
-            { url = "https://judge.gehack.nl"; }
-          ];
+          cds.loadBalancer = {
+            servers = [
+              { url = "https://10.0.1.2:8443"; }
+            ];
+            # CDS presents its own self-signed cert on 8443.
+            serversTransport = "cds";
+          };
           loom.loadBalancer.servers = [
             { url = "https://loom.gehack.nl"; }
           ];
@@ -98,6 +102,8 @@
             { url = "http://127.0.0.1:3002"; }
           ];
         };
+
+        serversTransports.cds.insecureSkipVerify = true;
       };
     };
   };

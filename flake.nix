@@ -138,6 +138,10 @@
         ./hosts/judgehost/configuration.nix
       ];
 
+      cdsModules = commonModules ++ [
+        ./hosts/cds/configuration.nix
+      ];
+
       teammachine-isoModules = commonModules ++ [
         (mkHomeManager {
           users = {
@@ -207,6 +211,12 @@
         modules = judgehostModules;
       };
 
+      cds = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = cdsModules;
+      };
+
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -251,6 +261,7 @@
           scoreboard-laptop
           scoreboard-laptop_arm
           judgehost
+          cds
           teammachine-iso
           ;
       };
@@ -262,6 +273,7 @@
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
+        cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
       };

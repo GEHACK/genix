@@ -184,7 +184,8 @@ in
           "${contestBridge},6,${geproxy_ip}"
           "${contestBridge},42,${geproxy_ip}"
           "${adminBridge},3,${admin_ip}"
-          "${adminBridge},6,8.8.8.8,1.1.1.1"
+          "tag:${adminBridge},tag:!cds,6,8.8.8.8,1.1.1.1"
+          "tag:cds,6,${admin_ip}"
           "${adminBridge},42,${admin_ip}"
         ];
         address = [
@@ -212,6 +213,7 @@ in
         dhcp-host = [
           "b0:0c:d1:de:f0:0d,10.0.0.10,infinite"
           "02:20:d7:6f:20:cc,10.0.0.11,infinite"
+          "3c:18:a0:7e:ba:15,set:cds,10.0.1.2,infinite"
         ];
       };
     };
