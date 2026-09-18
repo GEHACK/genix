@@ -28,6 +28,7 @@
         webcam = "/dev/video0";
       };
     };
+    printers.enable = true;
 
     netboot = {
       pxe.enable = true;
