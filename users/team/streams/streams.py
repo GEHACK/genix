@@ -153,6 +153,8 @@ def create_pipeline(
         launch = launch + """
         pipewiresrc on-disconnect=eos !
         audioconvert !
+        audioresample !
+        audio/x-raw,rate=48000 !
         fdkaacenc !
         aacparse !
         queue !
@@ -160,6 +162,10 @@ def create_pipeline(
         """
 
     pipeline = Gst.parse_launch(launch)
+    if audio:
+        # Force a pipeline clock to prevent clock issues between video and audio clocks
+        pipeline.use_clock(Gst.SystemClock.obtain())
+        pipeline.set_start_time(Gst.CLOCK_TIME_NONE)
 
     queues = set()
     sink = pipeline.get_by_name("ts_sink")
