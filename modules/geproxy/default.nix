@@ -37,5 +37,13 @@ in
     inventoryUrl = "${loom_url}/api/inventory";
     sshKeyFile = config.sops.secrets.fanout-ssh-key.path;
     authorizedKeys = operatorKeys;
+    sshOpts = [
+      "-o"
+      "UserKnownHostsFile=/dev/null"
+      "-o"
+      "GlobalKnownHostsFile=/dev/null"
+      "-o"
+      "StrictHostKeyChecking=no"
+    ];
   };
 }
