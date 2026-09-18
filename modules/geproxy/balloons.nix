@@ -9,6 +9,11 @@
 let
   escposAddr = "10.0.0.11:9100";
   escposWidth = "576";
+  # DOMjudge group ids. `system` holds the internal GEHACK team, whose balloons
+  # must never reach the printer; `observers` still gets balloons but is skipped
+  # when deriving the first solve per problem.
+  hideGroupIDs = "system,jury,organization";
+  noFirstSolveGroupIDs = "observers";
   publicHost = "balloons.gehack.nl";
   listenAddr = "127.0.0.1:8090";
 in
@@ -42,6 +47,8 @@ in
       ADDR = listenAddr;
       DOMJUDGE_URL = dj_url;
       DOMJUDGE_CONTEST_ID = contest_id;
+      HIDE_GROUP_IDS = hideGroupIDs;
+      NO_FIRST_SOLVE_GROUP_IDS = noFirstSolveGroupIDs;
       PRINTER_KIND = "escpos";
       PRINTER_ESCPOS_ADDR = escposAddr;
       PRINTER_ESCPOS_WIDTH = escposWidth;
