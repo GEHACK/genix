@@ -16,6 +16,7 @@ in
   imports = [
     ./balloons.nix
     ./boot.nix
+    ./cds.nix
     ./cuproxy.nix
     ./devdocs.nix
     ./fanout.nix

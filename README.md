@@ -58,8 +58,9 @@ Acts as the contest network router. Runs on hardware with multiple NICs bridged 
 | `br-contest` | `eno3–eno6` | 10.0.0.0/24 | Contest / team network |
 
 - `wlp6s0` and `eno1` use DHCP for upstream connectivity
-- dnsmasq provides DHCP and DNS on both bridges
-- Contest DNS resolves `judge.gehack.nl`, `loom.gehack.nl`, `cds.gehack.nl`, `imaged.gehack.nl`, and `docs.gehack.nl` to `10.0.0.1`
+- Two dnsmasq instances, one per bridge: `dnsmasq` serves the contest bridge as uid 995, `dnsmasq-admin` serves the admin bridge as uid 994. Only the contest one is caught by the internet kill switch, so admin DNS keeps working while the contest network is isolated
+- Both instances resolve `judge.gehack.nl`, `loom.gehack.nl`, `cds.gehack.nl`, `imaged.gehack.nl`, and `docs.gehack.nl` to geproxy — `10.0.0.1` on the contest bridge, `10.0.1.1` on the admin bridge — and forward everything else to the upstream servers geproxy itself learned over DHCP
+- systemd-resolved runs with `MulticastDNS=resolve` so geproxy can resolve `.local` names announced on either bridge; it does not announce anything itself
 - PXE/imaged boot configured for BIOS and EFI clients via dnsmasq `dhcp-boot`
 
 **imaged** runs as native NixOS services (`imaged-server` + `imaged-tftp`) for disk imaging and deployment of teammachines over the contest network. The web UI is accessible at `imaged.gehack.nl` via Traefik; PXE clients use `http://10.0.0.1:8080/boot/boot.ipxe` directly.
@@ -75,7 +76,7 @@ disable-internet  # flushes chain — contest network is isolated
 **Traefik** reverse proxies HTTPS traffic (Cloudflare ACME DNS challenge) for:
 - `judge.gehack.nl` → DOMjudge
 - `loom.gehack.nl` → Loom contest platform
-- `cds.gehack.nl` → Contest Data Server
+- `cds.gehack.nl` → Contest Data Server, discovered over mDNS at `cds.local:8443` (`geproxy.cds.url`); its TLS certificate is not verified, so a self-signed CDS cert works
 - `imaged.gehack.nl` → imaged UI/API (port 8080)
 
 Disk layout uses RAID1 mdadm with dual GRUB mirrors.
@@ -91,6 +92,17 @@ A minimal kiosk that boots directly into the ICPC presentation client, no deskto
 - CDS credentials loaded from sops secrets at runtime
 - Service restarts automatically on failure (5 s delay)
 - Waits for `network-online.target` before starting
+
+---
+
+### `cds` — Contest Data Server
+
+Runs the ICPC CDS container (`ghcr.io/icpctools/cds`) on the admin network, feeding the scoreboard kiosk.
+
+- CDS listens on 8443 with a self-signed certificate; contest data lives in `/var/lib/cds`
+- All CDS passwords come from sops; `CCS_URL` points at `judge.gehack.nl`, which the admin resolver sends to geproxy so the `__CONTEST__` placeholder gets rewritten
+- avahi announces `cds.local`, which is how geproxy's Traefik finds it — no DHCP reservation needed
+- Root accepts `fanout_pubkey`, so geproxy can deploy to it like a teammachine
 
 ---
 

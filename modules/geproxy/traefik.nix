@@ -68,15 +68,6 @@
               certResolver = "myresolver";
             };
           };
-          cds = {
-            rule = "Host(`cds.gehack.nl`)";
-            service = "cds";
-            middlewares = [ "contest-placeholder" ];
-            entryPoints = [ "websecure" ];
-            tls = {
-              certResolver = "myresolver";
-            };
-          };
         };
 
         middlewares.contest-placeholder.replacePathRegex = {
@@ -86,9 +77,6 @@
 
         services = {
           judge.loadBalancer.servers = [
-            { url = "https://judge.gehack.nl"; }
-          ];
-          cds.loadBalancer.servers = [
             { url = "https://judge.gehack.nl"; }
           ];
           loom.loadBalancer.servers = [

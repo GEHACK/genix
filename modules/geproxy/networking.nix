@@ -12,8 +12,48 @@ let
   contestBridge = "br-contest";
   adminBridge = "br-admin";
   dnsmasqId = 995;
+  dnsmasqAdminId = 994;
+
+  uplinkResolvConf = "/run/systemd/resolve/resolv.conf";
 
   imagedUrl = "http://${geproxy_ip}:${toString imaged_port}";
+
+  proxiedHosts = ip: [
+    "/judge.gehack.nl/${ip}"
+    "/imaged.gehack.nl/${ip}"
+    "/loom.gehack.nl/${ip}"
+    "/cds.gehack.nl/${ip}"
+    "/cds/${ip}"
+    "/docs.gehack.nl/${ip}"
+  ];
+
+  dnsmasqFormat = pkgs.formats.keyValue {
+    mkKeyValue = name: value: if value == true then name else "${name}=${toString value}";
+    listsAsDuplicateKeys = true;
+  };
+
+  adminDnsmasqConf = dnsmasqFormat.generate "dnsmasq-admin.conf" {
+    log-queries = true;
+    log-dhcp = true;
+
+    domain-needed = true;
+    bogus-priv = true;
+
+    bind-interfaces = true;
+    interface = adminBridge;
+    dhcp-authoritative = true;
+    listen-address = admin_ip;
+    resolv-file = uplinkResolvConf;
+    dhcp-leasefile = "/var/lib/dnsmasq-admin/dnsmasq.leases";
+
+    dhcp-range = "${adminBridge},10.0.1.50,10.0.1.250,255.255.255.0,infinite";
+    dhcp-option = [
+      "${adminBridge},3,${admin_ip}"
+      "${adminBridge},6,${admin_ip}"
+      "${adminBridge},42,${admin_ip}"
+    ];
+    address = proxiedHosts admin_ip;
+  };
 in
 {
   networking = {
@@ -92,6 +132,8 @@ in
             iifname "${contestBridge}" ip daddr ${geproxy_ip} udp dport 53 accept
             iifname "${contestBridge}" ip daddr ${geproxy_ip} tcp dport 53 accept
 
+            iifname { "${contestBridge}", "${adminBridge}" } udp dport 5353 accept
+
             iifname "${contestBridge}" ip daddr ${geproxy_ip} tcp dport 631 accept
 
             iifname { "${adminBridge}", "${wifiIface}" } tcp dport 22 accept
@@ -148,6 +190,15 @@ in
   users.groups.dnsmasq = {
     gid = dnsmasqId;
   };
+  users.users.dnsmasq-admin = {
+    isSystemUser = true;
+    group = "dnsmasq-admin";
+    uid = dnsmasqAdminId;
+  };
+  users.groups.dnsmasq-admin = {
+    gid = dnsmasqAdminId;
+  };
+
   services = {
     dnsmasq = {
       resolveLocalQueries = false;
@@ -160,40 +211,26 @@ in
         bogus-priv = true;
 
         bind-interfaces = true;
-        interface = [
-          contestBridge
-          adminBridge
-        ];
+        interface = contestBridge;
         except-interface = wifiIface;
         enable-tftp = true;
         tftp-root = "${pkgs.ipxe}";
         dhcp-authoritative = true;
-        listen-address = [
-          geproxy_ip
-          admin_ip
-        ];
+        listen-address = geproxy_ip;
+        resolv-file = uplinkResolvConf;
+        local = "/contest.local/";
         domain = [
           "contest.local,${contestBridge}"
         ];
         dhcp-range = [
           "${contestBridge},10.0.0.50,10.0.0.250,255.255.255.0,infinite"
-          "${adminBridge},10.0.1.50,10.0.1.250,255.255.255.0,infinite"
         ];
         dhcp-option = [
           "${contestBridge},3,${geproxy_ip}"
           "${contestBridge},6,${geproxy_ip}"
           "${contestBridge},42,${geproxy_ip}"
-          "${adminBridge},3,${admin_ip}"
-          "${adminBridge},6,8.8.8.8,1.1.1.1"
-          "${adminBridge},42,${admin_ip}"
         ];
-        address = [
-          "/judge.gehack.nl/${geproxy_ip}"
-          "/imaged.gehack.nl/${geproxy_ip}"
-          "/loom.gehack.nl/${geproxy_ip}"
-          "/cds.gehack.nl/${geproxy_ip}"
-          "/docs.gehack.nl/${geproxy_ip}"
-        ];
+        address = proxiedHosts geproxy_ip;
         dhcp-userclass = "set:ipxe,iPXE";
         dhcp-match = [
           "set:bios,60,PXEClient:Arch:00000"
@@ -217,6 +254,14 @@ in
     };
     dnsmasq.settings.server = [ "/team.loom/127.0.0.1#5053" ];
 
+    resolved = {
+      enable = true;
+      settings.Resolve = {
+        MulticastDNS = "resolve";
+        LLMNR = false;
+      };
+    };
+
     https-dns-proxy = {
       enable = true;
       address = "127.0.0.1";
@@ -227,6 +272,36 @@ in
         "-b"
         "127.0.0.1"
       ];
+    };
+  };
+
+  systemd.services.dnsmasq-admin = {
+    description = "Dnsmasq Daemon — admin network";
+    after = [
+      "network.target"
+      "systemd-resolved.service"
+    ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.dnsmasq}/bin/dnsmasq -k --conf-file=${adminDnsmasqConf}";
+      ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
+      User = "dnsmasq-admin";
+      Group = "dnsmasq-admin";
+      StateDirectory = "dnsmasq-admin";
+      AmbientCapabilities = [
+        "CAP_NET_BIND_SERVICE"
+        "CAP_NET_RAW"
+        "CAP_NET_ADMIN"
+      ];
+      CapabilityBoundingSet = [
+        "CAP_NET_BIND_SERVICE"
+        "CAP_NET_RAW"
+        "CAP_NET_ADMIN"
+      ];
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      Restart = "on-failure";
     };
   };
 
