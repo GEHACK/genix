@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, admin_ip, ... }:
 {
   sops.secrets.cloudflare-api-key-env = { };
   services.traefik = {
@@ -25,7 +25,7 @@
         };
       };
       entryPoints.admin-net-secure = {
-        address = "10.0.1.1:433";
+        address = "${admin_ip}:433";
         http.tls = {
           options = "strictTLS";
           certResolver = "myresolver";

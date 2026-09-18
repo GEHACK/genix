@@ -1,9 +1,11 @@
-_:
+{
+  geproxy_ip,
+  imaged_port,
+  ...
+}:
 let
   publicHost = "imaged.gehack.nl";
-  contestAddress = "10.0.0.1";
-  serverPort = 8080;
-  machineAddr = "${contestAddress}:${toString serverPort}";
+  machineAddr = "${geproxy_ip}:${toString imaged_port}";
   webAddr = "127.0.0.1:8081";
 in
 {

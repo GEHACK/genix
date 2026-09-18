@@ -1,4 +1,20 @@
-{ pkgs, ... }:
+{
+  pkgs,
+  geproxy_ip,
+  contest_subnet,
+  admin_ip,
+  admin_subnet,
+  imaged_port,
+  ...
+}:
+let
+  wifiIface = "wlp6s0";
+  contestBridge = "br-contest";
+  adminBridge = "br-admin";
+  dnsmasqId = 995;
+
+  imagedUrl = "http://${geproxy_ip}:${toString imaged_port}";
+in
 {
   networking = {
     hostName = "geproxy";
@@ -8,13 +24,13 @@
       networks."iotroam".psk = "gehackgehack";
     };
     bridges = {
-      "br-admin" = {
+      ${adminBridge} = {
         interfaces = [
           "eno1"
           "eno2"
         ];
       };
-      "br-contest" = {
+      ${contestBridge} = {
         interfaces = [
           "eno3"
           "eno4"
@@ -24,24 +40,24 @@
       };
     };
     interfaces = {
-      "wlp6s0".useDHCP = true;
-      "br-contest" = {
+      ${wifiIface}.useDHCP = true;
+      ${contestBridge} = {
         useDHCP = false;
         ipv4 = {
           addresses = [
             {
-              address = "10.0.0.1";
+              address = geproxy_ip;
               prefixLength = 24;
             }
           ];
         };
       };
-      "br-admin" = {
+      ${adminBridge} = {
         useDHCP = false;
         ipv4 = {
           addresses = [
             {
-              address = "10.0.1.1";
+              address = admin_ip;
               prefixLength = 24;
             }
           ];
@@ -52,25 +68,91 @@
     nftables = {
       enable = true;
       checkRuleset = true;
-      rulesetFile = ./assets/firewall.nft;
+      ruleset = ''
+        flush ruleset
+
+        table inet filter {
+          chain input {
+            type filter hook input priority 0; policy drop;
+
+            iif lo accept
+            ct state established,related accept
+            ct state invalid drop
+
+            ip protocol icmp accept
+            ip6 nexthdr icmpv6 accept
+
+            iifname { "${contestBridge}", "${adminBridge}" } udp dport { 67, 68 } accept
+
+            udp dport 123 accept
+
+            iifname "${adminBridge}" udp dport 53 accept
+            iifname "${adminBridge}" tcp dport 53 accept
+
+            iifname "${contestBridge}" ip daddr ${geproxy_ip} udp dport 53 accept
+            iifname "${contestBridge}" ip daddr ${geproxy_ip} tcp dport 53 accept
+
+            iifname "${contestBridge}" ip daddr ${geproxy_ip} tcp dport 631 accept
+
+            iifname { "${adminBridge}", "${wifiIface}" } tcp dport 22 accept
+            iifname { "${adminBridge}", "${wifiIface}", "${contestBridge}" } tcp dport { 80, 443 } accept
+            iifname { "${adminBridge}", "${wifiIface}" } tcp dport 3000 accept
+
+            iifname "${contestBridge}" udp dport 69 accept
+            iifname "${contestBridge}" tcp dport ${toString imaged_port} accept
+
+            iifname "${contestBridge}" udp dport 49152-65535 accept
+          }
+
+          chain contest_inet {
+          }
+
+          chain forward {
+            type filter hook forward priority 0; policy drop;
+
+            ct state established,related accept
+            ct state invalid drop
+
+            iifname "${adminBridge}" oifname "${wifiIface}" accept
+            iifname "${adminBridge}" oifname "${contestBridge}" accept
+
+            iifname "${contestBridge}" oifname "${wifiIface}" jump contest_inet
+          }
+
+          chain output {
+            type filter hook output priority 0; policy accept;
+            meta skuid ${toString dnsmasqId} udp dport 53 jump contest_inet
+            meta skuid ${toString dnsmasqId} tcp dport 53 jump contest_inet
+            meta skuid ${toString dnsmasqId} udp dport 53 drop
+            meta skuid ${toString dnsmasqId} tcp dport 53 drop
+          }
+        }
+
+        table ip nat {
+          chain postrouting {
+            type nat hook postrouting priority 100; policy accept;
+
+            iifname "${adminBridge}" oifname "${wifiIface}" ip saddr ${admin_subnet} masquerade
+            iifname "${contestBridge}" oifname "${wifiIface}" ip saddr ${contest_subnet} masquerade
+          }
+        }
+      '';
     };
   };
 
   users.users.dnsmasq = {
     isSystemUser = true;
     group = "dnsmasq";
-    uid = 995;
+    uid = dnsmasqId;
   };
   users.groups.dnsmasq = {
-    gid = 995;
+    gid = dnsmasqId;
   };
   services = {
-    # dnsmasq configuration
     dnsmasq = {
       resolveLocalQueries = false;
       enable = true;
       settings = {
-        # Logging
         log-queries = true;
         log-dhcp = true;
 
@@ -79,57 +161,39 @@
 
         bind-interfaces = true;
         interface = [
-          "br-contest"
-          "br-admin"
+          contestBridge
+          adminBridge
         ];
-        except-interface = "wlp6s0";
-
-        # TFTP chainloads iPXE; iPXE then fetches the imaged boot script over HTTP.
+        except-interface = wifiIface;
         enable-tftp = true;
         tftp-root = "${pkgs.ipxe}";
-
-        # DHCP
         dhcp-authoritative = true;
-
-        # Listen addresses
         listen-address = [
-          "10.0.0.1"
-          "10.0.1.1"
+          geproxy_ip
+          admin_ip
         ];
-
-        # Domains
         domain = [
-          "contest.local,br-contest"
+          "contest.local,${contestBridge}"
         ];
-
-        # DHCP ranges
         dhcp-range = [
-          "br-contest,10.0.0.50,10.0.0.250,255.255.255.0,infinite"
-          "br-admin,10.0.1.50,10.0.1.250,255.255.255.0,infinite"
+          "${contestBridge},10.0.0.50,10.0.0.250,255.255.255.0,infinite"
+          "${adminBridge},10.0.1.50,10.0.1.250,255.255.255.0,infinite"
         ];
-
-        # DHCP options
         dhcp-option = [
-          # Contest: captive, everything through 10.0.0.1
-          "br-contest,3,10.0.0.1"
-          "br-contest,6,10.0.0.1"
-          "br-contest,42,10.0.0.1"
-          # Admin: real gateway + public DNS so it bypasses dnsmasq
-          "br-admin,3,10.0.1.1"
-          "br-admin,6,8.8.8.8,1.1.1.1"
-          "br-admin,42,10.0.1.1"
+          "${contestBridge},3,${geproxy_ip}"
+          "${contestBridge},6,${geproxy_ip}"
+          "${contestBridge},42,${geproxy_ip}"
+          "${adminBridge},3,${admin_ip}"
+          "${adminBridge},6,8.8.8.8,1.1.1.1"
+          "${adminBridge},42,${admin_ip}"
         ];
-
-        # DNS addresses
         address = [
-          "/judge.gehack.nl/10.0.0.1"
-          "/imaged.gehack.nl/10.0.0.1"
-          "/loom.gehack.nl/10.0.0.1"
-          "/cds.gehack.nl/10.0.0.1"
-          "/docs.gehack.nl/10.0.0.1"
+          "/judge.gehack.nl/${geproxy_ip}"
+          "/imaged.gehack.nl/${geproxy_ip}"
+          "/loom.gehack.nl/${geproxy_ip}"
+          "/cds.gehack.nl/${geproxy_ip}"
+          "/docs.gehack.nl/${geproxy_ip}"
         ];
-
-        # PXE/imaged boot configuration
         dhcp-userclass = "set:ipxe,iPXE";
         dhcp-match = [
           "set:bios,60,PXEClient:Arch:00000"
@@ -138,11 +202,11 @@
           "set:efi64,60,PXEClient:Arch:00009"
         ];
         dhcp-boot = [
-          "tag:!ipxe,tag:bios,undionly.kpxe,,10.0.0.1"
-          "tag:!ipxe,tag:efi32,ipxe.efi,,10.0.0.1"
-          "tag:!ipxe,tag:efibc,ipxe.efi,,10.0.0.1"
-          "tag:!ipxe,tag:efi64,ipxe.efi,,10.0.0.1"
-          "tag:ipxe,http://10.0.0.1:8080/boot/boot.ipxe"
+          "tag:!ipxe,tag:bios,undionly.kpxe,,${geproxy_ip}"
+          "tag:!ipxe,tag:efi32,ipxe.efi,,${geproxy_ip}"
+          "tag:!ipxe,tag:efibc,ipxe.efi,,${geproxy_ip}"
+          "tag:!ipxe,tag:efi64,ipxe.efi,,${geproxy_ip}"
+          "tag:ipxe,${imagedUrl}/boot/boot.ipxe"
         ];
 
         dhcp-host = [
@@ -151,8 +215,6 @@
         ];
       };
     };
-
-    # proxy team.loom to loom to resolve the ip of some team
     dnsmasq.settings.server = [ "/team.loom/127.0.0.1#5053" ];
 
     https-dns-proxy = {

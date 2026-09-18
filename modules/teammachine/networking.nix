@@ -1,7 +1,7 @@
 {
   lib,
   pkgs,
-  judge_ip,
+  geproxy_ip,
   contest_subnet,
   ...
 }:
@@ -15,7 +15,7 @@
     hostName = "team";
     useDHCP = false;
     extraHosts = ''
-      ${judge_ip} judge
+      ${geproxy_ip} judge
     '';
 
     interfaces.enp0s31f6.wakeOnLan.enable = true;
@@ -33,7 +33,7 @@
             chain input {
                 type filter hook input priority filter; policy accept;
                 iifname "lo" accept
-                ip saddr ${judge_ip} accept
+                ip saddr ${geproxy_ip} accept
                 ip saddr ${contest_subnet} drop
             }
 
@@ -44,7 +44,7 @@
             chain output {
                 type filter hook output priority filter; policy accept;
                 oifname "lo" accept
-                ip daddr ${judge_ip} accept
+                ip daddr ${geproxy_ip} accept
                 ip daddr ${contest_subnet} drop
             }
         }
@@ -54,7 +54,7 @@
 
   services.timesyncd = {
     enable = lib.mkForce true;
-    servers = [ "10.0.0.1" ];
+    servers = [ geproxy_ip ];
   };
 
   boot.blacklistedKernelModules = [

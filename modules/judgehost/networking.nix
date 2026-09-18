@@ -1,5 +1,5 @@
 {
-  judge_ip,
+  geproxy_ip,
   lib,
   pkgs,
   ...
@@ -65,5 +65,5 @@ in
     };
   };
 
-  services.timesyncd.servers = [ judge_ip ];
+  services.timesyncd.servers = [ geproxy_ip ];
 }

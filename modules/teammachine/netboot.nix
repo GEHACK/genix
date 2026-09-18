@@ -2,6 +2,8 @@
   config,
   lib,
   pkgs,
+  geproxy_ip,
+  imaged_port,
   ...
 }:
 let
@@ -40,7 +42,7 @@ let
       systemd
     ];
     text = ''
-      SERVER="http://10.0.0.1:8080"
+      SERVER="http://${geproxy_ip}:${toString imaged_port}"
       WORKDIR="$(mktemp -d)"
       trap 'rm -rf "$WORKDIR"' EXIT
 

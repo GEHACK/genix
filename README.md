@@ -41,7 +41,7 @@ The primary machine used by contestants during a competition. Available for both
 - Webcam HTTP stream on port 8080 via VLC (`webcamstream.nix`) - by default disabled
 - `pxe-reboot` command — sets EFI next-boot to the PXE/IPv4 entry and reboots for imaged deployment
 - USBGuard enabled (currently allows all present devices)
-- Firewall drops all traffic to `contest_subnet` except to/from `judge_ip`
+- Firewall drops all traffic to `contest_subnet` except to/from `geproxy_ip`
 - Sleep, hibernate, and suspend are all disabled
 
 ---
@@ -218,4 +218,4 @@ To add a new team member's key, add their age public key to `.sops.yaml` and re-
 
 ### Firewall
 
-The project uses nftables exclusively — do not introduce iptables rules. Geproxy rules live in `modules/geproxy/assets/firewall.nft`. Teammachine rules are written inline in `modules/teammachine/networking.nix` using the `contest_subnet` and `judge_ip` specialArgs variables.
+The project uses nftables exclusively — do not introduce iptables rules. Both rulesets are written inline in Nix — `modules/geproxy/networking.nix` and `modules/teammachine/networking.nix` — and are built from the `geproxy_ip`, `contest_subnet`, `admin_ip`, `admin_subnet` and `imaged_port` specialArgs.

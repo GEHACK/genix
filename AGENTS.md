@@ -23,7 +23,7 @@ graph LR
 
 Four layers, in evaluation order:
 
-1. **`flake.nix`** — declares contest-wide facts as `specialArgs`: `dj_url`, `loom_url`, `judge_ip = "10.0.0.1"`, `contest_subnet = "10.0.0.0/24"`. Builds each system as `commonModules ++ <role-specific flake-input modules> ++ mkHomeManager {...} ++ ./hosts/<host>/configuration.nix`.
+1. **`flake.nix`** — declares contest-wide facts as `specialArgs`: `dj_url`, `loom_url`, `geproxy_ip = "10.0.0.1"`, `contest_subnet = "10.0.0.0/24"`, `admin_ip = "10.0.1.1"`, `admin_subnet = "10.0.1.0/24"`, `imaged_port = 8080`. Builds each system as `commonModules ++ <role-specific flake-input modules> ++ mkHomeManager {...} ++ ./hosts/<host>/configuration.nix`.
 2. **`hosts/<host>/configuration.nix`** — the *only* thing that imports `modules/`. Contains just `imports = [ ./disko.nix ../../modules ../../modules/<role> ];`, hardware facts, and a declarative toggle block. No logic.
 3. **`modules/`** — `modules/default.nix` is a barrel imported by every host; `modules/<role>/default.nix` is a barrel of single-concern files.
 4. **`users/`** — **home-manager modules only**, wired in `flake.nix` via `mkHomeManager`. They never contain `users.users.*`.
@@ -137,13 +137,13 @@ in {
 
 **Option namespaces**: system toggles under `teammachine.*` / `scoreboard.*`; the fanout mimics upstream naming as `services.buildFanout.*`. Home-manager options *also* live under `teammachine.*` — same prefix, different module system.
 
-**Naming is layered and deliberately inconsistent**: kebab-case files and dirs (`user-tools.nix`, `pxe-boot.nix`), camelCase `let` bindings (`operatorKeys`), snake_case `specialArgs` (`dj_url`, `judge_ip`). Secrets are kebab-case (`loom-auth`) or dotted namespaces (`balloons.domjudge.user`, quoted in Nix).
+**Naming is layered and deliberately inconsistent**: kebab-case files and dirs (`user-tools.nix`, `netboot.nix`), camelCase `let` bindings (`operatorKeys`), snake_case `specialArgs` (`dj_url`, `geproxy_ip`). Secrets are kebab-case (`loom-auth`) or dotted namespaces (`balloons.domjudge.user`, quoted in Nix).
 
-**Contest facts flow via `specialArgs`, not options.** Changing `judge_ip` in `flake.nix` rewrites every laptop's firewall.
+**Contest facts flow via `specialArgs`, not options.** Changing `geproxy_ip` in `flake.nix` rewrites every laptop's firewall, geproxy's own ruleset, dnsmasq and the PXE chain.
 
 **Secrets by path, never by value.** Multi-value secrets use `sops.templates` with `config.sops.placeholder.*` (see `modules/geproxy/balloons.nix`) rather than shell-time concatenation.
 
-**Firewall: nftables only — never introduce iptables rules.** Both roles set `networking.firewall.enable = false` plus `networking.nftables` with `checkRuleset = true`; geproxy uses `rulesetFile = ./assets/firewall.nft`, teammachine an inline ruleset built from `judge_ip`/`contest_subnet`.
+**Firewall: nftables only — never introduce iptables rules.** Both roles set `networking.firewall.enable = false` plus `networking.nftables` with `checkRuleset = true`, and both rulesets are inline Nix strings built from `geproxy_ip`/`contest_subnet`/`admin_ip`/`admin_subnet`/`imaged_port`.
 
 **Inline derivations, zero overlays.** External packages come from flake-input `nixosModules` or `_module.args`. Local packages are `pkgs.writeShellApplication` / `writeShellScriptBin` / `stdenv.mkDerivation` inline in the consuming module. `grep nixpkgs.overlays` returns nothing.
 
@@ -161,7 +161,7 @@ in {
 | `modules/users.nix` | `mutableUsers = false`, the `gehack` admin, root keys from `../authorized_keys` |
 | `modules/teammachine/user-tools.nix` | `teammachine.users` → home-manager router |
 | `modules/geproxy/fanout.nix` | 250-line SSH forced-command deploy relay |
-| `modules/geproxy/assets/firewall.nft` | Raw nftables ruleset; `chain contest_inet` is mutated at runtime |
+| `modules/geproxy/networking.nix` | Bridges, dnsmasq/PXE and the inline nftables ruleset; `chain contest_inet` is mutated at runtime |
 | `users/team/languages.nix` | The real home of `mygcc`/`mygpp`/`mypython`/`myjavac`/`mykotlinc` |
 | `authorized_keys` | **Generated.** Edit `USERS` in `scripts/update_keys.sh` instead |
 | `fanout_pubkey` | Hand-maintained; grants geproxy root access to laptops |
@@ -199,7 +199,7 @@ Non-obvious traps, all verified against source:
 - **`modules/scoreboard-laptop/scoreboard.nix` is a package, not a module.** It is deliberately absent from the barrel and `callPackage`d from `desktop.nix`. Adding it to `default.nix` breaks evaluation.
 - **`.#contestlaptop` does not exist** despite the comment at the top of `modules/geproxy/fanout.nix`. Use `.#teammachine`.
 - **`enable-internet`/`disable-internet` are not declarative.** They mutate the live `chain contest_inet`; any `nixos-rebuild switch` reloads the ruleset and resets contest internet to disabled.
-- **dnsmasq's uid/gid are pinned to 995** because `firewall.nft` matches `meta skuid 995`. Removing the pin silently breaks DNS egress filtering.
+- **dnsmasq's uid/gid are pinned to 995** (the `dnsmasqId` binding in `modules/geproxy/networking.nix`) because the output chain matches `meta skuid`. Removing the pin silently breaks DNS egress filtering.
 - **`admin-net-secure` listens on port `433`, not `443`** (`modules/geproxy/traefik.nix`). Looks like a typo; confirm with a human before changing.
 - **All hosts share one age identity at `/etc/sops/hostkey`, and nothing in the repo provisions it.** Stage it locally and pass `--extra-files` + `--chown`; `.gitignore` carries `tmp/` for exactly this. A host without it fails activation, because `hashed-password` is `neededForUsers = true`.
 - **`secrets.yaml` may only be edited with `sops secrets.yaml`.** It has a MAC; any other write corrupts it. `&kevin` is an `ssh-ed25519` key inside the `age:` group — intentional, do not normalise it to `age1…`.
