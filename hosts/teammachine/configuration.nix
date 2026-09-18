@@ -40,6 +40,7 @@
       neovim.enable = true;
       firefox.enable = true;
     };
+    usbguard.enable = true;
   };
 
   hardware = {
