@@ -122,7 +122,7 @@ _: {
 **Argument heads.** `_:` when no arguments are used; otherwise destructure exactly what is needed and always end with `, ... }:`. `specialArgs` are destructured directly:
 
 ```nix
-{ pkgs, lib, config, judge_ip, contest_subnet, ... }:
+{ pkgs, lib, config, geproxy_ip, contest_subnet, ... }:
 ```
 
 **Opt-in feature modules** — the dominant shape, used across `modules/teammachine/*` and `modules/geproxy/fanout.nix`:

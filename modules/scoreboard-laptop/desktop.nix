@@ -26,6 +26,9 @@ in
         placeholder that geproxy's contest-placeholder middleware rewrites to the
         contest id declared in flake.nix, so the laptop never needs a rebuild
         between contests.
+
+        The middleware is a replacePathRegex, so the placeholder is substituted
+        in the request path only. A query string reaches DOMjudge verbatim.
       '';
     };
   };
