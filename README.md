@@ -41,7 +41,7 @@ The primary machine used by contestants during a competition. Available for both
 - Webcam HTTP stream on port 8080 via VLC (`webcamstream.nix`) - by default disabled
 - `pxe-reboot` command — sets EFI next-boot to the PXE/IPv4 entry and reboots for imaged deployment
 - USBGuard enabled (currently allows all present devices)
-- Firewall drops all traffic to `contest_subnet` except to/from `geproxy_ip`
+- Firewall drops all traffic to `contest_subnet` except to/from `geproxy_ip`; `geproxy_ip:8443` (`cds_port`) is dropped as well, so teammachines cannot reach the CDS
 - Sleep, hibernate, and suspend are all disabled
 
 ---
@@ -76,7 +76,7 @@ disable-internet  # flushes chain — contest network is isolated
 **Traefik** reverse proxies HTTPS traffic (Cloudflare ACME DNS challenge) for:
 - `judge.gehack.nl` → DOMjudge
 - `loom.gehack.nl` → Loom contest platform
-- `cds.gehack.nl` → Contest Data Server, discovered over mDNS at `cds.local:8443` (`geproxy.cds.url`); its TLS certificate is not verified, so a self-signed CDS cert works
+- `cds.gehack.nl` → Contest Data Server, discovered over mDNS at `cds.local:8443` (`geproxy.cds.url`); its TLS certificate is not verified, so a self-signed CDS cert works. Two routers serve it: `cds-admin` on the normal `websecure` entryPoint (443), restricted to `admin_subnet` by a `ClientIP` matcher, and `cds-contest` on its own `cds-contest` entryPoint at `cds_port` (8443) for everything else. Contest-network clients therefore get 404 on 443, and teammachines drop 8443 outbound, so only organiser machines and the scoreboard kiosk reach the CDS
 - `imaged.gehack.nl` → imaged UI/API (port 8080)
 
 Disk layout uses RAID1 mdadm with dual GRUB mirrors.
@@ -88,7 +88,7 @@ Disk layout uses RAID1 mdadm with dual GRUB mirrors.
 A minimal kiosk that boots directly into the ICPC presentation client, no desktop environment.
 
 - Runs `cage` (Wayland compositor) as a single-app kiosk for the `kiosk` user
-- Launches the ICPC presentation client (built from `modules/scoreboard-laptop/scoreboard.nix`) connecting to the Contest Data Server
+- Launches the ICPC presentation client (built from `modules/scoreboard-laptop/scoreboard.nix`) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
 - CDS credentials loaded from sops secrets at runtime
 - Service restarts automatically on failure (5 s delay)
 - Waits for `network-online.target` before starting

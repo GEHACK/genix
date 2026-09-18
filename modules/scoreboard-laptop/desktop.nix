@@ -1,4 +1,10 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  cds_port,
+  ...
+}:
 let
   cfg = config.scoreboard;
   icpc-presentation = pkgs.callPackage ./scoreboard.nix {};
@@ -14,7 +20,7 @@ in
   options.scoreboard = {
     cdsUrl = lib.mkOption {
       type = lib.types.str;
-      default = "https://cds.gehack.nl";
+      default = "https://cds.gehack.nl:${toString cds_port}";
       description = "Base URL of the Contest Data Server, without trailing slash.";
     };
 

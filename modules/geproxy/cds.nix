@@ -1,4 +1,10 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  admin_subnet,
+  cds_port,
+  ...
+}:
 let
   cfg = config.geproxy.cds;
 in
@@ -19,12 +25,28 @@ in
     '';
   };
 
+  config.services.traefik.staticConfigOptions.entryPoints.cds-contest = {
+    address = "0.0.0.0:${toString cds_port}";
+    http.tls = {
+      options = "strictTLS";
+      certResolver = "myresolver";
+    };
+  };
+
   config.services.traefik.dynamicConfigOptions.http = {
-    routers.cds = {
-      rule = "Host(`cds.gehack.nl`)";
+    routers.cds-admin = {
+      rule = "Host(`cds.gehack.nl`) && ClientIP(`${admin_subnet}`)";
       service = "cds";
       middlewares = [ "contest-placeholder" ];
       entryPoints = [ "websecure" ];
+      tls.certResolver = "myresolver";
+    };
+
+    routers.cds-contest = {
+      rule = "Host(`cds.gehack.nl`)";
+      service = "cds";
+      middlewares = [ "contest-placeholder" ];
+      entryPoints = [ "cds-contest" ];
       tls.certResolver = "myresolver";
     };
 

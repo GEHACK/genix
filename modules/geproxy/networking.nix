@@ -5,6 +5,7 @@
   admin_ip,
   admin_subnet,
   imaged_port,
+  cds_port,
   ...
 }:
 let
@@ -54,6 +55,7 @@ let
       "${adminBridge},42,${admin_ip}"
     ];
     address = proxiedHosts admin_ip;
+    server = [ "/team.loom/127.0.0.1#5053" ];
   };
 in
 {
@@ -140,6 +142,7 @@ in
             iifname { "${adminBridge}", "${wifiIface}" } tcp dport 22 accept
             iifname { "${adminBridge}", "${wifiIface}", "${contestBridge}" } tcp dport { 80, 443 } accept
             iifname { "${adminBridge}", "${wifiIface}" } tcp dport 3000 accept
+            iifname { "${adminBridge}", "${contestBridge}" } tcp dport ${toString cds_port} accept
 
             iifname "${contestBridge}" udp dport 69 accept
             iifname "${contestBridge}" tcp dport ${toString imaged_port} accept

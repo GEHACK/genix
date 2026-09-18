@@ -3,6 +3,7 @@
   pkgs,
   geproxy_ip,
   contest_subnet,
+  cds_port,
   ...
 }:
 {
@@ -44,6 +45,7 @@
             chain output {
                 type filter hook output priority filter; policy accept;
                 oifname "lo" accept
+                ip daddr ${geproxy_ip} tcp dport ${toString cds_port} drop
                 ip daddr ${geproxy_ip} accept
                 ip daddr ${contest_subnet} drop
             }

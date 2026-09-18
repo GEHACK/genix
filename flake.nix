@@ -59,6 +59,7 @@
       admin_ip = "10.0.1.1";
       admin_subnet = "10.0.1.0/24";
       imaged_port = 8080;
+      cds_port = 8443;
       contest_id = "prelims-test-session";
       specialArgs = {
         inherit
@@ -69,6 +70,7 @@
           admin_ip
           admin_subnet
           imaged_port
+          cds_port
           contest_id
           ;
       };
