@@ -30,6 +30,12 @@ let
       install -Dm755 submit/submit $out/bin/submit
     '';
 
+    makeWrapperArgs = [
+      "--set-default"
+      "SUBMITBASEURL"
+      dj_url
+    ];
+
     meta = with lib; {
       mainProgram = "submit";
     };
@@ -40,6 +46,5 @@ in
 
   config = lib.mkIf config.teammachine.submit.enable {
     home.packages = [ domjudge-submit ];
-    home.sessionVariables.SUBMITBASEURL = dj_url;
   };
 }
