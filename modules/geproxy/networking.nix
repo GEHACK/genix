@@ -41,6 +41,7 @@ let
 
     bind-interfaces = true;
     interface = adminBridge;
+    except-interface = "lo";
     dhcp-authoritative = true;
     listen-address = admin_ip;
     resolv-file = uplinkResolvConf;
