@@ -12,7 +12,7 @@
     ../../modules/teammachine/locale.nix
     ../../modules/teammachine/networking.nix
     ../../modules/teammachine/printer.nix
-    ../../modules/teammachine/pxe-boot.nix
+    ../../modules/teammachine/netboot.nix
     ../../modules/teammachine/usbguard.nix
     ../../modules/teammachine/user-tools.nix
   ];
