@@ -14,6 +14,10 @@ in
     services.usbguard = {
       enable = true;
       presentDevicePolicy = "allow";
+      # USB OPTICAL MOUSE (generic Chinese HID chipset, sold under many brands)
+      rules = ''
+        allow id 275d:0ba6
+      '';
     };
   };
 }
