@@ -43,6 +43,7 @@ The primary machine used by contestants during a competition. Available for both
 - USBGuard enabled (currently allows all present devices)
 - Firewall drops all traffic to `contest_subnet` except to/from `geproxy_ip`; `geproxy_ip:8443` (`cds_port`) is dropped as well, so teammachines cannot reach the CDS
 - Sleep, hibernate, and suspend are all disabled
+- Trackpad toggle (`teammachine.trackpad.enable`, `users/common/trackpad.nix`): `<Super>T` or the laptop's touchpad-toggle key flips `org.gnome.desktop.peripherals.touchpad send-events`, and a "Toggle Trackpad" launcher entry does the same for mouse users
 
 ---
 
@@ -105,6 +106,19 @@ A minimal kiosk that boots directly into the ICPC presentation client, no deskto
 - CDS credentials loaded from sops secrets at runtime
 - Service restarts automatically on failure (5 s delay)
 - Waits for `network-online.target` before starting
+
+---
+
+### `balloons-laptop` — Balloon Runner Kiosk
+
+A minimal kiosk that boots straight into a chromeless Chromium on the balloons dashboard, no desktop environment.
+
+- Runs `cage` as a single-app kiosk for the `kiosk` user; no login prompt, no window chrome
+- Opens `https://balloons.gehack.nl` (`balloons.url`), served by the `balloons` service on geproxy
+- Chromium runs `--app=`, not `--kiosk`: under ozone-wayland `--kiosk` still renders the tab strip and omnibox
+- Profile lives in the unit's `PrivateTmp`, so every start is a clean session with no crash-restore prompts
+- `networking.dhcpcd.wait = "ipv4"` holds `network-online.target` until the lease lands, so Chromium never opens before DNS works; the service restarts automatically (5 s delay)
+- Plug it into the admin network: `balloons.gehack.nl` resolves there through the admin resolver. The contest bridge only answers for the names in `proxiedHosts` (`modules/geproxy/networking.nix`), which does not include balloons
 
 ---
 
@@ -181,6 +195,7 @@ nix build .#nixosConfigurations.teammachine.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy-laptop.config.system.build.toplevel
 nix build .#nixosConfigurations.scoreboard-laptop.config.system.build.toplevel
+nix build .#nixosConfigurations.balloons-laptop.config.system.build.toplevel
 ```
 
 ### Formatting disks

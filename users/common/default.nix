@@ -7,6 +7,7 @@
     ./options.nix
     ./firefox.nix
     ./neovim.nix
+    ./trackpad.nix
   ];
   home.packages = with pkgs; [
     btop

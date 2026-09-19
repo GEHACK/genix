@@ -139,6 +139,10 @@
         ./hosts/scoreboard-laptop/configuration.nix
       ];
 
+      balloons-laptopModules = commonModules ++ [
+        ./hosts/balloons-laptop/configuration.nix
+      ];
+
       judgehostModules = commonModules ++ [
         ./hosts/judgehost/configuration.nix
       ];
@@ -216,6 +220,12 @@
         modules = scoreboard-laptopModules;
       };
 
+      balloons-laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = balloons-laptopModules;
+      };
+
       judgehost = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -257,6 +267,12 @@
         modules = judgehostModules ++ [ (mkVmModule 2224) ];
       };
 
+      balloons-laptop-vm = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = balloons-laptopModules ++ [ (mkVmModule 2225) ];
+      };
+
       teammachine-iso = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = isoSpecialArgs;
@@ -272,6 +288,7 @@
           geproxy-laptop
           scoreboard-laptop
           scoreboard-laptop_arm
+          balloons-laptop
           judgehost
           cds
           teammachine-iso
@@ -283,11 +300,13 @@
         geproxy = geproxy.config.system.build.toplevel;
         geproxy-laptop = geproxy-laptop.config.system.build.toplevel;
         scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
+        balloons-laptop = balloons-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
         cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
+        balloons-laptop-vm = balloons-laptop-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
       };
 

@@ -21,6 +21,7 @@
       submit.enable = true;
       games.enable = true;
       misc-packages.enable = true;
+      trackpad.enable = true;
 
       streams = {
         enable = true;
@@ -39,6 +40,7 @@
     users.gehack = {
       neovim.enable = true;
       firefox.enable = true;
+      trackpad.enable = true;
     };
     usbguard.enable = true;
   };
