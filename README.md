@@ -81,6 +81,19 @@ disable-internet  # flushes chain — contest network is isolated
 
 Disk layout uses RAID1 mdadm with dual GRUB mirrors.
 
+The NIC layout, the RAID1 boot and the admin network are options (`geproxy.network.uplink`, `geproxy.network.contestInterfaces`, `geproxy.network.admin.enable`, `geproxy.network.admin.interfaces`, `geproxy.raidBoot.enable`), defaulted to this machine.
+
+---
+
+### `geproxy-laptop` — Router / Firewall on a teammachine laptop
+
+The same role as `geproxy` on teammachine hardware: one NVMe disk, one ethernet port, wifi uplink. Identical services (dnsmasq, Traefik, imaged, cuproxy, balloons, devdocs, fanout, NTP) and the same contest bridge and firewall, minus everything admin-network:
+
+- `geproxy.network.admin.enable = false` — no `br-admin`, no `dnsmasq-admin`, no `admin-net-secure` Traefik entryPoint and no `cds-admin` router. Organiser traffic uses the contest bridge
+- `enp0s31f6` is the sole member of `br-contest`; `wlp0s20f3` is the uplink — check both against `ip -br link` on the actual laptop and adjust `hosts/geproxy-laptop/configuration.nix` if the kernel names them differently
+- `geproxy.raidBoot.enable = false` — single-disk GPT/ext4 on `/dev/nvme0n1`, plain EFI GRUB
+- `networking.hostName` is still `geproxy`; do not run both machines on one LAN
+
 ---
 
 ### `scoreboard-laptop` — Scoreboard Kiosk
@@ -166,6 +179,7 @@ ssh -p 2222 root@localhost
 ```bash
 nix build .#nixosConfigurations.teammachine.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy.config.system.build.toplevel
+nix build .#nixosConfigurations.geproxy-laptop.config.system.build.toplevel
 nix build .#nixosConfigurations.scoreboard-laptop.config.system.build.toplevel
 ```
 

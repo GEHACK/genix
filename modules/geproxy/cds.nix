@@ -34,20 +34,23 @@ in
   };
 
   config.services.traefik.dynamicConfigOptions.http = {
-    routers.cds-admin = {
-      rule = "Host(`cds.gehack.nl`) && ClientIP(`${admin_subnet}`)";
-      service = "cds";
-      middlewares = [ "contest-placeholder" ];
-      entryPoints = [ "websecure" ];
-      tls.certResolver = "myresolver";
-    };
-
-    routers.cds-contest = {
-      rule = "Host(`cds.gehack.nl`)";
-      service = "cds";
-      middlewares = [ "contest-placeholder" ];
-      entryPoints = [ "cds-contest" ];
-      tls.certResolver = "myresolver";
+    routers = lib.optionalAttrs config.geproxy.network.admin.enable {
+      cds-admin = {
+        rule = "Host(`cds.gehack.nl`) && ClientIP(`${admin_subnet}`)";
+        service = "cds";
+        middlewares = [ "contest-placeholder" ];
+        entryPoints = [ "websecure" ];
+        tls.certResolver = "myresolver";
+      };
+    }
+    // {
+      cds-contest = {
+        rule = "Host(`cds.gehack.nl`)";
+        service = "cds";
+        middlewares = [ "contest-placeholder" ];
+        entryPoints = [ "cds-contest" ];
+        tls.certResolver = "myresolver";
+      };
     };
 
     services.cds.loadBalancer = {

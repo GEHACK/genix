@@ -1,4 +1,4 @@
-{ config, admin_ip, contest_id, ... }:
+{ config, lib, admin_ip, contest_id, ... }:
 {
   sops.secrets.cloudflare-api-key-env = { };
   services.traefik = {
@@ -6,29 +6,33 @@
     environmentFiles = [ config.sops.secrets.cloudflare-api-key-env.path ];
 
     staticConfigOptions = {
-      entryPoints.websecure = {
-        address = "0.0.0.0:443";
-        http.tls = {
-          options = "strictTLS";
-          certResolver = "myresolver";
+      entryPoints = {
+        websecure = {
+          address = "0.0.0.0:443";
+          http.tls = {
+            options = "strictTLS";
+            certResolver = "myresolver";
+          };
+          transport.respondingTimeouts.readTimeout = 0;
         };
-        transport.respondingTimeouts.readTimeout = 0;
-      };
-      entryPoints.web = {
-        address = "0.0.0.0:80";
-      };
-      entryPoints.public = {
-        address = "0.0.0.0:3000";
-        http.tls = {
-          options = "strictTLS";
-          certResolver = "myresolver";
+        web = {
+          address = "0.0.0.0:80";
         };
-      };
-      entryPoints.admin-net-secure = {
-        address = "${admin_ip}:433";
-        http.tls = {
-          options = "strictTLS";
-          certResolver = "myresolver";
+        public = {
+          address = "0.0.0.0:3000";
+          http.tls = {
+            options = "strictTLS";
+            certResolver = "myresolver";
+          };
+        };
+      }
+      // lib.optionalAttrs config.geproxy.network.admin.enable {
+        admin-net-secure = {
+          address = "${admin_ip}:433";
+          http.tls = {
+            options = "strictTLS";
+            certResolver = "myresolver";
+          };
         };
       };
       certificatesResolvers.myresolver.acme = {

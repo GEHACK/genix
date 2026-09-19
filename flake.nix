@@ -116,7 +116,7 @@
         ./hosts/teammachine/configuration.nix
       ];
 
-      geproxyModules = commonModules ++ [
+      geproxyRoleModules = commonModules ++ [
         cuproxy.nixosModules.default
         imaged.nixosModules.default
         (mkHomeManager {
@@ -129,8 +129,11 @@
           ];
         })
         ({ ... }: { _module.args.balloons-pkg = balloons.packages.x86_64-linux.default; })
-        ./hosts/geproxy/configuration.nix
       ];
+
+      geproxyModules = geproxyRoleModules ++ [ ./hosts/geproxy/configuration.nix ];
+
+      geproxy-laptopModules = geproxyRoleModules ++ [ ./hosts/geproxy-laptop/configuration.nix ];
 
       scoreboard-laptopModules = commonModules ++ [
         ./hosts/scoreboard-laptop/configuration.nix
@@ -193,6 +196,12 @@
         system = "x86_64-linux";
         inherit specialArgs;
         modules = geproxyModules;
+      };
+
+      geproxy-laptop = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = geproxy-laptopModules;
       };
 
       scoreboard-laptop = nixpkgs.lib.nixosSystem {
@@ -260,6 +269,7 @@
           teammachine
           teammachine_arm
           geproxy
+          geproxy-laptop
           scoreboard-laptop
           scoreboard-laptop_arm
           judgehost
@@ -271,6 +281,7 @@
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
+        geproxy-laptop = geproxy-laptop.config.system.build.toplevel;
         scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
