@@ -8,7 +8,7 @@ NixOS flake-based infrastructure-as-code for the GEHACK competitive programming 
 
 ### `teammachine` — Contest Workstation
 
-The primary machine used by contestants during a competition. Available for both x86_64 (`teammachine`) and aarch64 (`teammachine_arm`).
+The primary machine used by contestants during a competition.
 
 **Users:**
 - `gehack` — admin user with sudo, zsh shell, SSH key access
@@ -86,30 +86,19 @@ The NIC layout, the RAID1 boot and the admin network are options (`geproxy.netwo
 
 ---
 
-### `geproxy-laptop` — Router / Firewall on a teammachine laptop
-
-The same role as `geproxy` on teammachine hardware: one NVMe disk, one ethernet port, wifi uplink. Identical services (dnsmasq, Traefik, imaged, cuproxy, balloons, devdocs, fanout, NTP) and the same contest bridge and firewall, minus everything admin-network:
-
-- `geproxy.network.admin.enable = false` — no `br-admin`, no `dnsmasq-admin`, no `admin-net-secure` Traefik entryPoint and no `cds-admin` router. Organiser traffic uses the contest bridge
-- `enp0s31f6` is the sole member of `br-contest`; `wlp0s20f3` is the uplink — check both against `ip -br link` on the actual laptop and adjust `hosts/geproxy-laptop/configuration.nix` if the kernel names them differently
-- `geproxy.raidBoot.enable = false` — single-disk GPT/ext4 on `/dev/nvme0n1`, plain EFI GRUB
-- `networking.hostName` is still `geproxy`; do not run both machines on one LAN
-
----
-
-### `scoreboard-laptop` — Scoreboard Kiosk
+### `scoreboard` — Scoreboard Kiosk
 
 A minimal kiosk that boots directly into the ICPC presentation client, no desktop environment.
 
 - Runs `cage` (Wayland compositor) as a single-app kiosk for the `kiosk` user
-- Launches the ICPC presentation client (built from `modules/scoreboard-laptop/scoreboard.nix`) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
+- Launches the ICPC presentation client (built from `modules/scoreboard/scoreboard.nix`) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
 - CDS credentials loaded from sops secrets at runtime
 - Service restarts automatically on failure (5 s delay)
 - Waits for `network-online.target` before starting
 
 ---
 
-### `balloons-laptop` — Balloon Runner Kiosk
+### `balloons` — Balloon Runner Kiosk
 
 A minimal kiosk that boots straight into a chromeless Chromium on the balloons dashboard, no desktop environment.
 
@@ -169,15 +158,6 @@ Or directly with nixos-rebuild:
 nixos-rebuild switch --flake .#<FLAKE_TARGET> --target-host root@<IP> --build-host root@<IP>
 ```
 
-ARM cross-build (requires a remote aarch64 builder):
-
-```bash
-nixos-rebuild switch --flake .#teammachine_arm \
-  --target-host root@<IP> \
-  --build-host root@<IP> \
-  --option builders "ssh://root@<IP>"
-```
-
 ### Testing with a VM
 
 Build and run a QEMU VM for the contest workstation (SSH forwarded to host port 2222):
@@ -193,9 +173,8 @@ ssh -p 2222 root@localhost
 ```bash
 nix build .#nixosConfigurations.teammachine.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy.config.system.build.toplevel
-nix build .#nixosConfigurations.geproxy-laptop.config.system.build.toplevel
-nix build .#nixosConfigurations.scoreboard-laptop.config.system.build.toplevel
-nix build .#nixosConfigurations.balloons-laptop.config.system.build.toplevel
+nix build .#nixosConfigurations.scoreboard.config.system.build.toplevel
+nix build .#nixosConfigurations.balloons.config.system.build.toplevel
 ```
 
 ### Formatting disks

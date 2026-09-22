@@ -2,7 +2,7 @@ _: {
   imports = [
     ./disko.nix
     ../../modules
-    ../../modules/scoreboard-laptop
+    ../../modules/scoreboard
   ];
 
   hardware.enableRedistributableFirmware = true;

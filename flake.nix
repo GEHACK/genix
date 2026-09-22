@@ -39,14 +39,13 @@
   };
 
   outputs =
-    {
+    inputs@{
       nixpkgs,
       disko,
       home-manager,
       loom,
       sops-nix,
       cuproxy,
-      balloons,
       imaged,
       nixvim,
       ...
@@ -128,19 +127,17 @@
             ./users/common
           ];
         })
-        ({ ... }: { _module.args.balloons-pkg = balloons.packages.x86_64-linux.default; })
+        ({ ... }: { _module.args.balloons-pkg = inputs.balloons.packages.x86_64-linux.default; })
       ];
 
       geproxyModules = geproxyRoleModules ++ [ ./hosts/geproxy/configuration.nix ];
 
-      geproxy-laptopModules = geproxyRoleModules ++ [ ./hosts/geproxy-laptop/configuration.nix ];
-
-      scoreboard-laptopModules = commonModules ++ [
-        ./hosts/scoreboard-laptop/configuration.nix
+      scoreboardModules = commonModules ++ [
+        ./hosts/scoreboard/configuration.nix
       ];
 
-      balloons-laptopModules = commonModules ++ [
-        ./hosts/balloons-laptop/configuration.nix
+      balloonsModules = commonModules ++ [
+        ./hosts/balloons/configuration.nix
       ];
 
       judgehostModules = commonModules ++ [
@@ -190,40 +187,22 @@
         modules = teammachineModules;
       };
 
-      teammachine_arm = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        inherit specialArgs;
-        modules = teammachineModules;
-      };
-
       geproxy = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
         modules = geproxyModules;
       };
 
-      geproxy-laptop = nixpkgs.lib.nixosSystem {
+      scoreboard = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = geproxy-laptopModules;
+        modules = scoreboardModules;
       };
 
-      scoreboard-laptop = nixpkgs.lib.nixosSystem {
+      balloons = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = scoreboard-laptopModules;
-      };
-
-      scoreboard-laptop_arm = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        inherit specialArgs;
-        modules = scoreboard-laptopModules;
-      };
-
-      balloons-laptop = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        inherit specialArgs;
-        modules = balloons-laptopModules;
+        modules = balloonsModules;
       };
 
       judgehost = nixpkgs.lib.nixosSystem {
@@ -267,10 +246,10 @@
         modules = judgehostModules ++ [ (mkVmModule 2224) ];
       };
 
-      balloons-laptop-vm = nixpkgs.lib.nixosSystem {
+      balloons-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = balloons-laptopModules ++ [ (mkVmModule 2225) ];
+        modules = balloonsModules ++ [ (mkVmModule 2225) ];
       };
 
       teammachine-iso = nixpkgs.lib.nixosSystem {
@@ -283,12 +262,9 @@
       nixosConfigurations = {
         inherit
           teammachine
-          teammachine_arm
           geproxy
-          geproxy-laptop
-          scoreboard-laptop
-          scoreboard-laptop_arm
-          balloons-laptop
+          scoreboard
+          balloons
           judgehost
           cds
           teammachine-iso
@@ -298,15 +274,14 @@
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
-        geproxy-laptop = geproxy-laptop.config.system.build.toplevel;
-        scoreboard-laptop = scoreboard-laptop.config.system.build.toplevel;
-        balloons-laptop = balloons-laptop.config.system.build.toplevel;
+        scoreboard = scoreboard.config.system.build.toplevel;
+        balloons = balloons.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
         cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
-        balloons-laptop-vm = balloons-laptop-vm.config.system.build.vm;
+        balloons-vm = balloons-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
       };
 
@@ -314,11 +289,6 @@
         pkgs = nixpkgs.legacyPackages.x86_64-linux;
         sopsModule = sops-nix.nixosModules.sops;
         inherit (nixpkgs) lib;
-      };
-
-      packages.aarch64-linux = {
-        teammachine-arm = teammachine_arm.config.system.build.toplevel;
-        scoreboard-laptop-arm = scoreboard-laptop_arm.config.system.build.toplevel;
       };
     };
 }

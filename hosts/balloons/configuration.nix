@@ -2,7 +2,7 @@ _: {
   imports = [
     ./disko.nix
     ../../modules
-    ../../modules/balloons-laptop
+    ../../modules/balloons
   ];
 
   networking.hostName = "balloons";
