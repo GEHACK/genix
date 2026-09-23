@@ -60,6 +60,7 @@ Acts as the contest network router. Runs on hardware with multiple NICs bridged 
 - Each network (`geproxy.networks.<name>`) gets its own bridge and a `dnsmasq-<name>` unit running as user `dnsmasq-<name>`. DHCP leases are infinite and stored in `/var/lib/dnsmasq-<name>/`
 - A network only answers DNS on its own geproxy address, so contest clients cannot use the admin resolver
 - `internet = "switchable"` routes both forwarding and that network's upstream DNS through chain `<name>_inet`. `enable-internet [network]` / `disable-internet [network]` toggle it, defaulting to `geproxy.internetToggle.default` (the first switchable network). Any `nixos-rebuild switch` reloads the ruleset and disables it again
+- `allow` lists the entries of `geproxy.ports` reachable on geproxy (`ssh`, `ntp`, `printing`, `imaged`); service modules register their ports there
 - `pxe.enable` adds TFTP and the BIOS/EFI `dhcp-boot` chain into imaged
 - systemd-resolved runs with `MulticastDNS=resolve` so geproxy can resolve `.local` names announced on either bridge
 - `wol` wakes every machine in every network's lease file
