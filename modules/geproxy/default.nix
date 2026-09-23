@@ -18,6 +18,7 @@ in
     ./boot.nix
     ./cds.nix
     ./cuproxy.nix
+    ./ddns.nix
     ./devdocs.nix
     ./fanout.nix
     ./imaged.nix

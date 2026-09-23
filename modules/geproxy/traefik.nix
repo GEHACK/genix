@@ -1,9 +1,11 @@
 { config, lib, admin_ip, contest_id, ... }:
 {
-  sops.secrets.cloudflare-api-key-env = { };
+  sops.templates.cloudflare-api-key-env.content = ''
+    CF_DNS_API_TOKEN=${config.sops.placeholder.cloudflare-token}
+  '';
   services.traefik = {
     enable = true;
-    environmentFiles = [ config.sops.secrets.cloudflare-api-key-env.path ];
+    environmentFiles = [ config.sops.templates.cloudflare-api-key-env.path ];
 
     staticConfigOptions = {
       entryPoints = {
