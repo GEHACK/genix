@@ -40,8 +40,6 @@ let
   settings =
     name: net:
     {
-      log-queries = true;
-      log-dhcp = true;
       domain-needed = true;
       bogus-priv = true;
 
