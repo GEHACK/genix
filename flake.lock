@@ -88,6 +88,26 @@
         "type": "github"
       }
     },
+    "domjudge-submit": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790190158,
+        "narHash": "sha256-GhGsI8By0tl3E3oxmiR+gUMQLh5q1bmINRHDfmZG0WQ=",
+        "owner": "GEHACK",
+        "repo": "domjudge-submit-nix",
+        "rev": "e9fd5810e8757f3afb858cddf866ae83a00d3e69",
+        "type": "github"
+      },
+      "original": {
+        "owner": "GEHACK",
+        "repo": "domjudge-submit-nix",
+        "type": "github"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -199,6 +219,26 @@
         "owner": "nix-community",
         "ref": "release-26.05",
         "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "icpc-presentation": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790190707,
+        "narHash": "sha256-cpXLE3vX/tZwiNgym5aK7KTmWCIhXBJP5To0KvMmQGk=",
+        "owner": "GEHACK",
+        "repo": "icpc-presentation-nix",
+        "rev": "017579c48ba7c256335fd6de5cb7f1b8cb23bcc6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "GEHACK",
+        "repo": "icpc-presentation-nix",
         "type": "github"
       }
     },
@@ -367,7 +407,9 @@
         "balloons": "balloons",
         "cuproxy": "cuproxy",
         "disko": "disko",
+        "domjudge-submit": "domjudge-submit",
         "home-manager": "home-manager",
+        "icpc-presentation": "icpc-presentation",
         "imaged": "imaged",
         "loom": "loom",
         "nixpkgs": "nixpkgs_6",

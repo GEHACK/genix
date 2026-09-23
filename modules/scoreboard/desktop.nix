@@ -7,13 +7,11 @@
 }:
 let
   cfg = config.scoreboard;
-  icpc-presentation = pkgs.callPackage ./scoreboard.nix {};
-
   start-presentation = pkgs.writeShellScript "start-presentation" ''
     USERNAME=$(cat ${config.sops.secrets."cds.presentation-client.username".path})
     PASSWORD=$(cat ${config.sops.secrets."cds.presentation-client.password".path})
 
-    exec ${icpc-presentation}/bin/presentation-client "${cfg.cdsUrl}/api/contests/${cfg.contestId}" "$USERNAME" "$PASSWORD"
+    exec ${lib.getExe pkgs.icpc-presentation} "${cfg.cdsUrl}/api/contests/${cfg.contestId}" "$USERNAME" "$PASSWORD"
   '';
 in
 {

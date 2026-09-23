@@ -35,7 +35,7 @@ The primary machine used by contestants during a competition.
 **Other features:**
 - GNOME desktop, no GDM — uses [`loom-greeter`](https://github.com/luukblankenstijn/loom) via greetd (from the loom flake input)
 - [`loomd`](https://github.com/luukblankenstijn/loom) service connects to the Loom contest platform for team management
-- [`submit`](https://github.com/DOMjudge/DOMjudge) CLI pre-configured to submit to DOMjudge (URL set via `dj_url` specialArgs in `flake.nix`)
+- [`submit`](https://github.com/DOMjudge/DOMjudge) CLI from the [`domjudge-submit`](https://github.com/GEHACK/domjudge-submit-nix) flake input, pre-configured to submit to DOMjudge (URL set via `dj_url` specialArgs in `flake.nix`)
 - [Devdocs](github.com/GEHACK/devdocs) served locally via Docker at `http://docs` (port 80)
 - Printing via CUPS, pre-configured to IPP printer on geproxy (`10.0.0.1:631`)
 - Webcam HTTP stream on port 8080 via VLC (`webcamstream.nix`) - by default disabled
@@ -98,7 +98,7 @@ Disk layout uses RAID1 mdadm with dual GRUB mirrors (`geproxy.raidBoot.enable`).
 A minimal kiosk that boots directly into the ICPC presentation client, no desktop environment.
 
 - Runs `cage` (Wayland compositor) as a single-app kiosk for the `kiosk` user
-- Launches the ICPC presentation client (built from `modules/scoreboard/scoreboard.nix`) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
+- Launches the ICPC presentation client (from the [`icpc-presentation`](https://github.com/GEHACK/icpc-presentation-nix) flake input) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
 - CDS credentials loaded from sops secrets at runtime
 - Service restarts automatically on failure (5 s delay)
 - Waits for `network-online.target` before starting

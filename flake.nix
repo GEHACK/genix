@@ -27,6 +27,16 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    domjudge-submit = {
+      url = "github:GEHACK/domjudge-submit-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    icpc-presentation = {
+      url = "github:GEHACK/icpc-presentation-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     loom.url = "github:LuukBlankenstijn/loom";
     cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
     balloons.url = "github:GEHACK/balloons/main";
@@ -48,6 +58,8 @@
       cuproxy,
       imaged,
       nixvim,
+      domjudge-submit,
+      icpc-presentation,
       ...
     }:
     let
@@ -80,10 +92,20 @@
         dj_url = "https://www.domjudge.org/demoweb/";
       };
 
+      packageOverlays =
+        { ... }:
+        {
+          nixpkgs.overlays = [
+            domjudge-submit.overlays.default
+            icpc-presentation.overlays.default
+          ];
+        };
+
       commonModules = [
         disko.nixosModules.disko
         sops-nix.nixosModules.sops
         home-manager.nixosModules.home-manager
+        packageOverlays
       ];
 
       mkHomeManager =
