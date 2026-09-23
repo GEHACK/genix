@@ -285,10 +285,17 @@
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
       };
 
-      checks.x86_64-linux.teammachine-rdp = import ./tests/teammachine-rdp.nix {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        sopsModule = sops-nix.nixosModules.sops;
-        inherit (nixpkgs) lib;
+      checks.x86_64-linux = {
+        teammachine-rdp = import ./tests/teammachine-rdp.nix {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          sopsModule = sops-nix.nixosModules.sops;
+          inherit (nixpkgs) lib;
+        };
+        geproxy-network = import ./tests/geproxy-network.nix {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          sopsModule = sops-nix.nixosModules.sops;
+          inherit (nixpkgs) lib;
+        };
       };
     };
 }

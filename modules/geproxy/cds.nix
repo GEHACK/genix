@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  admin_subnet,
   cds_port,
   ...
 }:
@@ -9,6 +8,8 @@ let
   cfg = config.geproxy.cds;
 in
 {
+  options.geproxy.cds.enable = lib.mkEnableOption "proxying the Contest Data Server as proxy site `cds`";
+
   options.geproxy.cds.url = lib.mkOption {
     type = lib.types.str;
     default = "https://cds.local:${toString cds_port}";
@@ -25,39 +26,9 @@ in
     '';
   };
 
-  config.services.traefik.staticConfigOptions.entryPoints.cds-contest = {
-    address = "0.0.0.0:${toString cds_port}";
-    http.tls = {
-      options = "strictTLS";
-      certResolver = "myresolver";
-    };
-  };
-
-  config.services.traefik.dynamicConfigOptions.http = {
-    routers = lib.optionalAttrs config.geproxy.network.admin.enable {
-      cds-admin = {
-        rule = "Host(`cds.gehack.nl`) && ClientIP(`${admin_subnet}`)";
-        service = "cds";
-        middlewares = [ "contest-placeholder" ];
-        entryPoints = [ "websecure" ];
-        tls.certResolver = "myresolver";
-      };
-    }
-    // {
-      cds-contest = {
-        rule = "Host(`cds.gehack.nl`)";
-        service = "cds";
-        middlewares = [ "contest-placeholder" ];
-        entryPoints = [ "cds-contest" ];
-        tls.certResolver = "myresolver";
-      };
-    };
-
-    services.cds.loadBalancer = {
-      servers = [ { url = cfg.url; } ];
-      serversTransport = "cds";
-    };
-
-    serversTransports.cds.insecureSkipVerify = true;
+  config.geproxy.proxy.sites.cds = lib.mkIf cfg.enable {
+    upstream = cfg.url;
+    rewriteContest = true;
+    insecureUpstream = true;
   };
 }

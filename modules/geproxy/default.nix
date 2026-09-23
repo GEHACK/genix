@@ -22,9 +22,8 @@ in
     ./devdocs.nix
     ./fanout.nix
     ./imaged.nix
-    ./networking.nix
+    ./network
     ./ntp.nix
-    ./traefik.nix
   ];
 
   sops.secrets.fanout-ssh-key = {

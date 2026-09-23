@@ -49,40 +49,46 @@ The primary machine used by contestants during a competition.
 
 ### `geproxy` — Router / Firewall
 
-Acts as the contest network router. Runs on hardware with multiple NICs bridged into two networks.
+Acts as the contest network router. Runs on hardware with multiple NICs bridged into two networks. The whole network is declared in one `geproxy` block in `hosts/geproxy/configuration.nix`; `modules/geproxy/network/` generates the bridges, dnsmasq instances, nftables ruleset and Caddy config from it.
 
-**Network layout:**
+| Network | Bridge | Interface(s) | Subnet | Internet | Reaches |
+|---------|--------|--------------|--------|----------|---------|
+| `admin` | `br-admin` | `eno1`, `eno2` | 10.0.1.0/24 | always | `contest` |
+| `contest` | `br-contest` | `eno3–eno6` | 10.0.0.0/24 | switchable | — |
 
-| Bridge | Interface(s) | Subnet | Purpose |
-|--------|-------------|--------|---------|
-| `br-admin` | `eno2` | 10.0.1.0/24 | Admin / organiser network |
-| `br-contest` | `eno3–eno6` | 10.0.0.0/24 | Contest / team network |
+- `wlp6s0` (`geproxy.uplink.interface`) is the uplink: DHCP, the only interface NAT masquerades to
+- Each network (`geproxy.networks.<name>`) gets its own bridge and a `dnsmasq-<name>` unit running as user `dnsmasq-<name>`. DHCP leases are infinite and stored in `/var/lib/dnsmasq-<name>/`
+- A network only answers DNS on its own geproxy address, so contest clients cannot use the admin resolver
+- `internet = "switchable"` routes both forwarding and that network's upstream DNS through chain `<name>_inet`. `enable-internet [network]` / `disable-internet [network]` toggle it, defaulting to `geproxy.internetToggle.default` (the first switchable network). Any `nixos-rebuild switch` reloads the ruleset and disables it again
+- `pxe.enable` adds TFTP and the BIOS/EFI `dhcp-boot` chain into imaged
+- systemd-resolved runs with `MulticastDNS=resolve` so geproxy can resolve `.local` names announced on either bridge
+- `wol` wakes every machine in every network's lease file
 
-- `wlp6s0` and `eno1` use DHCP for upstream connectivity
-- Two dnsmasq instances, one per bridge: `dnsmasq` serves the contest bridge as uid 995, `dnsmasq-admin` serves the admin bridge as uid 994. Only the contest one is caught by the internet kill switch, so admin DNS keeps working while the contest network is isolated
-- Both instances resolve `judge.gehack.nl`, `loom.gehack.nl`, `cds.gehack.nl`, `imaged.gehack.nl`, and `docs.gehack.nl` to geproxy — `10.0.0.1` on the contest bridge, `10.0.1.1` on the admin bridge — and forward everything else to the upstream servers geproxy itself learned over DHCP
-- systemd-resolved runs with `MulticastDNS=resolve` so geproxy can resolve `.local` names announced on either bridge; it does not announce anything itself
-- PXE/imaged boot configured for BIOS and EFI clients via dnsmasq `dhcp-boot`
+Every service is behind a `geproxy.<service>.enable` toggle in the host file: `ntp`, `ddns`, `loomDns`, `cuproxy`, `imaged`, `balloons`, `devdocs`, `cds`.
 
-**imaged** runs as native NixOS services (`imaged-server` + `imaged-tftp`) for disk imaging and deployment of teammachines over the contest network. The web UI is accessible at `imaged.gehack.nl` via Traefik; PXE clients use `http://10.0.0.1:8080/boot/boot.ipxe` directly.
+**imaged** runs as native NixOS services (`imaged-server` + `imaged-tftp`) for disk imaging and deployment of teammachines over the contest network. PXE clients use `http://10.0.0.1:8080/boot/boot.ipxe` directly.
 
 **cuproxy** — CUPS print proxy that forwards print jobs from the contest network to the physical printer at `10.0.0.10:631`.
 
-**Internet toggle** (run as root on geproxy):
-```bash
-enable-internet   # opens nftables chain — contest network can reach the internet
-disable-internet  # flushes chain — contest network is isolated
-```
+**Caddy** reverse proxies HTTPS for the sites in `geproxy.proxy.sites`. One Let's Encrypt certificate covers all of them, issued by `security.acme` through the Cloudflare DNS challenge. `expose` says, per network (or `uplink`), on which ports a site is served:
+- The network's resolver points the site's hostname at geproxy, and the firewall opens those ports on it
+- A client from a network the site is not exposed to gets 404, even on a port another site opened
+- Port 80 redirects to HTTPS wherever 443 is exposed
 
-**Traefik** reverse proxies HTTPS traffic (Cloudflare ACME DNS challenge) for:
-- `judge.gehack.nl` → DOMjudge
-- `loom.gehack.nl` → Loom contest platform
-- `cds.gehack.nl` → Contest Data Server, discovered over mDNS at `cds.local:8443` (`geproxy.cds.url`); its TLS certificate is not verified, so a self-signed CDS cert works. Two routers serve it: `cds-admin` on the normal `websecure` entryPoint (443), restricted to `admin_subnet` by a `ClientIP` matcher, and `cds-contest` on its own `cds-contest` entryPoint at `cds_port` (8443) for everything else. Contest-network clients therefore get 404 on 443, and teammachines drop 8443 outbound, so only organiser machines and the scoreboard kiosk reach the CDS
-- `imaged.gehack.nl` → imaged UI/API (port 8080)
+| Site | Upstream | admin | contest | uplink |
+|------|----------|-------|---------|--------|
+| `judge.gehack.nl` | DOMjudge, `__CONTEST__` rewritten to `contest_id` | 443 | 443 | 443 |
+| `loom.gehack.nl` | Loom | 443 | 443 | 443 |
+| `docs.gehack.nl` | DevDocs container | 443 | 443 | 443 |
+| `balloons.gehack.nl` | balloons dispatcher | 443 | — | — |
+| `cds.gehack.nl` | CDS at `cds.local:8443` over mDNS (`geproxy.cds.url`), certificate not verified | 443, 8443 | 8443 | — |
+| `imaged.gehack.nl` | imaged UI | 3000 | — | 3000 |
 
-Disk layout uses RAID1 mdadm with dual GRUB mirrors.
+Teammachines drop 8443 outbound, so on the contest network only the scoreboard kiosk reaches the CDS.
 
-The NIC layout, the RAID1 boot and the admin network are options (`geproxy.network.uplink`, `geproxy.network.contestInterfaces`, `geproxy.network.admin.enable`, `geproxy.network.admin.interfaces`, `geproxy.raidBoot.enable`), defaulted to this machine.
+Disk layout uses RAID1 mdadm with dual GRUB mirrors (`geproxy.raidBoot.enable`).
+
+`nix build .#checks.x86_64-linux.geproxy-network` boots geproxy with a contest client, an admin client and an upstream host, and checks DHCP, DNS, per-network site access, reachability and the internet switch.
 
 ---
 
@@ -107,7 +113,7 @@ A minimal kiosk that boots straight into a chromeless Chromium on the balloons d
 - Chromium runs `--app=`, not `--kiosk`: under ozone-wayland `--kiosk` still renders the tab strip and omnibox
 - Profile lives in the unit's `PrivateTmp`, so every start is a clean session with no crash-restore prompts
 - `networking.dhcpcd.wait = "ipv4"` holds `network-online.target` until the lease lands, so Chromium never opens before DNS works; the service restarts automatically (5 s delay)
-- Plug it into the admin network: `balloons.gehack.nl` resolves there through the admin resolver. The contest bridge only answers for the names in `proxiedHosts` (`modules/geproxy/networking.nix`), which does not include balloons
+- Plug it into the admin network: `balloons.gehack.nl` is only exposed there
 
 ---
 
@@ -117,7 +123,7 @@ Runs the ICPC CDS container (`ghcr.io/icpctools/cds`) on the admin network, feed
 
 - CDS listens on 8443 with a self-signed certificate; contest data lives in `/var/lib/cds`
 - All CDS passwords come from sops; `CCS_URL` points at `judge.gehack.nl`, which the admin resolver sends to geproxy so the `__CONTEST__` placeholder gets rewritten
-- avahi announces `cds.local`, which is how geproxy's Traefik finds it — no DHCP reservation needed
+- avahi announces `cds.local`, which is how geproxy's Caddy finds it — no DHCP reservation needed
 - Root accepts `fanout_pubkey`, so geproxy can deploy to it like a teammachine
 
 ---
@@ -238,4 +244,4 @@ To add a new team member's key, add their age public key to `.sops.yaml` and re-
 
 ### Firewall
 
-The project uses nftables exclusively — do not introduce iptables rules. Both rulesets are written inline in Nix — `modules/geproxy/networking.nix` and `modules/teammachine/networking.nix` — and are built from the `geproxy_ip`, `contest_subnet`, `admin_ip`, `admin_subnet` and `imaged_port` specialArgs.
+The project uses nftables exclusively — do not introduce iptables rules. geproxy's ruleset is generated by `modules/geproxy/network/firewall.nix` from the `geproxy` options; the teammachine ruleset is written inline in `modules/teammachine/networking.nix` from the `geproxy_ip`, `contest_subnet` and `cds_port` specialArgs.
