@@ -129,6 +129,19 @@ Runs the ICPC CDS container (`ghcr.io/icpctools/cds`) on the admin network, feed
 
 ---
 
+### `domjudge` — DOMjudge Server Laptop
+
+Hosts a contest on its own: the `domjudge/domserver` container on `bleeding` plus the MariaDB it needs, nothing else.
+
+- Both images are pinned by digest in `modules/domjudge/domserver.nix` and shipped in the closure, so the laptop needs no registry access; refresh a pin with `nix-prefetch-docker --image-name <name> --image-tag <tag> --os linux --arch amd64`
+- Both containers use host networking; MariaDB binds `127.0.0.1` only, the domserver serves plain HTTP on port 80
+- Database passwords come from sops (`domjudge.mysql.password`, `domjudge.mysql.root-password`); data lives in `/var/lib/mariadb`
+- The `judgehost` user gets the `judgehost.password` secret the judgehosts already use: a start script copies a sops-rendered `restapi.secret` into the container before the database install, so the judgehosts connect without touching the web interface
+- The initial `admin` password is printed once in `journalctl -u docker-domserver` on first start; change it in the web interface
+- Lid and power key are ignored and sleep is disabled, so it keeps serving with the lid closed
+
+---
+
 ## Running It Yourself
 
 ### Prerequisites
@@ -182,6 +195,7 @@ nix build .#nixosConfigurations.teammachine.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy.config.system.build.toplevel
 nix build .#nixosConfigurations.scoreboard.config.system.build.toplevel
 nix build .#nixosConfigurations.balloons.config.system.build.toplevel
+nix build .#nixosConfigurations.domjudge.config.system.build.toplevel
 ```
 
 ### Formatting disks

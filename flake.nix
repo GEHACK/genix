@@ -170,6 +170,10 @@
         ./hosts/cds/configuration.nix
       ];
 
+      domjudgeModules = commonModules ++ [
+        ./hosts/domjudge/configuration.nix
+      ];
+
       teammachine-isoModules = commonModules ++ [
         (mkHomeManager {
           users = {
@@ -239,6 +243,12 @@
         modules = cdsModules;
       };
 
+      domjudge = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = domjudgeModules;
+      };
+
       teammachine-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -289,6 +299,7 @@
           balloons
           judgehost
           cds
+          domjudge
           teammachine-iso
           ;
       };
@@ -302,6 +313,7 @@
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
         cds = cds.config.system.build.toplevel;
+        domjudge = domjudge.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
         balloons-vm = balloons-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
