@@ -50,6 +50,7 @@ let
       resolv-file = "/run/systemd/resolve/resolv.conf";
 
       dhcp-authoritative = true;
+      dhcp-ignore-clid = true;
       dhcp-leasefile = "/var/lib/dnsmasq-${name}/dnsmasq.leases";
       dhcp-range = lib.concatStringsSep "," ([ net.bridge ] ++ net.dhcp.range ++ [ "infinite" ]);
       dhcp-option = map (option: "${net.bridge},${toString option},${net.address}") (

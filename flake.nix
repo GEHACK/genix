@@ -305,6 +305,7 @@
         judgehost-vm = judgehost-vm.config.system.build.vm;
         balloons-vm = balloons-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
+        nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
       };
 
       checks.x86_64-linux = {

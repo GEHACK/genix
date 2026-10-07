@@ -16,6 +16,8 @@ in
   imports = [
     ./balloons.nix
     ./boot.nix
+    ./build-host.nix
+    ./cache.nix
     ./cds.nix
     ./cuproxy.nix
     ./ddns.nix

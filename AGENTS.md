@@ -76,6 +76,9 @@ nix build .#packages.x86_64-linux.teammachine-iso
 ./scripts/nixos-anywhere.sh <FLAKE_TARGET> root@<IP>
 ./scripts/nixos-anywhere.sh -J <jump> -i <key> --extra-files ./tmp \
   --chown /etc/sops/hostkey root:root <FLAKE_TARGET> root@<IP>
+# Fast provisioning: build on geproxy, target on the admin net pulls from geproxy's cache
+./scripts/nixos-anywhere.sh -B gehack@geproxy.gehack.nl --cache http://10.0.1.1:5000 \
+  --extra-files ./tmp --chown /etc/sops/hostkey root:root <FLAKE_TARGET> root@<IP>
 
 # Deploy an update
 ./scripts/install.sh <FLAKE_TARGET> root@<IP>   # remote — NO confirmation prompt
@@ -175,7 +178,7 @@ in {
 - **Nix with flakes**, `nixpkgs` pinned to `nixos-26.05`. Only 3 of 9 inputs `follow` nixpkgs — `disko`, `loom`, `cuproxy`, `balloons`, `imaged` carry their own. Adding `inputs.nixpkgs.follows` is a behaviour change, not a cleanup.
 - `nixConfig` declares two substituters: `luukblankenstijn.cachix.org` and `gehack.cachix.org`. Only honoured for trusted Nix users; otherwise every Rust/Go input builds from source.
 - `sops` + an age key listed in `.sops.yaml` is required to touch secrets.
-- External tools (`disko`, `nixos-anywhere`) are invoked ad-hoc via `nix run github:nix-community/<tool>` — there is no devShell.
+- `nixos-anywhere` is pinned as `packages.x86_64-linux.nixos-anywhere` (nixpkgs' package). Its kexec step makes the *target* download the installer from GitHub, so run `enable-internet` on geproxy before installing a machine on the contest network. `disko` is still invoked ad-hoc via `nix run github:nix-community/disko`. There is no devShell.
 - `system.stateVersion = "25.11"` on every host while nixpkgs is `26.05`. **Intentional — never "fix" it.**
 - `home-manager.useGlobalPkgs = true`, so `nixpkgs.config` inside HM modules is ignored; `allowUnfree` must be set at the host level.
 
@@ -194,6 +197,8 @@ Non-obvious traps, all verified against source:
 - **`scripts/format.sh` destroys disks.** See the warning above. This is the single most dangerous name collision in the repo.
 - **`install.sh` remote mode has no confirmation prompt** and immediately `switch`es a live host.
 - **Both deploy scripts run `update_keys.sh` first**, which requires network access to github.com, hard-fails offline, and silently `git add`s `authorized_keys` into your index.
+- **`nixos-anywhere.sh -B` needs a trusted Nix user on the build host.** It sends the flake with `nix flake archive --to ssh-ng://…`, builds `toplevel`, `diskoScript` and `nixos-anywhere` there under GC roots in `~/.local/state/genix-provision`, and runs nixos-anywhere with `--store-paths`. geproxy trusts `gehack` and uses both cachix caches via `modules/geproxy/build-host.nix`, which reads them from `flake.nix`'s `nixConfig`. Only files tracked by git reach the build host.
+- **`nixos-anywhere.sh --cache` only works for targets on the admin net.** `modules/geproxy/cache.nix` serves geproxy's whole store with harmonia (unsigned, zstd) on port 5000, allowed only on `admin`. The script splits nixos-anywhere into `--phases kexec` and `disko,install,reboot`, and in between writes `substituters = <cache>` and `require-sigs = false` into the installer's `/root/.config/nix/nix.conf`, so the target substitutes the closure in parallel over HTTP (measured ~9.5× faster than the ssh copy). The cache must be the build host, since only paths in its store are served. Without a reachable cache, the paths should still arrive over the slow ssh copy after the 5 s `connect-timeout`, but that fallback is untested.
 - **`authorized_keys` is generated and parsed by Nix.** `modules/geproxy/default.nix` reads it at eval time and filters `#`-prefixed lines into `services.buildFanout.authorizedKeys`, so the `# <username>` comment format is load-bearing. Hand edits are clobbered on the next deploy.
 - **The ISO is a fork, not a variant.** `hosts/teammachine-iso/configuration.nix` uses `disabledModules = [ ../../modules/users.nix ]`, re-declares users inline with a literal `hashedPassword`, and imports **8 specific `modules/teammachine/*` files by path** rather than the barrel. Adding a file to `modules/teammachine/default.nix` does not reach the ISO; renaming one of those 8 breaks it. Never copy the literal-password pattern into a real host.
 - **`teammachine.users` is `types.attrsOf types.attrs`** — typos are silently accepted at the NixOS layer and only explode inside home-manager, or not at all. `scoreboard-laptop` loads HM with *no* users, so `teammachine.users.*` there does nothing.

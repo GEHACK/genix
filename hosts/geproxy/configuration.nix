@@ -75,6 +75,7 @@ in
         allow = [
           "ssh"
           "ntp"
+          "cache"
         ];
         dhcp.range = [
           "10.0.1.50"
@@ -116,6 +117,7 @@ in
     balloons.enable = true;
     devdocs.enable = true;
     cds.enable = true;
+    cache.enable = true;
   };
 
   networking = {

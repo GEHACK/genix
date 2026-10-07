@@ -12,10 +12,15 @@ usage() {
     echo "  TARGET_HOST    (Required) The ssh destination (e.g., root@1.1.1.1)"
     echo ""
     echo "Options:"
-    echo "  -B, --build-host <ssh-host>       Run the installer from this host, so the closure"
-    echo "                                    is built there and copied to the target directly."
+    echo "  -B, --build-host <ssh-host>       Build on this host and run the installer from it."
+    echo "                                    The flake is sent with 'nix flake archive', build"
+    echo "                                    results stay rooted in ~/.local/state/genix-provision."
+    echo "                                    The ssh user must be a trusted nix user there."
     echo "                                    Ssh options then describe build host -> target,"
     echo "                                    and the ssh agent is forwarded to the build host."
+    echo "      --cache <url>                 Binary cache on the build host that the installer"
+    echo "                                    downloads the closure from, e.g. http://10.0.1.1:5000."
+    echo "                                    Requires --build-host."
     echo "  -J, --jump <ssh-host>              Proxy jump through this host, can be repeated"
     echo "  -o, --ssh-option <k=v>            Extra ssh option without '-o', can be repeated"
     echo "  -p, --ssh-port <port>             Ssh port of the target host"
@@ -49,6 +54,8 @@ IDENTITY=""
 EXTRA_FILES=""
 DISK_KEY_REMOTE=()
 DISK_KEY_LOCAL=()
+SSH_OPTIONS=()
+CACHE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -61,23 +68,28 @@ while [[ $# -gt 0 ]]; do
             BUILD_HOST="$2"
             shift 2
             ;;
+        --cache)
+            require_value "$@"
+            CACHE="$2"
+            shift 2
+            ;;
         -J | --jump)
             require_value "$@"
-            EXTRA_ARGS+=(--ssh-option "ProxyJump=$2")
+            SSH_OPTIONS+=("ProxyJump=$2")
             shift 2
             ;;
         -o | --ssh-option)
             require_value "$@"
-            EXTRA_ARGS+=(--ssh-option "$2")
+            SSH_OPTIONS+=("$2")
             shift 2
             ;;
         -p | --ssh-port)
             require_value "$@"
-            EXTRA_ARGS+=(--ssh-port "$2")
+            SSH_OPTIONS+=("Port=$2")
             shift 2
             ;;
         -A | --forward-agent)
-            EXTRA_ARGS+=(--ssh-option ForwardAgent=yes)
+            SSH_OPTIONS+=(ForwardAgent=yes)
             shift
             ;;
         -i | --identity)
@@ -129,6 +141,14 @@ if [[ -n "$IDENTITY" ]]; then
     EXTRA_ARGS+=(-i "$IDENTITY")
 fi
 
+[[ -z "$CACHE" || -n "$BUILD_HOST" ]] || die "--cache requires --build-host."
+
+SSH_ARGS=()
+for option in "${SSH_OPTIONS[@]}"; do
+    EXTRA_ARGS+=(--ssh-option "$option")
+    SSH_ARGS+=(-o "$option")
+done
+
 "$SCRIPT_DIR/update_keys.sh"
 
 echo "DANGER: This will partition $TARGET_HOST and install NixOS configuration #$FLAKE_TARGET."
@@ -138,6 +158,8 @@ if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
+[[ -n "$CACHE" ]] || EXTRA_ARGS+=(--no-substitute-on-destination)
+
 if [[ -z "$BUILD_HOST" ]]; then
     [[ -z "$EXTRA_FILES" ]] || EXTRA_ARGS+=(--extra-files "$EXTRA_FILES")
     for i in "${!DISK_KEY_LOCAL[@]}"; do
@@ -145,19 +167,34 @@ if [[ -z "$BUILD_HOST" ]]; then
     done
 
     echo "Starting deployment to $TARGET_HOST..."
-    nix run github:nix-community/nixos-anywhere -- \
+    nix run "$REPO_ROOT#nixos-anywhere" -- \
         --flake "$REPO_ROOT#$FLAKE_TARGET" \
         "${EXTRA_ARGS[@]}" \
         "$TARGET_HOST"
     exit 0
 fi
 
-REMOTE_ROOT="$(ssh "$BUILD_HOST" 'mktemp -d')"
-trap 'ssh "$BUILD_HOST" "rm -rf -- $REMOTE_ROOT"' EXIT
+echo "Copying the flake and its inputs to $BUILD_HOST..."
+FLAKE_SRC="$(nix flake archive --json --to "ssh-ng://$BUILD_HOST" "$REPO_ROOT" | jq -r .path)"
 
-echo "Copying the working tree to $BUILD_HOST:$REMOTE_ROOT/flake..."
-tar -C "$REPO_ROOT" --exclude=./.git --exclude=./tmp -czf - . |
-    ssh "$BUILD_HOST" "mkdir -p $REMOTE_ROOT/flake && tar -xzf - -C $REMOTE_ROOT/flake"
+GC_ROOTS=".local/state/genix-provision"
+ssh "$BUILD_HOST" "mkdir -p $GC_ROOTS"
+
+build_on_host() {
+    ssh "$BUILD_HOST" "$(printf '%q ' nix build --print-out-paths \
+        --out-link "$GC_ROOTS/$1" "$FLAKE_SRC#$2")"
+}
+
+echo "Building $FLAKE_TARGET on $BUILD_HOST..."
+SYSTEM_ATTR="nixosConfigurations.$FLAKE_TARGET.config.system.build"
+DISKO_SCRIPT="$(build_on_host "$FLAKE_TARGET-diskoScript" "$SYSTEM_ATTR.diskoScript")"
+TOPLEVEL="$(build_on_host "$FLAKE_TARGET-toplevel" "$SYSTEM_ATTR.toplevel")"
+NIXOS_ANYWHERE="$(build_on_host nixos-anywhere packages.x86_64-linux.nixos-anywhere)"
+
+if [[ -n "$EXTRA_FILES" || ${#DISK_KEY_LOCAL[@]} -gt 0 ]]; then
+    REMOTE_ROOT="$(ssh "$BUILD_HOST" 'mktemp -d')"
+    trap 'ssh "$BUILD_HOST" "rm -rf -- $REMOTE_ROOT"' EXIT
+fi
 
 if [[ -n "$EXTRA_FILES" ]]; then
     tar -C "$EXTRA_FILES" -czf - . |
@@ -170,6 +207,23 @@ for i in "${!DISK_KEY_LOCAL[@]}"; do
     EXTRA_ARGS+=(--disk-encryption-keys "${DISK_KEY_REMOTE[$i]}" "$REMOTE_ROOT/disk-keys/$i")
 done
 
-echo "Starting deployment to $TARGET_HOST, building on $BUILD_HOST..."
-ssh -A -t "$BUILD_HOST" "$(printf '%q ' nix run github:nix-community/nixos-anywhere -- \
-    --flake "$REMOTE_ROOT/flake#$FLAKE_TARGET" "${EXTRA_ARGS[@]}" "$TARGET_HOST")"
+run_installer() {
+    ssh -A -t "$BUILD_HOST" "$(printf '%q ' "$NIXOS_ANYWHERE/bin/nixos-anywhere" \
+        --store-paths "$DISKO_SCRIPT" "$TOPLEVEL" "${EXTRA_ARGS[@]}" "$@" "$TARGET_HOST")"
+}
+
+echo "Starting deployment to $TARGET_HOST from $BUILD_HOST..."
+if [[ -z "$CACHE" ]]; then
+    run_installer
+    exit 0
+fi
+
+run_installer --phases kexec
+
+echo "Pointing the installer at $CACHE..."
+printf '%s\n' "substituters = $CACHE" "require-sigs = false" "connect-timeout = 5" |
+    ssh -A "$BUILD_HOST" "$(printf '%q ' ssh "${SSH_ARGS[@]}" \
+        -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "root@${TARGET_HOST#*@}" \
+        'mkdir -p ~/.config/nix && cat > ~/.config/nix/nix.conf')"
+
+run_installer --phases disko,install,reboot
