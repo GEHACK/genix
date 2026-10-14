@@ -6,60 +6,34 @@
 }:
 let
   cfg = config.teammachine.languages;
-  staticGlibc = pkgs.glibc.static;
-
-  mygcc = pkgs.writeShellScriptBin "mygcc" ''
-    ${pkgs.gcc}/bin/gcc -std=gnu17 -x c -Wall -O2 -static -pipe \
-      -L${staticGlibc}/lib \
-      -o "$1" "$1.c" -lm
-  '';
-
-  mygpp = pkgs.writeShellScriptBin "mygpp" ''
-    ${pkgs.gcc}/bin/g++ -std=gnu++20 -x c++ -Wall -O2 -static -pipe \
-      -L${staticGlibc}/lib \
-      -o "$1" "$1.cpp" -lm
-  '';
-
-  mypython = pkgs.writeShellScriptBin "mypython" ''
-    exec ${pkgs.pypy3}/bin/pypy3 "$@"
-  '';
-
-  myjavac = pkgs.writeShellScriptBin "myjavac" ''
-    exec ${pkgs.jdk21}/bin/javac -encoding UTF-8 -sourcepath . -d . "$@"
-  '';
-
-  mykotlinc = pkgs.writeShellScriptBin "mykotlinc" ''
-    exec ${pkgs.kotlin}/bin/kotlinc -d . "$@"
-  '';
+  toolchain = import ../../toolchain { inherit pkgs; };
+  inherit (toolchain) compilers helpers;
 in
 {
   home.packages =
-    lib.optionals cfg.c.enable [
-      pkgs.gcc
-      pkgs.gdb
-      pkgs.cmake
-      mygcc
-    ]
-    ++ lib.optionals cfg.cpp.enable [
-      pkgs.gcc
-      pkgs.gdb
-      pkgs.cmake
-      mygpp
-    ]
+    lib.optionals cfg.c.enable (
+      compilers.c
+      ++ [
+        pkgs.gdb
+        pkgs.cmake
+        helpers.mygcc
+      ]
+    )
+    ++ lib.optionals cfg.cpp.enable (
+      compilers.cpp
+      ++ [
+        pkgs.gdb
+        pkgs.cmake
+        helpers.mygpp
+      ]
+    )
     ++ lib.optionals cfg.python.enable [
       (pkgs.pypy3.withPackages (pypy-pkgs: [ ]))
       (pkgs.python3.withPackages (python-pkgs: [ ]))
-      mypython
+      helpers.mypython
     ]
-    ++ lib.optionals cfg.java.enable [
-      pkgs.jdk21
-      myjavac
-    ]
-    ++ lib.optionals cfg.kotlin.enable [
-      pkgs.kotlin
-      pkgs.jdk21
-      mykotlinc
-    ];
+    ++ lib.optionals cfg.java.enable (compilers.java ++ [ helpers.myjavac ])
+    ++ lib.optionals cfg.kotlin.enable (compilers.kotlin ++ [ helpers.mykotlinc ]);
 
   home.sessionVariables = lib.mkIf (cfg.java.enable || cfg.kotlin.enable) {
     JAVA_HOME = "${pkgs.jdk21.home}";

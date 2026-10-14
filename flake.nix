@@ -279,6 +279,9 @@
         specialArgs = isoSpecialArgs;
         modules = teammachine-isoModules;
       };
+
+      judgeToolchain = import ./toolchain { inherit (judgehost) pkgs; };
+      teamToolchain = import ./toolchain { inherit (teammachine) pkgs; };
     in
     {
       nixosConfigurations = {
@@ -306,9 +309,16 @@
         balloons-vm = balloons-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
         nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
+        judge-toolchain = judgeToolchain.judgeEnv;
+        judgehost-chroot = judgeToolchain.chroot;
+        domjudge-executables = judgeToolchain.executables;
       };
 
       checks.x86_64-linux = {
+        # Fails evaluation if the teammachine and judgehost resolve different compilers.
+        toolchain-parity =
+          assert teamToolchain.judgeEnv.drvPath == judgeToolchain.judgeEnv.drvPath;
+          judgeToolchain.judgeEnv;
         teammachine-rdp = import ./tests/teammachine-rdp.nix {
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
           sopsModule = sops-nix.nixosModules.sops;

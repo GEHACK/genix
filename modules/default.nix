@@ -4,6 +4,7 @@ _: {
     ./security.nix
     ./sops.nix
     ./ssh.nix
+    ./toolchain.nix
     ./users.nix
   ];
 }

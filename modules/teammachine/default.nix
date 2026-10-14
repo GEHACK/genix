@@ -3,7 +3,6 @@ _: {
     ./boot.nix
     ./desktop.nix
     ./greeter.nix
-    ./languages.nix
     ./locale.nix
     ./loom.nix
     ./networking.nix

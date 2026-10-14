@@ -24,6 +24,18 @@ let
 
   runUserBaseId = 62860;
 
+  toolchain = import ../../toolchain { inherit pkgs; };
+
+  # The image's own debootstrapped chroot is shadowed by toolchain.chroot. Upstream
+  # chroot-startstop.sh only bind-mounts etc/usr/lib/bin/lib64 into each judging dir,
+  # so nix/ has to be added before the daemon starts.
+  startstop = "/opt/domjudge/judgehost/lib/judge/chroot-startstop.sh";
+  startCmd = ''
+    sed -i 's/^SUBDIRMOUNTS="etc usr lib bin"$/SUBDIRMOUNTS="etc usr lib bin nix"/' ${startstop}
+    grep -q '^SUBDIRMOUNTS="etc usr lib bin nix"$' ${startstop}
+    exec /scripts/start.sh
+  '';
+
   # Requires= as well as After=, so a failed prerequisite keeps the daemons from
   # registering under a wrong name or judging on an untuned CPU.
   ordering = [
@@ -51,12 +63,22 @@ let
       # create_cgroups writes to the root cgroup.subtree_control, so the mount must be
       # writable and the host cgroup namespace must be visible. runguard additionally
       # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
-      volumes = [ "/sys/fs/cgroup:/sys/fs/cgroup" ];
+      volumes = [
+        "/sys/fs/cgroup:/sys/fs/cgroup"
+        "${toolchain.chroot}:/chroot/domjudge:ro"
+      ];
       extraOptions = [
         "--privileged"
         "--cgroupns=host"
         "--network=host"
         "--uts=host"
+        # start.sh copies resolv.conf into the chroot's etc.
+        "--tmpfs=/chroot/domjudge/etc"
+      ];
+      cmd = [
+        "/bin/bash"
+        "-ec"
+        startCmd
       ];
     };
 

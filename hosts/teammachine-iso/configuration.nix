@@ -9,7 +9,6 @@
     (modulesPath + "/installer/cd-dvd/iso-image.nix")
     ../../modules
     ../../modules/teammachine/desktop.nix
-    ../../modules/teammachine/languages.nix
     ../../modules/teammachine/locale.nix
     ../../modules/teammachine/networking.nix
     ../../modules/teammachine/printer.nix
