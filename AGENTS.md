@@ -104,9 +104,9 @@ nix flake update
 
 ### Flake targets
 
-`nixosConfigurations`: `teammachine`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
+`nixosConfigurations`: `teammachine`, `teammachine-part`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
 
-`packages.x86_64-linux`: `teammachine`, `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
+`packages.x86_64-linux`: `teammachine`, `teammachine-part` (single-partition ext4 image, installed with `scripts/install-partition.sh`), `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
 `packages.aarch64-linux`: `teammachine-arm`, `scoreboard-laptop-arm`.
 
 Note the naming split: **underscore** in `nixosConfigurations` (`teammachine_arm`), **hyphen** in `packages` (`teammachine-arm`). The `*-vm` targets exist only as packages — `nixos-rebuild --flake .#teammachine-vm` fails.
@@ -150,7 +150,7 @@ in {
 
 **Inline derivations, minimal overlays.** External packages come from flake-input `nixosModules`, `_module.args`, or the flake-input overlays in `packageOverlays` (`flake.nix`). Local packages are `pkgs.writeShellApplication` / `writeShellScriptBin` / `stdenv.mkDerivation` inline in the consuming module. The only local overlay is `modules/teammachine/languages.nix`: setting `teammachine.languages.kotlin.pin = { version; hash; }` in a host file swaps nixpkgs' `kotlin` for that JetBrains release everywhere (including `mykotlinc`); `null` (the default) keeps the nixpkgs version.
 
-**`mkForce` appears only in the ISO**; `mkIf` is the standard conditional; `mkDefault` is unused.
+**`mkForce` appears only in the ISO and `hosts/teammachine-part`** (which disables GRUB: the host's own GRUB boots the system profile directly); `mkIf` is the standard conditional; `mkDefault` is unused.
 
 **Commits**: recent history uses Conventional Commits (`feat:`, `chore:`) without scopes; older history is free-form. Follow `feat:`/`fix:`/`chore:`. Branches are `<type>/<kebab-slug>`.
 

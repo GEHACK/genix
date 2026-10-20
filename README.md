@@ -147,6 +147,29 @@ Use `nixos-anywhere` for initial setup — it partitions disks (via disko) and i
 nix run github:nix-community/nixos-anywhere -- --flake .#<TARGET> root@<IP>
 ```
 
+### Installing into an existing partition
+
+`teammachine-part` is the teammachine as a single ext4 filesystem image (label `teammachine`) without a bootloader, for an existing host whose own GRUB boots its kernel directly. Nothing outside the partition is touched.
+
+```bash
+nix build .#teammachine-part
+sudo ./scripts/install-partition.sh result/teammachine.img /dev/<PARTITION> <HOSTKEY>
+```
+
+The script writes the image, grows the filesystem to the partition, installs the sops key at `/etc/sops/hostkey` and prints the host GRUB entry:
+
+```
+menuentry "Teammachine" {
+    search --no-floppy --label teammachine --set=root
+    linux /nix/var/nix/profiles/system/kernel init=/nix/var/nix/profiles/system/init <kernel-params>
+    initrd /nix/var/nix/profiles/system/initrd
+}
+```
+
+The entry follows the `system` profile, so rebuilds swap kernel and initrd without touching the host; only a change to `boot.kernelParams` needs the host entry updated. There is no generation menu, so rollback means `nixos-rebuild switch --rollback` from the running system.
+
+Later updates go through `./install.sh teammachine-part root@<IP>` like any other host.
+
 ### Deploying updates
 
 From the `scripts/` directory:

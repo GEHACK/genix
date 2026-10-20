@@ -209,6 +209,12 @@
         modules = teammachineModules;
       };
 
+      teammachine-part = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineModules ++ [ ./hosts/teammachine-part/configuration.nix ];
+      };
+
       geproxy = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -284,6 +290,7 @@
       nixosConfigurations = {
         inherit
           teammachine
+          teammachine-part
           geproxy
           scoreboard
           balloons
@@ -295,6 +302,7 @@
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
+        teammachine-part = teammachine-part.config.system.build.partitionImage;
         geproxy = geproxy.config.system.build.toplevel;
         scoreboard = scoreboard.config.system.build.toplevel;
         balloons = balloons.config.system.build.toplevel;
