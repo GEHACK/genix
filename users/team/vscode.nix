@@ -23,7 +23,37 @@ in
       mutableExtensionsDir = false;
       profiles.default = {
         userSettings = {
+          # AI / Copilot: no chat view, setup prompts or command-center button
           "chat.disableAIFeatures" = true;
+          "chat.commandCenter.enabled" = false;
+          "workbench.secondarySideBar.defaultVisibility" = "hidden";
+
+          # first-launch noise: welcome page, walkthroughs, tips, trust dialog
+          "workbench.startupEditor" = "none";
+          "workbench.welcomePage.walkthroughs.openOnInstall" = false;
+          "workbench.welcomePage.experimentalOnboarding" = false; # sign-in / AI-preference wizard
+          "workbench.tips.enabled" = false;
+          "workbench.enableExperiments" = false;
+          "security.workspace.trust.enabled" = false;
+          "git.openRepositoryInParentFolders" = "never";
+
+          # updates, release notes, telemetry, recommendations
+          "update.mode" = "none";
+          "update.showReleaseNotes" = false;
+          "extensions.autoCheckUpdates" = false;
+          "extensions.autoUpdate" = false;
+          "extensions.ignoreRecommendations" = true;
+          "telemetry.telemetryLevel" = "off";
+
+          # extension-specific first-run prompts
+          "redhat.telemetry.enabled" = false;
+          "java.help.firstView" = "none";
+          "java.help.showReleaseNotes" = false;
+          "python.experiments.enabled" = false;
+          "cmake.configureOnOpen" = false;
+
+          # vim off by default; "Vim: Toggle Vim Mode" (toggleVim) switches it per session
+          "vim.disableExtension" = true;
 
           # C/C++ compiler & IntelliSense
           "C_Cpp.default.compilerPath" = "${pkgs.gcc}/bin/g++";
@@ -134,48 +164,6 @@ in
             ];
             preLaunchTask = "g++: build active file";
           }
-        ];
-      };
-    };
-
-    xdg.desktopEntries = {
-      "code-novim" = {
-        name = "VScode";
-        genericName = "Text Editor";
-        exec = "code --disable-extension vscodevim.vim %F";
-        icon = "vscode";
-        terminal = false;
-        startupNotify = true;
-        categories = [
-          "Utility"
-          "TextEditor"
-          "Development"
-          "IDE"
-        ];
-        mimeType = [
-          "text/plain"
-          "inode/directory"
-        ];
-      };
-      "code" = {
-        name = "VScode (vim)";
-        genericName = "Text Editor";
-        exec = "code %F";
-        icon = builtins.path {
-          path = ../../assets/vscode-vim.png;
-          name = "vscode-vim.png";
-        };
-        terminal = false;
-        startupNotify = true;
-        categories = [
-          "Utility"
-          "TextEditor"
-          "Development"
-          "IDE"
-        ];
-        mimeType = [
-          "text/plain"
-          "inode/directory"
         ];
       };
     };
