@@ -3,7 +3,7 @@ keys:
   - &bartjan age1n0k4lj6n3hkxr6kssrnjf3u6tckk7vfmgqgex3y34w9d6gz4pdwqw4aqg9
   - &kevin ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFnzlwceExSp4l0yPNi3KysnyGWlGHIiwz9LRqCrXUzs
   - &sandor ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIz78vI5CB7ECTqy8p0F3dRL/D5XNEQ+5DsbeWSw+3K/
-  - &host-key age10rxt6w552lyznl336qlk5xhq7p9dys5tsthgfqypsa7x5egn7g7sjmx936
+  - &host-key age1d4w2zt5ky9dsrntetgtc62d0hchqxung99ckmkg36nvc738vdesq9z2aw6
 
 creation_rules:
   - path_regex: secrets.yaml
