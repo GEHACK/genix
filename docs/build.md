@@ -8,7 +8,7 @@ the same **NixOS 26.05** system as a real team machine — same GNOME desktop, c
 editors and tooling — packaged as a live USB so you can boot it on almost any PC without
 installing anything.
 
-<p><a class="download-btn" href="https://gehack.gewis.nl/teammachine.iso">Download the ISO</a></p>
+<p><a class="download-btn" href="https://share.luukblankenstijn.nl/api/shares/RfzrUXoU/files/2a6f3d40-fcef-4b47-95df-29e9d9f0c857">Download the ISO</a></p>
 
 > Looking for what's *on* the machine? See the **[Contest Environment](index.md)**.
 
