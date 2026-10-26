@@ -85,6 +85,10 @@ submit-and-judge flow end to end.
   live image even though real team machines have them locked down.)
 - **Nothing persists.** The live session runs from RAM/USB; anything you create is gone
   after a reboot.
+- **No contest printer, screen streaming or USB lockdown.** Those only exist on real team
+  machines at a contest.
+- **The DevDocs bookmark** points at the contest's offline mirror (`docs.gehack.nl`); away
+  from a contest, use [devdocs.io](https://devdocs.io/) instead.
 - **Hostname** is `gehack-iso`.
 - **This is NixOS, not Debian/Ubuntu.** Software is managed declaratively and everything you
   need is already installed — package-manager commands like `apt`, `apt-get` and `dpkg` are

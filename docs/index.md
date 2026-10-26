@@ -3,9 +3,9 @@ title: GEHACK Contest Environment
 description: What you get on a team workstation — editors, compilers, tooling, and how to submit
 ---
 
-A standard **GNOME desktop on NixOS 26.05**. Firefox is the browser and sits in the
-dock by default. Everything below is installed and ready the moment you log in — nothing
-to set up.
+A standard **GNOME desktop on NixOS 26.05**. Firefox is the browser: it sits in the dock
+and opens on the contest judge when you log in. Everything below is installed and ready the
+moment you log in — nothing to set up.
 
 > Want to run this environment yourself? See **[The GEHACK Live Image](build.md)**.
 
@@ -17,6 +17,8 @@ to set up.
 | Desktop | GNOME (Wayland) |
 | Browser | Firefox |
 | Keyboard layouts | US and NL (switch from the GNOME top bar) |
+| Shell | Bash by default; Zsh is installed too (with autosuggestions and syntax highlighting) |
+| Trackpad | Press <kbd>Super</kbd>+<kbd>T</kbd> (or the laptop's touchpad key), or run **Toggle Trackpad**, to switch it off while typing and back on |
 
 ## Languages & compilers
 
@@ -50,11 +52,14 @@ $ ./solution < in     # run it
 
 Pick whatever you're fastest in — all are installed.
 
-- **VS Code** — with C/C++, Python and Java extensions; build & debug tasks pre-wired
-  for C/C++ (g++ `-std=c++23`, gdb). Separate Vim and no-Vim launchers.
+- **VS Code** — with C/C++ (plus CMake Tools), Python and Java extensions; build & debug
+  tasks pre-wired for C/C++ (g++ `-std=c++23` / gcc `-std=c17`, gdb). AI/Copilot features,
+  the welcome page and update prompts are switched off. The Vim extension is installed but
+  off by default: run **Vim: Toggle Vim Mode** from the Command Palette
+  (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) to turn it on.
 - **Neovim** — clangd, pyright and jdtls language servers plus treesitter highlighting.
 - **Vim**, **Emacs**, **nano**, **gedit**, **Geany**
-- **JetBrains** — PyCharm (Python), IntelliJ IDEA (Java), CLion (C/C++)
+- **JetBrains** — PyCharm (Python), IntelliJ IDEA (Java & Kotlin), CLion (C/C++)
 - **Eclipse** and **NetBeans** (Java)
 - **Code::Blocks** (C/C++)
 
@@ -63,7 +68,7 @@ Pick whatever you're fastest in — all are installed.
 Debugging, profiling and the usual shell utilities:
 
 `gdb` · `valgrind` · `strace` · `cmake` · `git` · `tmux` · `screen` ·
-`shellcheck` · `btop` · `htop` · `iotop` · `wget` · `zip` / `unzip` / `7z`
+`shellcheck` · `btop` · `htop` · `iotop` · `wget` · `curl` · `zip` / `unzip` / `7z`
 
 ## Submitting solutions
 
@@ -75,11 +80,34 @@ $ submit solution.cpp        # submit for the current problem
 $ submit -p A solution.cpp   # submit explicitly for problem A
 ```
 
-You can also submit from the DOMjudge web interface in Firefox.
+You can also submit from the DOMjudge web interface in Firefox: it is the browser's
+homepage and the first bookmark on the toolbar.
+
+## Printing
+
+The contest printer, **PSGEWIS1**, is set up as the default printer. Print from any
+application with <kbd>Ctrl</kbd>+<kbd>P</kbd>, or from the terminal:
+
+```console
+$ lp solution.cpp
+```
 
 ## Extras
 
 | | |
 |---|---|
-| Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror served in-browser at `http://docs` — no internet needed |
-| Games | GNOME games (Sudoku, Mines, Mahjongg…), SuperTux, plus terminal classics |
+| Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror at `https://docs.gehack.nl` (also on the Firefox bookmarks toolbar) — no internet needed |
+| Games | GNOME games (Sudoku, Mines, Mahjongg…), SuperTux, SuperTuxKart, Neverball, plus terminal classics |
+
+## Good to know
+
+- **No internet during the contest.** The machine can reach the judge, the DevDocs mirror
+  and the printer; other machines on the contest network are blocked.
+- **Firefox is locked down**: extensions cannot be installed and the homepage is fixed to
+  the judge.
+- **USB devices plugged in after the machine has started are blocked.** Ask a GEHACK
+  volunteer if you need to connect something.
+- **WiFi and Bluetooth are disabled.**
+- **Your screen and webcam are streamed** to the contest organisation.
+- **Nix commands are disabled** for the contest account; everything you need is already
+  installed.
