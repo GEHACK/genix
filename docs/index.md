@@ -57,11 +57,60 @@ Pick whatever you're fastest in — all are installed.
   the welcome page and update prompts are switched off. The Vim extension is installed but
   off by default: run **Vim: Toggle Vim Mode** from the Command Palette
   (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) to turn it on.
-- **Neovim** — clangd, pyright and jdtls language servers plus treesitter highlighting.
+- **Neovim** — language servers, treesitter highlighting and a file tree (see below).
 - **Vim**, **Emacs**, **nano**, **gedit**, **Geany**
 - **JetBrains** — PyCharm (Python), IntelliJ IDEA (Java & Kotlin), CLion (C/C++)
 - **Eclipse** and **NetBeans** (Java)
 - **Code::Blocks** (C/C++)
+
+## Editor plugins
+
+These are the only plugins installed. You can't install or update extensions during the
+contest.
+
+### VS Code extensions
+
+| Extension | ID | For |
+|-----------|----|-----|
+| C/C++ | `ms-vscode.cpptools` | C, C++: IntelliSense and gdb debugging |
+| CMake Tools | `ms-vscode.cmake-tools` | C, C++ |
+| Python | `ms-python.python` | Python |
+| Pylance | `ms-python.vscode-pylance` | Python: language server |
+| Python Debugger | `ms-python.debugpy` | Python |
+| Language Support for Java | `redhat.java` | Java |
+| Debugger for Java | `vscjava.vscode-java-debug` | Java |
+| Test Runner for Java | `vscjava.vscode-java-test` | Java |
+| Vim | `vscodevim.vim` | Off by default; turn on with **Vim: Toggle Vim Mode** |
+
+There is no Kotlin extension for VS Code; use IntelliJ IDEA or Neovim for Kotlin.
+
+### Neovim plugins
+
+| Plugin | What it does |
+|--------|--------------|
+| LSP (`nvim-lspconfig`) | Language servers: `clangd` (C/C++), `pyright` (Python), `jdtls` (Java), `kotlin-language-server` (Kotlin) |
+| `nvim-treesitter` | Syntax highlighting and indentation for C, C++, Python, Java and Kotlin |
+| `neo-tree` | File tree |
+| `which-key` | Pops up the available key bindings as you type |
+| `nvim-web-devicons` | File-type icons |
+
+The leader key is <kbd>Space</kbd>. Preset key bindings:
+
+| Keys | Action |
+|------|--------|
+| <kbd>Space</kbd> <kbd>e</kbd> | Toggle the file tree |
+| <kbd>g</kbd> <kbd>d</kbd> | Go to definition |
+| <kbd>g</kbd> <kbd>r</kbd> | List references |
+| <kbd>K</kbd> | Hover documentation |
+| <kbd>Space</kbd> <kbd>r</kbd> <kbd>n</kbd> | Rename symbol |
+| <kbd>Space</kbd> <kbd>c</kbd> <kbd>a</kbd> | Code action |
+| <kbd>[</kbd> <kbd>d</kbd> / <kbd>]</kbd> <kbd>d</kbd> | Previous / next diagnostic |
+
+### JetBrains IDEs
+
+PyCharm, IntelliJ IDEA and CLion come with their standard bundled plugins only. IntelliJ
+IDEA has JDK 21 preconfigured as the project SDK, so new Java and Kotlin projects build
+straight away.
 
 ## Command-line tools
 
