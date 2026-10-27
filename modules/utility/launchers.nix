@@ -9,7 +9,7 @@ let
   cfg = config.utility;
   secrets = config.sops.secrets;
 
-  start-presentation = pkgs.writeShellScript "start-presentation" ''
+  scoreboard = pkgs.writeShellScriptBin "scoreboard" ''
     USERNAME=$(cat ${secrets."cds.presentation-client.username".path})
     PASSWORD=$(cat ${secrets."cds.presentation-client.password".path})
 
@@ -19,7 +19,7 @@ let
   # Chromium ignores --kiosk under ozone-wayland; --app is what drops the tab
   # strip and omnibox. The profile lives in the runtime dir, so every login
   # starts clean with no crash-restore prompts.
-  start-balloons = pkgs.writeShellScript "start-balloons" ''
+  balloons = pkgs.writeShellScriptBin "balloons" ''
     exec ${lib.getExe pkgs.chromium} \
       --app="${cfg.balloons.url}" \
       --start-fullscreen \
@@ -36,7 +36,7 @@ let
     name = "gehack-presentation";
     desktopName = "Scoreboard Presentation";
     comment = "ICPC presentation client connected to the CDS";
-    exec = "${start-presentation}";
+    exec = lib.getExe scoreboard;
     icon = "video-display";
     categories = [ "Utility" ];
   };
@@ -45,7 +45,7 @@ let
     name = "gehack-balloons";
     desktopName = "Balloons";
     comment = "Balloon runner dashboard";
-    exec = "${start-balloons}";
+    exec = lib.getExe balloons;
     icon = "emblem-favorite";
     categories = [ "Utility" ];
   };
@@ -87,7 +87,10 @@ in
       "cds.presentation-client.password".owner = "gehack";
     };
 
+    # On PATH too, so both start from a terminal as `scoreboard` / `balloons`.
     environment.systemPackages = [
+      scoreboard
+      balloons
       presentation-launcher
       balloons-launcher
     ];
@@ -98,6 +101,7 @@ in
         settings."org/gnome/shell".favorite-apps = [
           "gehack-presentation.desktop"
           "gehack-balloons.desktop"
+          "firefox.desktop"
           "org.gnome.Terminal.desktop"
           "org.gnome.Nautilus.desktop"
         ];

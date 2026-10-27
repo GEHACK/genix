@@ -1,6 +1,6 @@
 # GEHACK NixOS Infrastructure
 
-NixOS flake-based infrastructure-as-code for the GEHACK competitive programming competitions like FPC, EAPC and EUC26. This repository manages fully declarative system configurations for contest workstations, a network router/firewall, and a scoreboard kiosk — all defined in Nix with no imperative package management.
+NixOS flake-based infrastructure-as-code for the GEHACK competitive programming competitions like FPC, EAPC and EUC26. This repository manages fully declarative system configurations for contest workstations, a network router/firewall, and a scoreboard/balloons utility machine — all defined in Nix with no imperative package management.
 
 ---
 
@@ -85,7 +85,7 @@ Every service is behind a `geproxy.<service>.enable` toggle in the host file: `n
 | `cds.gehack.nl` | CDS at `cds.local:8443` over mDNS (`geproxy.cds.url`), certificate not verified | 443, 8443 | 8443 | — |
 | `imaged.gehack.nl` | imaged UI | 3000 | — | 3000 |
 
-Teammachines drop 8443 outbound, so on the contest network only the scoreboard kiosk reaches the CDS.
+Teammachines drop 8443 outbound, so on the contest network only the utility machine reaches the CDS.
 
 Disk layout uses RAID1 mdadm with dual GRUB mirrors (`geproxy.raidBoot.enable`).
 
@@ -93,34 +93,21 @@ Disk layout uses RAID1 mdadm with dual GRUB mirrors (`geproxy.raidBoot.enable`).
 
 ---
 
-### `scoreboard` — Scoreboard Kiosk
+### `utility` — Scoreboard & Balloons Machine
 
-A minimal kiosk that boots directly into the ICPC presentation client, no desktop environment.
+One plain GNOME machine for the admin desk that replaces the separate scoreboard and balloons kiosks. Plug it into the admin network: `balloons.gehack.nl` is only exposed there.
 
-- Runs `cage` (Wayland compositor) as a single-app kiosk for the `kiosk` user
-- Launches the ICPC presentation client (from the [`icpc-presentation`](https://github.com/GEHACK/icpc-presentation-nix) flake input) connecting to the Contest Data Server at `https://cds.gehack.nl:8443` (`scoreboard.cdsUrl`, defaulted from the `cds_port` specialArg)
-- CDS credentials loaded from sops secrets at runtime
-- Service restarts automatically on failure (5 s delay)
-- Waits for `network-online.target` before starting
-
----
-
-### `balloons` — Balloon Runner Kiosk
-
-A minimal kiosk that boots straight into a chromeless Chromium on the balloons dashboard, no desktop environment.
-
-- Runs `cage` as a single-app kiosk for the `kiosk` user; no login prompt, no window chrome
-- Opens `https://balloons.gehack.nl` (`balloons.url`), served by the `balloons` service on geproxy
-- Chromium runs `--app=`, not `--kiosk`: under ozone-wayland `--kiosk` still renders the tab strip and omnibox
-- Profile lives in the unit's `PrivateTmp`, so every start is a clean session with no crash-restore prompts
-- `networking.dhcpcd.wait = "ipv4"` holds `network-online.target` until the lease lands, so Chromium never opens before DNS works; the service restarts automatically (5 s delay)
-- Plug it into the admin network: `balloons.gehack.nl` is only exposed there
+- Log in as `gehack` at GDM; once in, screen blanking, locking and sleep are off, and closing the lid does nothing, so it can run lid-closed on a projector
+- Two launchers in the app grid, pinned to the dash, also on `PATH` as `scoreboard` and `balloons`:
+  - **Scoreboard Presentation** starts the ICPC presentation client (from the [`icpc-presentation`](https://github.com/GEHACK/icpc-presentation-nix) flake input) against the Contest Data Server at `https://cds.gehack.nl:8443` (`utility.presentation.cdsUrl`, defaulted from the `cds_port` specialArg), with CDS credentials read from sops at launch
+  - **Balloons** opens `https://balloons.gehack.nl` (`utility.balloons.url`) in a chromeless, full-screen Chromium (`--app=`; F11 leaves full screen). Its profile lives in `$XDG_RUNTIME_DIR`, so every login starts clean
+- Root accepts `fanout_pubkey`, so geproxy can deploy to it
 
 ---
 
 ### `cds` — Contest Data Server
 
-Runs the ICPC CDS container (`ghcr.io/icpctools/cds`) on the admin network, feeding the scoreboard kiosk.
+Runs the ICPC CDS container (`ghcr.io/icpctools/cds`) on the admin network, feeding the utility machine's presentation client.
 
 - CDS listens on 8443 with a self-signed certificate; contest data lives in `/var/lib/cds`
 - All CDS passwords come from sops; `CCS_URL` points at `judge.gehack.nl`, which the admin resolver sends to geproxy so the `__CONTEST__` placeholder gets rewritten
@@ -180,8 +167,7 @@ ssh -p 2222 root@localhost
 ```bash
 nix build .#nixosConfigurations.teammachine.config.system.build.toplevel
 nix build .#nixosConfigurations.geproxy.config.system.build.toplevel
-nix build .#nixosConfigurations.scoreboard.config.system.build.toplevel
-nix build .#nixosConfigurations.balloons.config.system.build.toplevel
+nix build .#nixosConfigurations.utility.config.system.build.toplevel
 ```
 
 ### Formatting disks
