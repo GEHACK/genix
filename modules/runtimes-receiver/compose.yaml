@@ -27,7 +27,7 @@ services:
     networks: [internal]
 
   cloudflared:
-    image: cloudflare/cloudflared:2026.5.2
+    image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     env_file: .env
