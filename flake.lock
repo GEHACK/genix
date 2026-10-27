@@ -20,6 +20,26 @@
         "type": "github"
       }
     },
+    "bapctools": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793092206,
+        "narHash": "sha256-auC7B2R4iQ96xOYvMD6DH//IyeblRRZbWz9gT02ZV88=",
+        "owner": "BHenkemans",
+        "repo": "nix-bapc-tools",
+        "rev": "d22cd60175b5bfe743738ad2352fba91095669d3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "BHenkemans",
+        "repo": "nix-bapc-tools",
+        "type": "github"
+      }
+    },
     "crane": {
       "locked": {
         "lastModified": 1785782307,
@@ -435,6 +455,7 @@
     "root": {
       "inputs": {
         "balloons": "balloons",
+        "bapctools": "bapctools",
         "cuproxy": "cuproxy",
         "disko": "disko",
         "domjudge-submit": "domjudge-submit",

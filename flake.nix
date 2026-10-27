@@ -47,6 +47,11 @@
       url = "github:nix-community/nixvim/nixos-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    bapctools = {
+      url = "github:BHenkemans/nix-bapc-tools";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -62,6 +67,8 @@
       nixvim,
       domjudge-submit,
       icpc-tools,
+      icpc-presentation,
+      bapctools,
       ...
     }:
     let
@@ -71,6 +78,7 @@
       contest_subnet = "10.0.0.0/24";
       admin_ip = "10.0.1.1";
       admin_subnet = "10.0.1.0/24";
+      runtimes_host = "runtimes.gehack.nl";
       imaged_port = 8080;
       cds_port = 8443;
       contest_id = "prelims";
@@ -82,6 +90,7 @@
           contest_subnet
           admin_ip
           admin_subnet
+          runtimes_host
           imaged_port
           cds_port
           contest_id
@@ -195,6 +204,11 @@
         ./hosts/teammachine-iso/configuration.nix
       ];
 
+      runtimes-isoModules = [
+        { nixpkgs.overlays = [ bapctools.overlays.default ]; }
+        ./hosts/runtimes-iso/configuration.nix
+      ];
+
       mkVmModule =
         hostPort:
         { modulesPath, ... }:
@@ -283,6 +297,12 @@
         specialArgs = isoSpecialArgs;
         modules = teammachine-isoModules;
       };
+
+      runtimes-iso = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = runtimes-isoModules;
+      };
     in
     {
       nixosConfigurations = {
@@ -293,6 +313,7 @@
           judgehost
           cds
           teammachine-iso
+          runtimes-iso
           ;
       };
 
@@ -307,6 +328,10 @@
         judgehost-vm = judgehost-vm.config.system.build.vm;
         utility-vm = utility-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
+        runtimes-iso = runtimes-iso.config.system.build.isoImage;
+        runtimes-receiver-image =
+          nixpkgs.legacyPackages.x86_64-linux.callPackage ./modules/runtimes-receiver/image.nix
+            { };
         nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
       };
 

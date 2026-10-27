@@ -1,0 +1,87 @@
+"""Store reports POSTed by the runtimes ISO.
+
+Write-only: nothing can be read back over HTTP. Reports arrive age-encrypted to the
+jury's keys, so this host, and the Cloudflare edge in front of it, only ever hold
+ciphertext. Uploads must carry the ISO's bearer token; only its SHA-256 lives here.
+
+Usage:
+  receiver.py <host:port> <directory> <token-sha256>   serve
+  receiver.py export <directory>                       tar of the reports to stdout,
+                                                       for `kubectl exec` (no tar in
+                                                       the image)
+"""
+
+import hashlib
+import hmac
+import secrets
+import sys
+import tarfile
+from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+MAX_BODY = 4 * 1024 * 1024
+AGE_HEADER = b"age-encryption.org/v1\n"
+
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = "runtimes-receiver"
+    sys_version = ""
+
+    def do_POST(self):
+        if self.path != "/api/reports":
+            return self.reply(404, "not found")
+
+        auth = self.headers.get("Authorization", "")
+        token = auth.removeprefix("Bearer ").strip() if auth.startswith("Bearer ") else ""
+        digest = hashlib.sha256(token.encode()).hexdigest()
+        if not hmac.compare_digest(digest, self.server.token_hash):
+            return self.reply(401, "unauthorized")
+
+        try:
+            length = int(self.headers["Content-Length"])
+        except (TypeError, ValueError):
+            return self.reply(411, "length required")
+        if length > MAX_BODY:
+            return self.reply(413, "report too large")
+        body = self.rfile.read(length)
+        if not body.startswith(AGE_HEADER):
+            return self.reply(400, "not an age-encrypted report")
+
+        now = datetime.now(timezone.utc)
+        report_id = f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
+        with open(self.server.directory / f"{report_id}.age", "xb") as f:
+            f.write(body)
+        self.reply(201, report_id)
+
+    def do_GET(self):
+        self.reply(404, "not found")
+
+    def reply(self, status, text):
+        body = f"{text}\n".encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+
+def export(directory):
+    with tarfile.open(fileobj=sys.stdout.buffer, mode="w|") as tar:
+        for path in sorted(Path(directory).glob("*.age")):
+            tar.add(path, arcname=path.name)
+
+
+def main():
+    if sys.argv[1] == "export":
+        return export(sys.argv[2])
+    address, directory, token_hash = sys.argv[1:]
+    host, port = address.rsplit(":", 1)
+    server = ThreadingHTTPServer((host, int(port)), Handler)
+    server.directory = Path(directory)
+    server.token_hash = token_hash.strip().lower()
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
