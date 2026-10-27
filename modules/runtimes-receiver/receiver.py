@@ -5,10 +5,9 @@ jury's keys, so this host, and the Cloudflare edge in front of it, only ever hol
 ciphertext. Uploads must carry the ISO's bearer token; only its SHA-256 lives here.
 
 Usage:
-  receiver.py <host:port> <directory> <token-sha256>   serve
-  receiver.py export <directory>                       tar of the reports to stdout,
-                                                       for `kubectl exec` (no tar in
-                                                       the image)
+  receiver.py <host:port> <directory> <token-sha256-file>   serve
+  receiver.py export <directory>                            tar of the reports to
+                                                            stdout, for `docker exec`
 """
 
 import hashlib
@@ -75,11 +74,14 @@ def export(directory):
 def main():
     if sys.argv[1] == "export":
         return export(sys.argv[2])
-    address, directory, token_hash = sys.argv[1:]
+    address, directory, token_hash_file = sys.argv[1:]
+    token_hash = Path(token_hash_file).read_text().strip().lower()
+    if len(token_hash) != 64:
+        sys.exit(f"{token_hash_file} does not hold a SHA-256 hex digest")
     host, port = address.rsplit(":", 1)
     server = ThreadingHTTPServer((host, int(port)), Handler)
     server.directory = Path(directory)
-    server.token_hash = token_hash.strip().lower()
+    server.token_hash = token_hash
     server.serve_forever()
 
 

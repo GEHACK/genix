@@ -1,18 +1,19 @@
 # Write-only receiver for runtimes ISO reports, published as runtimes.gehack.nl
 # through a Cloudflare Tunnel. No ports are published on the host.
 #
-#   1. Load the image: nix build .#runtimes-receiver-image && docker load < result
-#      (or push it to ghcr.io and pull), then set the tag below.
+#   1. Clone genix on the Docker host and cd into this directory.
 #   2. In Cloudflare Zero Trust, create a tunnel, give it the public hostname
 #      runtimes.gehack.nl -> http://runtimes-receiver:8095, and put its token in
 #      .env next to this file as TUNNEL_TOKEN=... (chmod 600).
-#   3. docker compose up -d
+#   3. docker compose up -d --build
 #
+# After rotating the upload token: git pull && docker compose restart runtimes-receiver.
 # Read reports with scripts/runtimes-reports.sh from a genix checkout.
 
 services:
   runtimes-receiver:
-    image: ghcr.io/gehack/runtimes-receiver:<tag>
+    build: .
+    image: runtimes-receiver
     container_name: runtimes-receiver
     restart: unless-stopped
     read_only: true
@@ -22,6 +23,7 @@ services:
     volumes:
       # A named volume starts out as the image's /data: owned by 65534, mode 0700.
       - reports:/data
+      - ../runtimes-iso/assets/upload_token.sha256:/app/upload_token.sha256:ro
     networks: [internal]
 
   cloudflared:

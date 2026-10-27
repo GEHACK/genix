@@ -329,9 +329,6 @@
         utility-vm = utility-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
         runtimes-iso = runtimes-iso.config.system.build.isoImage;
-        runtimes-receiver-image =
-          nixpkgs.legacyPackages.x86_64-linux.callPackage ./modules/runtimes-receiver/image.nix
-            { };
         nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
       };
 

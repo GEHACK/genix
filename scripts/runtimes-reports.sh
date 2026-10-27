@@ -30,7 +30,7 @@ dir=tmp/runtimes-reports
 mkdir -p "$dir"
 chmod 0700 "$dir"
 # No -t: a tty would mangle the binary tar stream.
-docker exec "$container" /bin/python3 /app/receiver.py export /data | tar -x -C "$dir"
+docker exec "$container" python3 /app/receiver.py export /data | tar -x -C "$dir"
 
 shopt -s nullglob
 for encrypted in "$dir"/*.age; do
