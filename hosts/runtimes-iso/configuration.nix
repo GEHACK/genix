@@ -1,8 +1,8 @@
 { modulesPath, lib, ... }:
 {
   # Flash, plug into the machine under test with a network cable, boot, walk away.
-  # The ISO runs `bt time_limit` on the baked-in problem set, once on stock CPU
-  # settings and once tuned like a judgehost, and uploads the results over HTTPS.
+  # The ISO runs `bt time_limit` on the problem set with the CPU tuned like a
+  # judgehost (optionally first on stock settings) and uploads the results over HTTPS.
   imports = [
     (modulesPath + "/installer/cd-dvd/iso-image.nix")
     # The machine under test is unknown hardware, so ship every storage and NIC driver.

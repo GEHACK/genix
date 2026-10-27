@@ -115,13 +115,27 @@ def parse_log(text):
 def run(state, label):
     log = read(state / f"{label}.log")
     if log is None:
-        return {"skipped": read(state / "tune.log", "not run")}
+        return {"skipped": read(state / f"{label}.skipped", "not run")}
     return {
         "exit_status": int(read(state / f"{label}.status", "-1")),
         "cpu": json.loads(read(state / f"{label}.cpu.json", "null")),
         "problems": parse_log(log),
         "log": log,
     }
+
+
+def languages(args):
+    """Merge the overrides into the contest's languages.yaml and print the result."""
+    from ruamel.yaml import YAML
+
+    yaml = YAML(typ="safe")
+    path = args.contest / "languages.yaml"
+    merged = (yaml.load(path) if path.is_file() else None) or {}
+    overrides = json.loads(args.overrides.read_text())
+    for code, fields in overrides.items():
+        merged.setdefault(code, {}).update(fields)
+    yaml.dump(merged, path)
+    json.dump({code: merged[code] for code in overrides}, sys.stdout)
 
 
 def build(args):
@@ -140,6 +154,7 @@ def build(args):
         },
         "bapctools": version("bapctools"),
         "jobs": args.jobs,
+        "languages": json.loads(read(args.state / "languages.json", "null")),
         "tune_log": read(args.state / "tune.log"),
         "runs": {label: run(args.state, label) for label in RUNS},
     }
@@ -156,20 +171,16 @@ def summary(args):
     print(f"{m['dmi']['sys_vendor']} {m['dmi']['product_name']}, {m['cpu_model']}")
     print()
     runs = report["runs"]
-    names = sorted({name for r in runs.values() for name in r.get("problems", {})})
-    header = ["problem"] + [f"{label} slowest" for label in RUNS] + ["tuned limit"]
-    rows = [header]
-    for name in names:
-        row = [name]
+    if args.hide_problems:
+        # Not even how many problems or errors there are: the problem set is secret.
         for label in RUNS:
-            slowest = runs[label].get("problems", {}).get(name, {}).get("slowest", {})
-            row.append(seconds(slowest.get("seconds")))
-        limit = runs["tuned"].get("problems", {}).get(name, {}).get("time_limit_s")
-        row.append("-" if limit is None else f"{limit:.1f}s")
-        rows.append(row)
-    widths = [max(len(row[i]) for row in rows) for i in range(len(header))]
-    for row in rows:
-        print("  ".join(cell.ljust(width) for cell, width in zip(row, widths)))
+            r = runs[label]
+            if "skipped" in r:
+                print(f"{label}: skipped")
+            else:
+                print(f"{label}: finished, bt exited with {r['exit_status']}")
+        return
+    table(runs, [label for label in RUNS if "skipped" not in runs[label]])
     for label in RUNS:
         r = runs[label]
         if "skipped" in r:
@@ -179,21 +190,44 @@ def summary(args):
             print(f"\n{label}: bt exited with {r['exit_status']} ({errors} errors, see the log)")
 
 
+def table(runs, measured):
+    names = sorted({name for r in runs.values() for name in r.get("problems", {})})
+    header = ["problem"] + [f"{label} slowest" for label in measured] + ["tuned limit"]
+    rows = [header]
+    for name in names:
+        row = [name]
+        for label in measured:
+            slowest = runs[label].get("problems", {}).get(name, {}).get("slowest", {})
+            row.append(seconds(slowest.get("seconds")))
+        limit = runs["tuned"].get("problems", {}).get(name, {}).get("time_limit_s")
+        row.append("-" if limit is None else f"{limit:.1f}s")
+        rows.append(row)
+    widths = [max(len(row[i]) for row in rows) for i in range(len(header))]
+    for row in rows:
+        print("  ".join(cell.ljust(width) for cell, width in zip(row, widths)))
+
+
 def main():
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("cpu-state")
+    lang = sub.add_parser("languages")
+    lang.add_argument("--contest", type=Path, required=True)
+    lang.add_argument("--overrides", type=Path, required=True)
     b = sub.add_parser("build")
     b.add_argument("--state", type=Path, required=True)
     b.add_argument("--contest", type=Path, required=True)
     b.add_argument("--problemset-rev", required=True)
     b.add_argument("--jobs", type=int, required=True)
     s = sub.add_parser("summary")
+    s.add_argument("--hide-problems", action="store_true")
     s.add_argument("report", type=Path)
     args = parser.parse_args()
 
     if args.command == "cpu-state":
         json.dump(cpu_state(), sys.stdout)
+    elif args.command == "languages":
+        languages(args)
     elif args.command == "build":
         build(args)
     else:

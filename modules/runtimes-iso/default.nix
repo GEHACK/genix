@@ -29,6 +29,16 @@ let
     kotlin
   ];
 
+  # The problem set's languages.yaml compiles C and C++ with its own flags (dynamic
+  # linking, other standards); these entries replace them with mygcc's and mygpp's.
+  compileFlags = import ../../users/team/compile-flags.nix;
+  languages = pkgs.writeText "languages.json" (
+    builtins.toJSON {
+      c.compile = "gcc ${compileFlags.c} -o {binary} {files} -lm";
+      cpp.compile = "g++ ${compileFlags.cpp} -o {binary} {files} -lm";
+    }
+  );
+
   tuneCpu = pkgs.writeShellApplication {
     name = "runtimes-tune-cpu";
     runtimeInputs = [ pkgs.coreutils ];
@@ -69,6 +79,10 @@ let
       RECIPIENTS=${cfg.recipients}
       KNOWN_HOSTS=${cfg.knownHosts}
       JOBS=${toString cfg.jobs}
+      COOLDOWN=${toString cfg.cooldown}
+      LANGUAGES=${languages}
+      SHOW_LOGS=${lib.boolToString cfg.showLogs}
+      MEASURE_STOCK=${lib.boolToString cfg.measureStock}
       REPORT_URL=${lib.escapeShellArg cfg.reportUrl}
       ${builtins.readFile ./assets/run.sh}
     '';
@@ -135,6 +149,37 @@ in
         Submissions bt runs at once. One matches a judgehost, which judges one
         submission per core; more finishes sooner but lets runs contend for cache
         and memory bandwidth, inflating the measured times.
+      '';
+    };
+
+    cooldown = lib.mkOption {
+      type = lib.types.ints.unsigned;
+      default = 60;
+      description = ''
+        Seconds the machine idles before each bt pass, so every run starts from a cool
+        CPU instead of inheriting the heat of booting, cloning or the previous run.
+      '';
+    };
+
+    measureStock = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Also time the problem set on stock CPU settings, before tuning the CPU like a
+        judgehost. Off by default: only the tuned run predicts judging times, and
+        skipping the other halves the time the machine is needed.
+      '';
+    };
+
+    showLogs = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Show bt's output and the per-problem results on screen. Off by default: they
+        name the problems, submissions and test cases of the secret problem set, and
+        the machine under test is in someone else's hands. Off, the screen shows only
+        elapsed time and whether each run finished, not even the number of problems.
+        The encrypted report always carries the complete logs.
       '';
     };
 

@@ -7,14 +7,15 @@
 let
   cfg = config.teammachine.languages;
   toolchain = pkgs.contestToolchain;
+  flags = import ./compile-flags.nix;
 
   mygcc = pkgs.writeShellScriptBin "mygcc" ''
-    ${toolchain.gcc}/bin/gcc -std=gnu17 -x c -Wall -O2 -static -pipe \
+    ${toolchain.gcc}/bin/gcc ${flags.c} \
       -o "$1" "$1.c" -lm
   '';
 
   mygpp = pkgs.writeShellScriptBin "mygpp" ''
-    ${toolchain.gcc}/bin/g++ -std=gnu++20 -x c++ -Wall -O2 -static -pipe \
+    ${toolchain.gcc}/bin/g++ ${flags.cpp} \
       -o "$1" "$1.cpp" -lm
   '';
 

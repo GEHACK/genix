@@ -1,5 +1,5 @@
 # Substituted above: REPO, REF, CONTEST_DIR, DEPLOY_KEY, UPLOAD_TOKEN, RECIPIENTS,
-# KNOWN_HOSTS, JOBS, REPORT_URL.
+# KNOWN_HOSTS, JOBS, COOLDOWN, LANGUAGES, SHOW_LOGS, MEASURE_STOCK, REPORT_URL.
 
 state=/var/lib/runtimes
 work=$state/problemset
@@ -13,13 +13,31 @@ banner() {
 # compile) still leaves useful timings, so its status is recorded, not fatal.
 # -e: bt otherwise crops compiler errors and program output to 25 lines.
 measure() {
-  local label=$1
+  local label=$1 status=0
+  # Both passes start from an idle, cool CPU, so neither is throttled by the heat of
+  # whatever ran before it (booting and cloning, or the other pass).
+  banner "Letting the CPU cool down for $COOLDOWN seconds"
+  sleep "$COOLDOWN"
   banner "Measuring runtimes ($label CPU settings)"
   runtimes-report cpu-state >"$state/$label.cpu.json"
-  set +e
-  (cd "$contest" && bt time_limit -e -j "$JOBS") 2>&1 | tee "$state/$label.log"
-  echo "${PIPESTATUS[0]}" >"$state/$label.status"
-  set -e
+  if [[ $SHOW_LOGS == true ]]; then
+    set +e
+    (cd "$contest" && bt time_limit -e -j "$JOBS") 2>&1 | tee "$state/$label.log"
+    status=${PIPESTATUS[0]}
+    set -e
+  else
+    # bt names problems, submissions and test cases, and even their number is secret,
+    # so its output only goes into the encrypted report. The screen shows elapsed time.
+    (cd "$contest" && bt time_limit -e -j "$JOBS") >"$state/$label.log" 2>&1 &
+    local pid=$! start=$SECONDS
+    while kill -0 "$pid" 2>/dev/null; do
+      printf '\rRunning, %d:%02d elapsed ' $(((SECONDS - start) / 60)) $(((SECONDS - start) % 60))
+      sleep 5
+    done
+    wait "$pid" || status=$?
+    echo
+  fi
+  echo "$status" >"$state/$label.status"
 }
 
 printf '\033c'
@@ -48,13 +66,22 @@ done
 revision=$(git -C "$work" rev-parse HEAD)
 echo "Problem set revision $revision, $JOBS job(s) at a time"
 
-measure stock
+# Compile like the team machine and the judge, not with the problem set's flags.
+runtimes-report languages --contest "$contest" --overrides "$LANGUAGES" \
+  >"$state/languages.json"
+
+if [[ $MEASURE_STOCK == true ]]; then
+  measure stock
+else
+  echo "disabled (runtimes.measureStock)" >"$state/stock.skipped"
+fi
 
 banner "Locking the CPU like a judgehost: turbo off, SMT siblings and E-cores offline"
 if runtimes-tune-cpu 2>&1 | tee "$state/tune.log"; then
   measure tuned
 else
   echo "CPU tuning failed; skipping the tuned run." | tee -a "$state/tune.log"
+  echo "CPU tuning failed, see tune_log" >"$state/tuned.skipped"
 fi
 
 banner "Results"
@@ -64,7 +91,9 @@ runtimes-report build \
   --problemset-rev "$revision" \
   --jobs "$JOBS" \
   >"$state/report.json"
-runtimes-report summary "$state/report.json"
+summary_args=()
+[[ $SHOW_LOGS == true ]] || summary_args=(--hide-problems)
+runtimes-report summary "${summary_args[@]}" "$state/report.json"
 
 # Encrypted end to end: the tunnel terminates TLS at Cloudflare, so only the jury's
 # keys may be able to read the report, not the edge or the receiving server.

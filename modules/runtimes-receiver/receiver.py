@@ -56,14 +56,21 @@ class Handler(BaseHTTPRequestHandler):
         report_id = f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
         partial = self.server.directory / f".{report_id}.partial"
         remaining = length - len(head)
-        with open(partial, "xb") as f:
-            f.write(head)
-            while remaining > 0:
-                chunk = self.rfile.read(min(remaining, CHUNK))
-                if not chunk:
-                    break
-                f.write(chunk)
-                remaining -= len(chunk)
+        try:
+            with open(partial, "xb") as f:
+                f.write(head)
+                while remaining > 0:
+                    chunk = self.rfile.read(min(remaining, CHUNK))
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    remaining -= len(chunk)
+        except OSError as e:
+            # Unwritable or full /data. Answering keeps it visible to the uploader
+            # instead of a dropped connection, which Cloudflare reports as a 502.
+            self.log_error("cannot store report: %s", e)
+            partial.unlink(missing_ok=True)
+            return self.reply(500, "cannot store report")
         if remaining > 0:
             partial.unlink()
             return self.reply(400, "upload cut short")
