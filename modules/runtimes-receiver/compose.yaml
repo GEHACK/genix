@@ -3,9 +3,15 @@
 #
 #   1. Clone genix on the Docker host and cd into this directory.
 #   2. In Cloudflare Zero Trust, create a tunnel, give it the public hostname
-#      runtimes.gehack.nl -> http://runtimes-receiver:8095, and put its token in
-#      .env next to this file as TUNNEL_TOKEN=... (chmod 600).
-#   3. docker compose up -d --build
+#      runtimes.gehack.nl -> http://runtimes-receiver:8095, and write .env (chmod 600):
+#        TUNNEL_TOKEN=<tunnel token>
+#        RUNTIMES_UID=<id -u>    # owner of the files in ./reports; default 65534
+#        RUNTIMES_GID=<id -g>
+#   3. mkdir -m 0700 reports, and if RUNTIMES_UID is not you: chown it to that uid.
+#      Docker would otherwise create it as root, and the receiver could not write.
+#   4. docker compose up -d --build
+#
+# Reports land in ./reports as <time>-<random>.age, age ciphertext only.
 #
 # After rotating the upload token: git pull && docker compose restart runtimes-receiver.
 # Read reports with scripts/runtimes-reports.sh from a genix checkout.
@@ -16,13 +22,13 @@ services:
     image: runtimes-receiver
     container_name: runtimes-receiver
     restart: unless-stopped
+    user: "${RUNTIMES_UID:-65534}:${RUNTIMES_GID:-65534}"
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     mem_limit: 64m
     volumes:
-      # A named volume starts out as the image's /data: owned by 65534, mode 0700.
-      - reports:/data
+      - ./reports:/data
       - ../runtimes-iso/assets/upload_token.sha256:/app/upload_token.sha256:ro
     networks: [internal]
 
@@ -41,6 +47,3 @@ networks:
   internal:
     internal: true
   egress: {}
-
-volumes:
-  reports: {}

@@ -14,5 +14,9 @@ tmp/
 .claude
 CLAUDE.md
 
+# Runtimes receiver on the Docker host: tunnel token and received reports
+modules/runtimes-receiver/.env
+modules/runtimes-receiver/reports/
+
 # Ignore Apple things
 .DS_Store
