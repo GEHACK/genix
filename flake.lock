@@ -222,23 +222,23 @@
         "type": "github"
       }
     },
-    "icpc-presentation": {
+    "icpc-tools": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1792351907,
-        "narHash": "sha256-GgzDGdQoLTPuqN4DrsYj0QXLKW1aBdu+ohLvt8tRons=",
+        "lastModified": 1793135629,
+        "narHash": "sha256-aPgY7fHdnGj7z7JORgZuy9nV6vpDDRxsufxIrDPtpcM=",
         "owner": "GEHACK",
-        "repo": "icpc-presentation-nix",
-        "rev": "c8b400f05b99fcf49ba226c94daf31f543dd7d5e",
+        "repo": "icpc-tools-nix",
+        "rev": "5ed8410b4ddae4d3696e77706f12ed19ba544111",
         "type": "github"
       },
       "original": {
         "owner": "GEHACK",
-        "repo": "icpc-presentation-nix",
+        "repo": "icpc-tools-nix",
         "type": "github"
       }
     },
@@ -409,7 +409,7 @@
         "disko": "disko",
         "domjudge-submit": "domjudge-submit",
         "home-manager": "home-manager",
-        "icpc-presentation": "icpc-presentation",
+        "icpc-tools": "icpc-tools",
         "imaged": "imaged",
         "loom": "loom",
         "nixpkgs": "nixpkgs_6",

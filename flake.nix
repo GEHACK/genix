@@ -32,8 +32,8 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    icpc-presentation = {
-      url = "github:GEHACK/icpc-presentation-nix";
+    icpc-tools = {
+      url = "github:GEHACK/icpc-tools-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -59,7 +59,7 @@
       imaged,
       nixvim,
       domjudge-submit,
-      icpc-presentation,
+      icpc-tools,
       ...
     }:
     let
@@ -97,7 +97,7 @@
         {
           nixpkgs.overlays = [
             domjudge-submit.overlays.default
-            icpc-presentation.overlays.default
+            icpc-tools.overlays.default
           ];
         };
 
