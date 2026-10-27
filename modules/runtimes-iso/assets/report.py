@@ -10,7 +10,6 @@ from importlib.metadata import version
 from pathlib import Path
 
 SCHEMA = 1
-LOG_LIMIT = 256 * 1024
 RUNS = ["stock", "tuned"]
 
 CPU = Path("/sys/devices/system/cpu")
@@ -121,7 +120,7 @@ def run(state, label):
         "exit_status": int(read(state / f"{label}.status", "-1")),
         "cpu": json.loads(read(state / f"{label}.cpu.json", "null")),
         "problems": parse_log(log),
-        "log": log[-LOG_LIMIT:],
+        "log": log,
     }
 
 

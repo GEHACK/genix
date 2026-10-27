@@ -55,6 +55,7 @@ let
       pkgs.curl
       pkgs.git
       pkgs.gnugrep
+      pkgs.gzip
       pkgs.openssh
       pkgs.util-linux
     ]

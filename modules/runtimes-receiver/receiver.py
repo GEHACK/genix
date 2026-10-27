@@ -19,7 +19,10 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-MAX_BODY = 4 * 1024 * 1024
+# Reports carry the complete bt logs. Cloudflare refuses request bodies over 100 MB,
+# so anything near that would never arrive anyway.
+MAX_BODY = 95 * 1024 * 1024
+CHUNK = 1024 * 1024
 AGE_HEADER = b"age-encryption.org/v1\n"
 
 
@@ -43,14 +46,28 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(411, "length required")
         if length > MAX_BODY:
             return self.reply(413, "report too large")
-        body = self.rfile.read(length)
-        if not body.startswith(AGE_HEADER):
+        head = self.rfile.read(min(length, len(AGE_HEADER)))
+        if head != AGE_HEADER:
             return self.reply(400, "not an age-encrypted report")
 
+        # Streamed to disk, so a large report never has to fit in memory. The dot
+        # prefix keeps a half-written upload out of `export`.
         now = datetime.now(timezone.utc)
         report_id = f"{now:%Y%m%dT%H%M%SZ}-{secrets.token_hex(4)}"
-        with open(self.server.directory / f"{report_id}.age", "xb") as f:
-            f.write(body)
+        partial = self.server.directory / f".{report_id}.partial"
+        remaining = length - len(head)
+        with open(partial, "xb") as f:
+            f.write(head)
+            while remaining > 0:
+                chunk = self.rfile.read(min(remaining, CHUNK))
+                if not chunk:
+                    break
+                f.write(chunk)
+                remaining -= len(chunk)
+        if remaining > 0:
+            partial.unlink()
+            return self.reply(400, "upload cut short")
+        partial.rename(self.server.directory / f"{report_id}.age")
         self.reply(201, report_id)
 
     def do_GET(self):

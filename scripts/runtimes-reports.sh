@@ -35,7 +35,10 @@ docker exec "$container" python3 /app/receiver.py export /data | tar -x -C "$dir
 shopt -s nullglob
 for encrypted in "$dir"/*.age; do
   report=${encrypted%.age}.json
-  [[ -e "$report" ]] || age --decrypt --identity "$identity" --output "$report" "$encrypted"
+  if [[ ! -e "$report" ]]; then
+    age --decrypt --identity "$identity" "$encrypted" | gunzip >"$report.partial"
+    mv "$report.partial" "$report"
+  fi
   printf '\n\033[1m%s\033[0m\n' "$(basename "$report" .json)"
   python3 modules/runtimes-iso/assets/report.py summary "$report"
 done

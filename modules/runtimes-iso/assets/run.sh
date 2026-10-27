@@ -11,12 +11,13 @@ banner() {
 
 # One bt pass. A failing bt (unexpected verdicts, a submission that does not
 # compile) still leaves useful timings, so its status is recorded, not fatal.
+# -e: bt otherwise crops compiler errors and program output to 25 lines.
 measure() {
   local label=$1
   banner "Measuring runtimes ($label CPU settings)"
   runtimes-report cpu-state >"$state/$label.cpu.json"
   set +e
-  (cd "$contest" && bt time_limit -j "$JOBS") 2>&1 | tee "$state/$label.log"
+  (cd "$contest" && bt time_limit -e -j "$JOBS") 2>&1 | tee "$state/$label.log"
   echo "${PIPESTATUS[0]}" >"$state/$label.status"
   set -e
 }
@@ -67,7 +68,9 @@ runtimes-report summary "$state/report.json"
 
 # Encrypted end to end: the tunnel terminates TLS at Cloudflare, so only the jury's
 # keys may be able to read the report, not the edge or the receiving server.
-age --encrypt --recipients-file "$RECIPIENTS" --output "$state/report.json.age" "$state/report.json"
+# Compressed first, since it carries the complete bt logs and age does not compress.
+gzip -9 --stdout "$state/report.json" |
+  age --encrypt --recipients-file "$RECIPIENTS" --output "$state/report.json.gz.age"
 
 # A header file keeps the token out of curl's command line.
 printf 'Authorization: Bearer %s\n' "$(<"$UPLOAD_TOKEN")" >/run/runtimes/auth-header
@@ -78,10 +81,10 @@ chmod 0600 /run/runtimes/auth-header
 banner "Uploading encrypted results to $REPORT_URL"
 attempt=1
 until curl --proto '=https' --tlsv1.2 --fail-with-body --silent --show-error \
-  --max-time 60 \
+  --connect-timeout 30 --max-time 1800 \
   --header @/run/runtimes/auth-header \
   --header 'Content-Type: application/octet-stream' \
-  --data-binary "@$state/report.json.age" \
+  --data-binary "@$state/report.json.gz.age" \
   --output "$state/upload.response" \
   "$REPORT_URL"; do
   echo "Upload attempt $attempt failed. Is a network cable plugged in? Retrying in 30 seconds."
