@@ -1,4 +1,5 @@
 _: {
+  # Runs lid-closed on the projector; systemd would otherwise suspend it.
   services.logind.settings.Login = {
     HandleLidSwitch = "ignore";
     HandleLidSwitchExternalPower = "ignore";

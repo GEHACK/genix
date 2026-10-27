@@ -2,14 +2,16 @@ _: {
   imports = [
     ./disko.nix
     ../../modules
-    ../../modules/scoreboard
+    ../../modules/utility
   ];
+
+  networking.hostName = "utility";
 
   hardware.enableRedistributableFirmware = true;
 
   time.timeZone = "Europe/Amsterdam";
-  i18n.defaultLocale = "en_US.UTF-8";  
-  
+  i18n.defaultLocale = "en_US.UTF-8";
+
   nixpkgs.config.allowUnfree = true;
 
   system.stateVersion = "25.11";

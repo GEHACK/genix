@@ -154,12 +154,17 @@
 
       geproxyModules = geproxyRoleModules ++ [ ./hosts/geproxy/configuration.nix ];
 
-      scoreboardModules = commonModules ++ [
-        ./hosts/scoreboard/configuration.nix
-      ];
-
-      balloonsModules = commonModules ++ [
-        ./hosts/balloons/configuration.nix
+      utilityModules = commonModules ++ [
+        (mkHomeManager {
+          users = {
+            gehack = import ./users/gehack;
+          };
+          sharedModules = [
+            nixvim.homeModules.nixvim
+            ./users/common
+          ];
+        })
+        ./hosts/utility/configuration.nix
       ];
 
       judgehostModules = commonModules ++ [
@@ -215,16 +220,10 @@
         modules = geproxyModules;
       };
 
-      scoreboard = nixpkgs.lib.nixosSystem {
+      utility = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = scoreboardModules;
-      };
-
-      balloons = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        inherit specialArgs;
-        modules = balloonsModules;
+        modules = utilityModules;
       };
 
       judgehost = nixpkgs.lib.nixosSystem {
@@ -268,10 +267,10 @@
         modules = judgehostModules ++ [ (mkVmModule 2224) ];
       };
 
-      balloons-vm = nixpkgs.lib.nixosSystem {
+      utility-vm = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
-        modules = balloonsModules ++ [ (mkVmModule 2225) ];
+        modules = utilityModules ++ [ (mkVmModule 2225) ];
       };
 
       teammachine-iso = nixpkgs.lib.nixosSystem {
@@ -285,8 +284,7 @@
         inherit
           teammachine
           geproxy
-          scoreboard
-          balloons
+          utility
           judgehost
           cds
           teammachine-iso
@@ -296,14 +294,13 @@
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
         geproxy = geproxy.config.system.build.toplevel;
-        scoreboard = scoreboard.config.system.build.toplevel;
-        balloons = balloons.config.system.build.toplevel;
+        utility = utility.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
         cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
-        balloons-vm = balloons-vm.config.system.build.vm;
+        utility-vm = utility-vm.config.system.build.vm;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
         nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
       };
