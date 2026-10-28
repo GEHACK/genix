@@ -9,8 +9,7 @@ let
   langs = config.teammachine.languages;
 
   idea = pkgs.jetbrains.idea;
-  kotlin = pkgs.kotlin;
-  jdk = pkgs.jdk21;
+  inherit (pkgs.contestToolchain) kotlin jdk;
 
   ideaOptions = ".config/JetBrains/IntelliJIdea${lib.versions.majorMinor idea.version}/options";
 

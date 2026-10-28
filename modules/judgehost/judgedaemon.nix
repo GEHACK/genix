@@ -3,6 +3,7 @@
   lib,
   pkgs,
   dj_url,
+  contestToolchain,
   ...
 }:
 let
@@ -22,7 +23,14 @@ let
     arch = "amd64";
   };
 
-  runUserBaseId = 62860;
+  runUid = core: 62860 + core;
+
+  chroot = pkgs.callPackage ./chroot.nix {
+    inherit contestToolchain;
+    runUsers = lib.listToAttrs (
+      map (core: lib.nameValuePair "domjudge-run-${toString core}" (runUid core)) config.judgehost.cores
+    );
+  };
 
   # Requires= as well as After=, so a failed prerequisite keeps the daemons from
   # registering under a wrong name or judging on an untuned CPU.
@@ -40,7 +48,7 @@ let
 
       environment = {
         DAEMON_ID = toString core;
-        RUN_USER_UID_GID = toString (runUserBaseId + core);
+        RUN_USER_UID_GID = toString (runUid core);
         DOMSERVER_BASEURL = "${dj_url}/";
         JUDGEDAEMON_USERNAME = "judgehost";
         CONTAINER_TIMEZONE = config.time.timeZone;
@@ -51,7 +59,11 @@ let
       # create_cgroups writes to the root cgroup.subtree_control, so the mount must be
       # writable and the host cgroup namespace must be visible. runguard additionally
       # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
-      volumes = [ "/sys/fs/cgroup:/sys/fs/cgroup" ];
+      volumes = [
+        "/sys/fs/cgroup:/sys/fs/cgroup"
+        "${chroot}:/chroot/domjudge:ro"
+        "${chroot}/nix:/nix:ro"
+      ];
       extraOptions = [
         "--privileged"
         "--cgroupns=host"

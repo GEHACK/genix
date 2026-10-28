@@ -169,6 +169,7 @@
 
       judgehostModules = commonModules ++ [
         ./hosts/judgehost/configuration.nix
+        ({ ... }: { _module.args.contestToolchain = teammachine.pkgs.contestToolchain; })
       ];
 
       cdsModules = commonModules ++ [

@@ -56,7 +56,7 @@ in
           "vim.disableExtension" = true;
 
           # C/C++ compiler & IntelliSense
-          "C_Cpp.default.compilerPath" = "${pkgs.gcc}/bin/g++";
+          "C_Cpp.default.compilerPath" = "${pkgs.contestToolchain.gcc}/bin/g++";
           "C_Cpp.default.cStandard" = "c17";
           "C_Cpp.default.cppStandard" = "c++23";
           "C_Cpp.default.intelliSenseMode" = "linux-gcc-x64";
@@ -96,7 +96,7 @@ in
           {
             label = "g++: build active file";
             type = "shell";
-            command = "${pkgs.gcc}/bin/g++";
+            command = "${pkgs.contestToolchain.gcc}/bin/g++";
             args = [
               "-std=c++23"
               "-Wall"
@@ -117,7 +117,7 @@ in
           {
             label = "gcc: build active file (C)";
             type = "shell";
-            command = "${pkgs.gcc}/bin/gcc";
+            command = "${pkgs.contestToolchain.gcc}/bin/gcc";
             args = [
               "-std=c17"
               "-Wall"
