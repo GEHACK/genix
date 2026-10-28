@@ -67,7 +67,6 @@
       nixvim,
       domjudge-submit,
       icpc-tools,
-      icpc-presentation,
       bapctools,
       ...
     }:
