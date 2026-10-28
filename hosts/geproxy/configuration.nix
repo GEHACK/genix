@@ -22,7 +22,7 @@ in
 
   geproxy = {
     uplink = {
-      interface = "wlp6s0";
+      interface = "eno1";
       allow = [ "ssh" ];
     };
 
@@ -64,10 +64,11 @@ in
       };
 
       admin = {
-        interfaces = [
-          "eno1"
-          "eno2"
-        ];
+        interfaces = [ "eno2" ];
+        wifi = {
+          interface = "wlp6s0";
+          ssid = "gehack-admin";
+        };
         address = admin_ip;
         subnet = admin_subnet;
         internet = "always";
@@ -129,13 +130,7 @@ in
     cache.enable = true;
   };
 
-  networking = {
-    hostName = "geproxy";
-    wireless = {
-      enable = true;
-      networks."iotroam".psk = "gehackgehack";
-    };
-  };
+  networking.hostName = "geproxy";
 
   home-manager.users.gehack.teammachine.neovim.enable = true;
 
