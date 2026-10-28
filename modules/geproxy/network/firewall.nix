@@ -80,10 +80,10 @@ in
     preCheckRuleset = ''
       sed -E 's/skuid "dnsmasq-[^"]+"/skuid "nobody"/' -i ruleset.conf
     '';
-    ruleset = ''
-      flush ruleset
-
-      table inet filter {
+    flushRuleset = false;
+    tables.filter = {
+      family = "inet";
+      content = ''
         chain input {
           type filter hook input priority 0; policy drop;
 
@@ -116,16 +116,18 @@ in
 
           ${rules upstreamDns networks}
         }
-      }
-
-      table ip nat {
+      '';
+    };
+    tables.geproxy_nat = {
+      family = "ip";
+      content = ''
         chain postrouting {
           type nat hook postrouting priority 100; policy accept;
 
           ${rules masquerade networks}
         }
-      }
-    '';
+      '';
+    };
   };
 
   geproxy.ports.ssh.tcp = [ 22 ];
