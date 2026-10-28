@@ -24,7 +24,7 @@
       trackpad.enable = true;
 
       streams = {
-        enable = true;
+        enable = false;
         encoder = "vah264enc rate-control=vbr key-int-max=12 ! h264parse";
         webcam = "/dev/video0";
       };
