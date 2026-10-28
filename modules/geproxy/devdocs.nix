@@ -13,6 +13,7 @@
           "--pull=always"
         ];
         ports = [ "127.0.0.1:3002:9292" ];
+        environment.PERMITTED_HOSTS = config.geproxy.proxy.sites.docs.host;
       };
     };
 
