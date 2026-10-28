@@ -52,23 +52,23 @@
       extraPackages = [ pkgs.intel-media-driver ];
     };
     enableRedistributableFirmware = true;
+    cpu.intel.updateMicrocode = true;
     nvidia = {
       modesetting.enable = true;
-      open = false;
+      open = true;
       nvidiaSettings = false;
       package = config.boot.kernelPackages.nvidiaPackages.stable;
-
-      prime = {
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
-
-        offload = {
-          enable = true;
-          enableOffloadCmd = true;
-        };
-      };
     };
   };
+
+  # nixpkgs only loads the NVIDIA KMS modules when services.xserver.enable is set,
+  # which it isn't (Weston greeter + GNOME Wayland). Without nvidia_drm, outputs on
+  # the dGPU stay dark. i915 is added in modules/teammachine/boot.nix.
+  boot.initrd.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_drm"
+  ];
 
   services.xserver.videoDrivers = [ "nvidia" ];
 
