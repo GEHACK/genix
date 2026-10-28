@@ -1,6 +1,7 @@
 {
   lib,
   config,
+  geproxy_ip,
   ...
 }:
 let
@@ -20,5 +21,7 @@ in
     };
 
     geproxy.ports.cache.tcp = [ port ];
+
+    services.buildFanout.cacheUrl = "http://${geproxy_ip}:${toString port}";
   };
 }

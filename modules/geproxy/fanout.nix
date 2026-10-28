@@ -50,6 +50,12 @@ let
       deploy_one() {
         host="$1"
         target="${cfg.targetUser}@$host"
+        ${lib.optionalString (cfg.cacheUrl != null) ''
+          ssh ${lib.escapeShellArgs sshOpts} "$target" \
+            "nix-store --realise --no-gc-warning '$systemPath' --option substituters ${lib.escapeShellArg cfg.cacheUrl} \
+             --option require-sigs false --option connect-timeout 5 >/dev/null" \
+            || echo "warn $host: substituting from ${cfg.cacheUrl} failed, copying over ssh" >&2
+        ''}
         if nix copy --to "ssh://$target" "$systemPath" \
              && ssh ${lib.escapeShellArgs sshOpts} "$target" \
                   "nix-env -p /nix/var/nix/profiles/system --set '$systemPath' \
@@ -176,6 +182,17 @@ in
       type = lib.types.str;
       example = "http://localhost:8080/hosts-needing-rebuild";
       description = "URL returning a JSON array of online target host/IP strings.";
+    };
+
+    cacheUrl = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "http://10.0.0.1:5000";
+      description = ''
+        Unsigned binary cache serving this host's store, as reached from the
+        laptops. They substitute the system closure from it before the ssh copy,
+        which then only sends whatever the cache could not serve.
+      '';
     };
 
     targetUser = lib.mkOption {

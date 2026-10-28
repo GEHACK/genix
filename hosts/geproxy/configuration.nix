@@ -42,6 +42,7 @@ in
           "ntp"
           "printing"
           "imaged"
+          "cache"
         ];
         pxe.enable = true;
         domain = "contest.local";
