@@ -38,7 +38,7 @@
     };
 
     loom.url = "github:LuukBlankenstijn/loom";
-    cuproxy.url = "github:GEHACK/cuproxy/feat/typst";
+    cuproxy.url = "github:GEHACK/cuproxy";
     balloons.url = "github:GEHACK/balloons/main";
     imaged.url = "github:LuukBlankenstijn/imaged";
 

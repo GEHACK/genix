@@ -56,16 +56,15 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1776958683,
-        "narHash": "sha256-aLAkVgjLemdQMBXxEAFx75RGBDdFvQ49f1gkLmMUPhc=",
+        "lastModified": 1793208012,
+        "narHash": "sha256-8umEkA12r79PeD8YtFmvkr7hu5OkbBxubIfUqFO4gwM=",
         "owner": "GEHACK",
         "repo": "cuproxy",
-        "rev": "def91b2ad8675d6dec0f9642e292abafe9b175d6",
+        "rev": "4d03a4214b558fb201b933db4996a343e1b6983b",
         "type": "github"
       },
       "original": {
         "owner": "GEHACK",
-        "ref": "feat/typst",
         "repo": "cuproxy",
         "type": "github"
       }
