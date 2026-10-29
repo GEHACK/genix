@@ -3,6 +3,7 @@
   lib,
   pkgs,
   geproxy_ip,
+  admin_subnet,
   imaged_port,
   ...
 }:
@@ -30,7 +31,7 @@ let
     ];
   };
 
-  fromGeproxy = [
+  fromTrusted = [
     22
   ]
   ++ lib.optional rdp.enable rdp.port
@@ -70,7 +71,8 @@ in
                 meta l4proto { icmp, ipv6-icmp } accept
                 udp sport 67 udp dport 68 accept comment "dhcp"
                 udp dport 5353 accept comment "mdns"
-                ip saddr ${geproxy} tcp dport ${set fromGeproxy} accept
+                ip saddr ${geproxy} tcp dport ${set fromTrusted} accept
+                ip saddr ${admin_subnet} tcp dport ${set fromTrusted} accept
             }
 
             chain forward {
