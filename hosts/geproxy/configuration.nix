@@ -115,10 +115,7 @@ in
       };
     };
 
-    tunnel = {
-      enable = true;
-      meta."k8s/auth" = "authentik";
-    };
+    tunnel.enable = true;
 
     loomDns.enable = true;
     loom.enable = true;

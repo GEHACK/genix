@@ -1,23 +1,11 @@
 { lib, config, ... }:
 let
-  cfg = config.geproxy.tunnel;
   tunnelled = lib.filterAttrs (_: site: site.tunnel != null) config.geproxy.proxy.sites;
 in
 {
-  options.geproxy.tunnel = {
-    enable = lib.mkEnableOption "publishing proxy sites with `tunnel` through the tunnelrs server";
+  options.geproxy.tunnel.enable = lib.mkEnableOption "publishing proxy sites with `tunnel` through the tunnelrs server";
 
-    meta = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = { };
-      example = {
-        "k8s/auth" = "authentik";
-      };
-      description = "Meta every exposure announces; the tunnelrs operator selects its presets with it.";
-    };
-  };
-
-  config = lib.mkIf cfg.enable {
+  config = lib.mkIf config.geproxy.tunnel.enable {
     sops.secrets."tunnelrs.key".restartUnits = [ "tunnelrs-connector.service" ];
 
     services.tunnelrs.connector = {
@@ -32,7 +20,6 @@ in
         lib.nameValuePair site.host {
           backend = "127.0.0.1:${toString site.tunnel}";
           tls = "passthrough";
-          inherit (cfg) meta;
         }
       ) tunnelled;
     };
