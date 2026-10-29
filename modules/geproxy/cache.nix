@@ -5,12 +5,22 @@
   ...
 }:
 let
+  cfg = config.geproxy.cache;
   port = 5000;
 in
 {
-  options.geproxy.cache.enable = lib.mkEnableOption "an unsigned harmonia binary cache of geproxy's store, reachable as `cache`";
+  options.geproxy.cache = {
+    enable = lib.mkEnableOption "an unsigned harmonia binary cache of geproxy's store, reachable as `cache`";
 
-  config = lib.mkIf config.geproxy.cache.enable {
+    host = lib.mkOption {
+      type = lib.types.str;
+      default = geproxy_ip;
+      example = "geproxy.local";
+      description = "Name or address fanout tells the laptops to fetch the cache from.";
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
     services.harmonia.cache = {
       enable = true;
       settings = {
@@ -22,6 +32,6 @@ in
 
     geproxy.ports.cache.tcp = [ port ];
 
-    services.buildFanout.cacheUrl = "http://${geproxy_ip}:${toString port}";
+    services.buildFanout.cacheUrl = "http://${cfg.host}:${toString port}";
   };
 }
