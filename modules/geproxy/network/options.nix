@@ -191,6 +191,12 @@ in
         example = [ "ssh" ];
         description = "Entries of `geproxy.ports` reachable on geproxy from the uplink.";
       };
+
+      announce = mkEnableOption ''
+        machines on the uplink's network finding geproxy: it answers mDNS for
+        `geproxy.local` there and DNS for the proxy sites exposed on the uplink,
+        with the uplink's current address
+      '';
     };
 
     networks = mkOption {

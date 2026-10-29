@@ -34,7 +34,7 @@ Four layers, in evaluation order:
 config.home-manager.users = lib.mapAttrs (_name: userCfg: { teammachine = userCfg; }) config.teammachine.users;
 ```
 
-So `teammachine.users.team.languages.cpp.enable = true` in the host file becomes `home-manager.users.team.teammachine.languages.cpp.enable`. An entire workstation is configured from one block in `hosts/teammachine/configuration.nix`.
+So `teammachine.users.team.languages.cpp.enable = true` in the host file becomes `home-manager.users.team.teammachine.languages.cpp.enable`. An entire workstation is configured from one block in `hosts/teammachine/features.nix`, which the laptop (`hosts/teammachine`) and the venue machine (`hosts/teammachine-part`) both import; each keeps only its own hardware.
 
 **Secrets flow one way**: `modules/sops.nix` binds every host to `secrets.yaml`, decrypted with the age key at `/etc/sops/hostkey`. Modules declare `sops.secrets.<name> = { owner; group; mode; }` and consume `config.sops.secrets.<name>.path` — never the value.
 
@@ -49,6 +49,7 @@ So `teammachine.users.team.languages.cpp.enable = true` in the host file becomes
 | `modules/` | Base modules applied to every host (`nix`, `security`, `sops`, `ssh`, `users`) |
 | `modules/teammachine/` | Contest laptop: greetd/loom-greeter, GNOME, nftables, printer, PXE, usbguard |
 | `modules/geproxy/` | Gateway: `network/` (bridges, dnsmasq/PXE, nftables, Caddy, wifi access points), loom backend, imaged, cuproxy, balloons, fanout, tunnelrs connector |
+| `modules/partition/` | Venue machines (`teammachine-part`, `teammachine-part-base`): one btrfs partition chainloaded by the host's GRUB, the dd-able image, `teammachine-reset` |
 | `modules/scoreboard-laptop/` | `cage` Wayland kiosk running the ICPC presentation client |
 | `users/common/` | HM `sharedModules`: declares `teammachine.languages.*`, firefox policy, nixvim |
 | `users/team/`, `users/gehack/` | Per-user HM profiles |
@@ -92,6 +93,7 @@ nixos-rebuild switch --flake .#teammachine_arm \
 # Secrets
 sops secrets.yaml                 # only legal way to edit
 sops updatekeys secrets.yaml      # after adding a recipient to .sops.yaml
+sops secrets-teammachine.yaml     # teammachine-part copies of the five teammachine secrets
 
 # SSH keys / inputs
 ./scripts/update_keys.sh
@@ -104,9 +106,9 @@ nix flake update
 
 ### Flake targets
 
-`nixosConfigurations`: `teammachine`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
+`nixosConfigurations`: `teammachine`, `teammachine-part`, `teammachine-part-base`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
 
-`packages.x86_64-linux`: `teammachine`, `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
+`packages.x86_64-linux`: `teammachine`, `teammachine-part` (`teammachine.img.zst` of the small `teammachine-part-base`, a single-partition btrfs image written with plain `dd`; the full `teammachine-part` follows through imaged or a deploy), `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
 `packages.aarch64-linux`: `teammachine-arm`, `scoreboard-laptop-arm`.
 
 Note the naming split: **underscore** in `nixosConfigurations` (`teammachine_arm`), **hyphen** in `packages` (`teammachine-arm`). The `*-vm` targets exist only as packages — `nixos-rebuild --flake .#teammachine-vm` fails.
@@ -155,7 +157,7 @@ in {
 - DOMjudge's `chroot-startstop.sh` bind-mounts only `etc usr lib bin lib64` into each judging; `/nix` needs the `ghcr.io/gehack/judgehost` image, which patches `nix` into that list and tolerates a read-only `/chroot/domjudge`. Upstream `domjudge/judgehost` cannot judge in this chroot.
 - Never add a contest language to `users/team/languages.nix` as `pkgs.<x>`; add it to `contestToolchain` so it reaches the chroot as well.
 
-**`mkForce` appears only in the ISO**; `mkIf` is the standard conditional; `mkDefault` is unused.
+**`mkForce` appears only in the ISO and the venue machines**: `modules/partition` disables GRUB, because the host's own GRUB chainloads the UKI that the `boot.loader.external` hook writes to `/boot/teammachine.efi`, and moves the sops key to `/persist/sops/hostkey`, so it survives `teammachine-reset`. `hosts/teammachine-part` overrides `sops.defaultSopsFile` with `secrets-teammachine.yaml`. `mkIf` is the standard conditional; `mkDefault` is unused.
 
 **Commits**: recent history uses Conventional Commits (`feat:`, `chore:`) without scopes; older history is free-form. Follow `feat:`/`fix:`/`chore:`. Branches are `<type>/<kebab-slug>`.
 
@@ -174,7 +176,7 @@ in {
 | `users/team/languages.nix` | The real home of `mygcc`/`mygpp`/`mypython`/`myjavac`/`mykotlinc` |
 | `authorized_keys` | **Generated.** Edit `USERS` in `scripts/update_keys.sh` instead |
 | `fanout_pubkey` | Hand-maintained; grants geproxy root access to laptops |
-| `.sops.yaml` | 4 recipients, one `creation_rules` entry for `secrets.yaml` |
+| `.sops.yaml` | Operator recipients plus two host keys: `&host-key` for `secrets.yaml`, `&teammachine-key` for `secrets-teammachine.yaml` |
 | `README.md` | Operator manual — accurate on intent, stale in several specifics (below) |
 | `bartjan.md` | Personal scratch notes with a hardcoded LAN IP. Not authoritative |
 
@@ -205,17 +207,24 @@ Non-obvious traps, all verified against source:
 - **`nixos-anywhere.sh -B` needs a trusted Nix user on the build host.** It sends the flake with `nix flake archive --to ssh-ng://…`, builds `toplevel`, `diskoScript` and `nixos-anywhere` there under GC roots in `~/.local/state/genix-provision`, and runs nixos-anywhere with `--store-paths`. geproxy trusts `gehack` and uses both cachix caches via `modules/geproxy/build-host.nix`, which reads them from `flake.nix`'s `nixConfig`. Only files tracked by git reach the build host.
 - **`nixos-anywhere.sh --cache` only works for targets on the admin net.** `modules/geproxy/cache.nix` serves geproxy's whole store with harmonia (unsigned, zstd) on port 5000, allowed only on `admin`. The script splits nixos-anywhere into `--phases kexec` and `disko,install,reboot`, and in between writes `substituters = <cache>` and `require-sigs = false` into the installer's `/root/.config/nix/nix.conf`, so the target substitutes the closure in parallel over HTTP (measured ~9.5× faster than the ssh copy). The cache must be the build host, since only paths in its store are served. Without a reachable cache, the paths should still arrive over the slow ssh copy after the 5 s `connect-timeout`, but that fallback is untested.
 - **`authorized_keys` is generated and parsed by Nix.** `modules/geproxy/default.nix` reads it at eval time and filters `#`-prefixed lines into `services.buildFanout.authorizedKeys`, so the `# <username>` comment format is load-bearing. Hand edits are clobbered on the next deploy.
-- **The ISO is a fork, not a variant.** `hosts/teammachine-iso/configuration.nix` uses `disabledModules = [ ../../modules/users.nix ]`, re-declares users inline with a literal `hashedPassword`, and imports **8 specific `modules/teammachine/*` files by path** rather than the barrel. Adding a file to `modules/teammachine/default.nix` does not reach the ISO; renaming one of those 8 breaks it. Never copy the literal-password pattern into a real host.
+- **The ISO is a fork, not a variant.** `hosts/teammachine-iso/configuration.nix` uses `disabledModules = [ ../../modules/users.nix ]`, re-declares users inline with a literal `hashedPassword`, and imports **9 specific `modules/teammachine/*` files by path** rather than the barrel. Adding a file to `modules/teammachine/default.nix` does not reach the ISO; renaming one of those 9 breaks it. `networking.nix`, `printer.nix` and `netboot.nix` read `teammachine.geproxy.host`, so `geproxy.nix` must stay in that list. Never copy the literal-password pattern into a real host.
 - **`teammachine.users` is `types.attrsOf types.attrs`** — typos are silently accepted at the NixOS layer and only explode inside home-manager, or not at all. `scoreboard-laptop` loads HM with *no* users, so `teammachine.users.*` there does nothing.
 - **`modules/scoreboard-laptop/scoreboard.nix` is a package, not a module.** It is deliberately absent from the barrel and `callPackage`d from `desktop.nix`. Adding it to `default.nix` breaks evaluation.
 - **`.#contestlaptop` does not exist** despite the comment at the top of `modules/geproxy/fanout.nix`. Use `.#teammachine`.
 - **`enable-internet`/`disable-internet` are not declarative.** They mutate the live `chain <network>_inet` of every `internet = "switchable"` network; any `nixos-rebuild switch` reloads the ruleset and resets internet to disabled.
 - **The DNS kill switch matches dnsmasq by user name** (`meta skuid "dnsmasq-<network>"`). nft resolves the name when the ruleset loads; the build-time check substitutes `nobody` via `preCheckRuleset`. Renaming the dnsmasq users breaks both.
 - **A proxy site not listed in `expose` for a network answers 404 there**, even on a port other sites opened; Caddy guards on `remote_ip` of the network subnets. Clients on the uplink have no known subnet, so a site exposed on the uplink can only exclude LAN subnets.
+- **Finding geproxy without its fixed address is opt-in on both ends.** `geproxy.uplink.announce` starts a dnsmasq on the uplink that answers the proxy sites exposed on the uplink with the uplink's current address, and opens mDNS and DNS there; resolved answers `geproxy.local` over mDNS on every link. `teammachine.geproxy.discover` resolves `geproxy.local`, puts the address in the nftables set `geproxy` and points DNS for `gehack.nl` at it; services then use `teammachine.geproxy.host` instead of `geproxy_ip`.
 - **loom runs on geproxy, not in a cluster.** `loom.nixosModules.loom-backend` serves the dashboard, `/api`, `/rpc` and the station gRPC on `127.0.0.1:3010` with SQLite in `/var/lib/loom`. Laptops reach it as `loom.gehack.nl` because dnsmasq answers proxy hosts with geproxy's address; geproxy's own consumers (fanout inventory, cuproxy webhooks, `team.loom` DNS) get there through `networking.hosts`. A fresh deploy starts with an empty database.
 - **Sites with `login` are guarded by the GEWIS authentik** (`geproxy.proxy.authentik`), through Caddy `forward_auth` against its embedded outpost. The forward-auth provider for each host lives in authentik, not here. Caddy strips client-sent `X-Proxy-Authorized` and sets it after a login; loom's backend (`trustedProxyHeader`) treats it as admin. Station gRPC (`Content-Type: application/grpc`, bearer token) and `/api/*` skip the login, as in the old k8s ingress.
 - **`geproxy.tunnel` publishes sites with `tunnel` through tunnelrs** (server `5387b0ee…` behind `relay.luukblankenstijn.nl:8443`) with TLS passthrough to Caddy on loopback, so geproxy's own certificate is served and the edge cannot add HTTP middleware. The connector key is `tunnelrs.key`; a new key stays `pending` until `tunnelrs-ctl approve <id>` on the server.
-- **All hosts share one age identity at `/etc/sops/hostkey`, and nothing in the repo provisions it.** Stage it locally and pass `--extra-files` + `--chown`; `.gitignore` carries `tmp/` for exactly this. A host without it fails activation, because `hashed-password` is `neededForUsers = true`.
+- **All hosts share one age identity at `/etc/sops/hostkey`, and nothing in the repo provisions it**, except the venue machines, which have their own (next entry). Stage it locally and pass `--extra-files` + `--chown`; `.gitignore` carries `tmp/` for exactly this. Without it, the `setupSecretsForUsers` activation snippet fails and every user with `hashedPasswordFile` stays without a password. Boot still continues and root SSH by key works. Services that need secrets do not work.
+- **The venue machines use their own key at `/persist/sops/hostkey`**: `teammachine-part` reads `secrets-teammachine.yaml` with `&teammachine-key` (private half `teammachine-hostkey` in `secrets.yaml`), which does not decrypt `secrets.yaml`. The file holds copies of secrets from `secrets.yaml`, so changing one of those means editing both files. The built image carries no key; push it over SSH.
+- **The venue machines must keep `systemd.gpt_auto=0`** (`modules/partition`). Without it, systemd auto-mounts the venue's ESP at `/efi` and `bootctl` creates `\loader\random-seed` there. After that, systemd-stub rewrites that file on every boot.
+- **The venue partition is one btrfs filesystem with label `teammachine`**, mounted by label, with subvolumes `root`, `nix`, `boot` and `persist`, grown on boot (`autoResize`). A second partition with that label on the same machine makes the root device ambiguous. GRUB resolves `/boot/teammachine.efi` from the top level, where it is the `boot` subvolume, so moving the UKI into `root` breaks the host entry. `teammachine-reset` replaces only `root` with `snapshots/root-pristine`; state that must survive a reset belongs in `/persist`, `/nix` or `/boot`.
+- **The image's files must be owned by root.** `mkfs.btrfs --rootdir` records the uid it sees, so the image build runs it under `unshare --map-root-user`; fakeroot does not reach it, and a uid-1000 store breaks sshd, dhcpcd and nscd.
+- **imaged does not handle btrfs yet** (imaged `fddffb5`: partclone is built `--disable-btrfs` and the filesystem probe rejects it), while the venue partition is btrfs. Capturing or deploying the venue partition with imaged fails until imaged gains btrfs support.
+- **`imaged-boot` must match the imaged server's routes.** It fetches `/boot/<linuxArch>/vmlinuz` and `/boot/<linuxArch>/initramfs.cpio.xz` (`modules/teammachine/netboot.nix`), the paths `crates/boot/src/pxe.rs` serves since imaged `fddffb5`. Bumping the input can move them again.
 - **`secrets.yaml` may only be edited with `sops secrets.yaml`.** It has a MAC; any other write corrupts it. `&kevin` is an `ssh-ed25519` key inside the `age:` group — intentional, do not normalise it to `age1…`.
 - **`users.mutableUsers = false`** everywhere: `passwd` on a host is a no-op.
 - **No `hardware-configuration.nix` exists anywhere.** Hardware facts (PCI bus IDs, NIC names, disk paths) are hand-written into `hosts/<host>/configuration.nix` and `disko.nix`. Never "regenerate" one.

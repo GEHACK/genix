@@ -36,7 +36,7 @@ in
   services.resolved = {
     enable = true;
     settings.Resolve = {
-      MulticastDNS = "resolve";
+      MulticastDNS = "yes";
       LLMNR = false;
     };
   };

@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  geproxy_ip,
   ...
 }:
 let
@@ -29,7 +28,7 @@ in
       ensurePrinters = [
         {
           name = "PSGEWIS1";
-          deviceUri = "ipp://${geproxy_ip}:631/ipp/print";
+          deviceUri = "ipp://${config.teammachine.geproxy.host}:631/ipp/print";
           model = "PSGEWIS1.ppd";
         }
       ];

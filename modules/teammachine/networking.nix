@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   geproxy_ip,
@@ -6,6 +7,11 @@
   cds_port,
   ...
 }:
+let
+  inherit (config.teammachine.geproxy) discover host;
+
+  geproxy = if discover then "@geproxy" else geproxy_ip;
+in
 {
 
   environment.systemPackages = with pkgs; [
@@ -15,7 +21,7 @@
   networking = {
     hostName = "team";
     useDHCP = false;
-    extraHosts = ''
+    extraHosts = lib.optionalString (!discover) ''
       ${geproxy_ip} judge
     '';
 
@@ -31,10 +37,12 @@
       ruleset = ''
         flush ruleset
         table inet filter {
+            ${lib.optionalString discover "set geproxy { type ipv4_addr; }"}
+
             chain input {
                 type filter hook input priority filter; policy accept;
                 iifname "lo" accept
-                ip saddr ${geproxy_ip} accept
+                ip saddr ${geproxy} accept
                 ip saddr ${contest_subnet} drop
             }
 
@@ -45,8 +53,8 @@
             chain output {
                 type filter hook output priority filter; policy accept;
                 oifname "lo" accept
-                ip daddr ${geproxy_ip} tcp dport ${toString cds_port} drop
-                ip daddr ${geproxy_ip} accept
+                ip daddr ${geproxy} tcp dport ${toString cds_port} drop
+                ip daddr ${geproxy} accept
                 ip daddr ${contest_subnet} drop
             }
         }
@@ -56,7 +64,7 @@
 
   services.timesyncd = {
     enable = lib.mkForce true;
-    servers = [ geproxy_ip ];
+    servers = [ host ];
   };
 
   boot.blacklistedKernelModules = [

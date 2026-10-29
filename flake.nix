@@ -132,7 +132,7 @@
           };
         };
 
-      teammachineModules = commonModules ++ [
+      teammachineRoleModules = commonModules ++ [
         loom.nixosModules.default
         (mkHomeManager {
           users = {
@@ -144,8 +144,9 @@
             ./users/common
           ];
         })
-        ./hosts/teammachine/configuration.nix
       ];
+
+      teammachineModules = teammachineRoleModules ++ [ ./hosts/teammachine/configuration.nix ];
 
       geproxyRoleModules = commonModules ++ [
         cuproxy.nixosModules.default
@@ -232,6 +233,18 @@
         modules = teammachineModules;
       };
 
+      teammachine-part = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineRoleModules ++ [ ./hosts/teammachine-part/configuration.nix ];
+      };
+
+      teammachine-part-base = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = teammachineRoleModules ++ [ ./hosts/teammachine-part/base.nix ];
+      };
+
       geproxy = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -307,6 +320,8 @@
       nixosConfigurations = {
         inherit
           teammachine
+          teammachine-part
+          teammachine-part-base
           geproxy
           utility
           judgehost
@@ -318,6 +333,7 @@
 
       packages.x86_64-linux = {
         teammachine = teammachine.config.system.build.toplevel;
+        teammachine-part = teammachine-part-base.config.system.build.partitionImage;
         geproxy = geproxy.config.system.build.toplevel;
         utility = utility.config.system.build.toplevel;
         teammachine-vm = teammachine-vm.config.system.build.vm;
