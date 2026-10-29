@@ -7,6 +7,8 @@ _: {
 
   judgehost.cores = [ 2 ];
 
+  services.loomd.label = "judgehost";
+
   hardware.enableRedistributableFirmware = true;
   hardware.bluetooth.enable = false;
 

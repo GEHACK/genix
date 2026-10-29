@@ -7,6 +7,8 @@ _: {
 
   networking.hostName = "cds";
 
+  services.loomd.label = "cds";
+
   hardware.enableRedistributableFirmware = true;
 
   time.timeZone = "Europe/Amsterdam";

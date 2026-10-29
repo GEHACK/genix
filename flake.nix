@@ -116,6 +116,7 @@
         sops-nix.nixosModules.sops
         home-manager.nixosModules.home-manager
         packageOverlays
+        loom.nixosModules.loomd
       ];
 
       mkHomeManager =
@@ -133,7 +134,7 @@
         };
 
       teammachineRoleModules = commonModules ++ [
-        loom.nixosModules.default
+        loom.nixosModules.loom-greeter
         (mkHomeManager {
           users = {
             gehack = import ./users/gehack;
