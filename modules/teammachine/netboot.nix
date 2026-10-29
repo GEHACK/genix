@@ -46,11 +46,11 @@ let
       WORKDIR="$(mktemp -d)"
       trap 'rm -rf "$WORKDIR"' EXIT
 
-      curl -fsSL "$SERVER/boot/vmlinuz" -o "$WORKDIR/vmlinuz"
-      curl -fsSL "$SERVER/boot/initramfs.cpio.gz" -o "$WORKDIR/initramfs.cpio.gz"
+      curl -fsSL "$SERVER/boot/${pkgs.stdenv.hostPlatform.linuxArch}/vmlinuz" -o "$WORKDIR/vmlinuz"
+      curl -fsSL "$SERVER/boot/${pkgs.stdenv.hostPlatform.linuxArch}/initramfs.cpio.xz" -o "$WORKDIR/initramfs.cpio.xz"
 
       kexec -s -l "$WORKDIR/vmlinuz" \
-        --initrd="$WORKDIR/initramfs.cpio.gz" \
+        --initrd="$WORKDIR/initramfs.cpio.xz" \
         --command-line="img_srv=$SERVER console=ttyS0,115200n8 console=tty0 ignore_loglevel"
 
       systemctl kexec

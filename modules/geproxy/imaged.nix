@@ -16,13 +16,12 @@ in
     services.imaged.server = {
       enable = true;
       bindAddress = machineAddr;
+      publicUrl = "http://${machineAddr}";
       webBindAddress = webAddr;
       multicastInterface = "br-contest";
       dataDir = "/var/lib/imaged";
       logLevel = "info";
     };
-
-    systemd.services.imaged-server.environment.PUBLIC_BASE = machineAddr;
 
     geproxy.ports.imaged = {
       tcp = [ imaged_port ];
