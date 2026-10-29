@@ -10,7 +10,16 @@ let
   webAddr = "127.0.0.1:8081";
 in
 {
-  options.geproxy.imaged.enable = lib.mkEnableOption "the imaged server, reachable as `imaged`, with its web UI as proxy site `imaged`";
+  options.geproxy.imaged = {
+    enable = lib.mkEnableOption "the imaged server, reachable as `imaged`, with its web UI as proxy site `imaged`";
+
+    multicastInterface = lib.mkOption {
+      type = lib.types.str;
+      default = "br-contest";
+      example = "eno1";
+      description = "Interface multicast deploys are sent on.";
+    };
+  };
 
   config = lib.mkIf config.geproxy.imaged.enable {
     services.imaged.server = {
@@ -18,7 +27,7 @@ in
       bindAddress = "0.0.0.0:${toString imaged_port}";
       publicUrl = "http://${machineAddr}";
       webBindAddress = webAddr;
-      multicastInterface = "br-contest";
+      inherit (config.geproxy.imaged) multicastInterface;
       dataDir = "/var/lib/imaged";
       logLevel = "info";
     };
