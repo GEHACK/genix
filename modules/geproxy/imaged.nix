@@ -27,6 +27,9 @@ in
       tcp = [ imaged_port ];
       udp = [ "50000-50127" ];
     };
-    geproxy.proxy.sites.imaged.upstream = "http://${webAddr}";
+    geproxy.proxy.sites.imaged = {
+      upstream = "http://${webAddr}";
+      login = true;
+    };
   };
 }

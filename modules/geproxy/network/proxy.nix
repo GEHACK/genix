@@ -7,7 +7,7 @@
 let
   inherit (config.geproxy) networks proxy;
 
-  sites = lib.filterAttrs (_: site: site.expose != { }) proxy.sites;
+  sites = lib.filterAttrs (_: site: site.expose != { } || site.tunnel != null) proxy.sites;
   hosts = lib.unique (lib.mapAttrsToList (_: site: site.host) sites);
 
   zonesServing =
@@ -16,9 +16,9 @@ let
   subnets = zones: map (zone: networks.${zone}.subnet) (lib.remove "uplink" zones);
 
   guard =
-    zones: denied:
-    lib.optionalString (zones != [ ]) ''
-      @denied ${lib.optionalString (!denied) "not "}remote_ip ${toString (subnets zones)}
+    ranges: denied:
+    lib.optionalString (ranges != [ ]) ''
+      @denied ${lib.optionalString (!denied) "not "}remote_ip ${toString ranges}
       respond @denied 404
     '';
 
@@ -28,18 +28,40 @@ let
       allowed = zonesServing port site;
     in
     if lib.elem "uplink" allowed then
-      guard (lib.subtractLists allowed (zonesOpen port)) true
+      guard (subnets (lib.subtractLists allowed (zonesOpen port))) true
     else
-      guard allowed false;
+      guard (subnets allowed ++ lib.optional (site.tunnel == port) "127.0.0.1/32") false;
+
+  loginCheck = ''
+    reverse_proxy /outpost.goauthentik.io/* ${proxy.authentik} {
+      header_up Host {upstream_hostport}
+    }
+    forward_auth ${proxy.authentik} {
+      uri /outpost.goauthentik.io/auth/caddy
+      header_up Host {upstream_hostport}
+    }
+    request_header X-Proxy-Authorized true
+  '';
+
+  ports =
+    site:
+    lib.unique (
+      lib.concatLists (lib.attrValues site.expose) ++ lib.optional (site.tunnel != null) site.tunnel
+    );
 
   vhost = site: port: {
     name = "${site.host}:${toString port}";
     value = {
       useACMEHost = "gehack";
       extraConfig = ''
-        ${access port site}
-        ${lib.optionalString site.rewriteContest "uri path_regexp __CONTEST__ ${contest_id}"}
-        reverse_proxy ${site.upstream} ${lib.optionalString site.insecureUpstream "{\ntransport http {\ntls_insecure_skip_verify\n}\n}"}
+        route {
+          ${access port site}
+          ${lib.optionalString site.rewriteContest "uri path_regexp __CONTEST__ ${contest_id}"}
+          ${lib.optionalString site.login "request_header -X-Proxy-Authorized"}
+          ${site.extraConfig}
+          ${lib.optionalString site.login loginCheck}
+          reverse_proxy ${site.upstream} ${lib.optionalString site.insecureUpstream "{\ntransport http {\ntls_insecure_skip_verify\n}\n}"}
+        }
       '';
     };
   };
@@ -68,9 +90,7 @@ in
         }
       '';
       virtualHosts = lib.listToAttrs (
-        lib.concatMap (site: map (vhost site) (lib.unique (lib.concatLists (lib.attrValues site.expose)))) (
-          lib.attrValues sites
-        )
+        lib.concatMap (site: map (vhost site) (ports site)) (lib.attrValues sites)
       );
     };
   };

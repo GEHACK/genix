@@ -24,8 +24,10 @@ in
     ./devdocs.nix
     ./fanout.nix
     ./imaged.nix
+    ./loom.nix
     ./network
     ./ntp.nix
+    ./tunnel.nix
   ];
 
   sops.secrets.fanout-ssh-key = {

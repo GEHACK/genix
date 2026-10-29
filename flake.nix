@@ -41,6 +41,7 @@
     cuproxy.url = "github:GEHACK/cuproxy";
     balloons.url = "github:GEHACK/balloons/main";
     imaged.url = "github:LuukBlankenstijn/imaged";
+    tunnelrs.url = "github:LuukBlankenstijn/tunnelrs";
 
     nixvim = {
       url = "github:nix-community/nixvim/nixos-26.05";
@@ -57,6 +58,7 @@
       sops-nix,
       cuproxy,
       imaged,
+      tunnelrs,
       nixvim,
       domjudge-submit,
       icpc-tools,
@@ -140,6 +142,8 @@
       geproxyRoleModules = commonModules ++ [
         cuproxy.nixosModules.default
         imaged.nixosModules.default
+        loom.nixosModules.loom-backend
+        tunnelrs.nixosModules.default
         (mkHomeManager {
           users = {
             gehack = import ./users/gehack;

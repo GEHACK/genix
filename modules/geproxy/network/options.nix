@@ -153,6 +153,26 @@ let
             a network not listed are refused, even on a port another site opens.
           '';
         };
+
+        tunnel = mkOption {
+          type = types.nullOr types.port;
+          default = null;
+          example = 443;
+          description = ''
+            Port of this site that `geproxy.tunnel` publishes as `host` with TLS passthrough;
+            the site then also answers loopback clients, which is how tunnelled visitors arrive.
+          '';
+        };
+
+        login = mkEnableOption ''
+          a login through `geproxy.proxy.authentik` for every request `extraConfig` does not answer.
+          Requests that pass carry `X-Proxy-Authorized: true`; client-supplied copies are always stripped'';
+
+        extraConfig = mkOption {
+          type = types.lines;
+          default = "";
+          description = "Caddy directives run in order after the access guard and before the login; a request they answer never reaches `upstream`.";
+        };
       };
     };
 in
@@ -200,9 +220,17 @@ in
       description = "Domains every network resolver forwards to a specific server.";
     };
 
-    proxy.sites = mkOption {
-      type = types.attrsOf (types.submodule site);
-      default = { };
+    proxy = {
+      sites = mkOption {
+        type = types.attrsOf (types.submodule site);
+        default = { };
+      };
+
+      authentik = mkOption {
+        type = types.str;
+        example = "https://authentik.example.com";
+        description = "authentik whose embedded outpost checks the login of sites with `login`.";
+      };
     };
   };
 }

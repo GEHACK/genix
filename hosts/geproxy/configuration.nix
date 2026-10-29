@@ -1,6 +1,5 @@
 {
   dj_url,
-  loom_url,
   geproxy_ip,
   contest_subnet,
   admin_ip,
@@ -85,32 +84,44 @@ in
       };
     };
 
-    proxy.sites = {
-      judge = {
-        upstream = dj_url;
-        rewriteContest = true;
-        expose = everywhere;
-      };
-      loom = {
-        upstream = loom_url;
-        expose = everywhere;
-      };
-      docs.expose = everywhere;
-      balloons.expose.admin = [ 443 ];
-      cds.expose = {
-        admin = [
-          443
-          8443
-        ];
-        contest = [ 8443 ];
-      };
-      imaged.expose = {
-        admin = [ 3000 ];
-        uplink = [ 3000 ];
+    proxy = {
+      authentik = "https://authentik.gewis.nl";
+      sites = {
+        judge = {
+          upstream = dj_url;
+          rewriteContest = true;
+          expose = everywhere;
+        };
+        loom = {
+          expose = {
+            contest = [ 443 ];
+            admin = [ 443 ];
+          };
+          tunnel = 443;
+        };
+        docs.expose = everywhere;
+        balloons.expose.admin = [ 443 ];
+        cds.expose = {
+          admin = [
+            443
+            8443
+          ];
+          contest = [ 8443 ];
+        };
+        imaged = {
+          expose.admin = [ 3000 ];
+          tunnel = 3000;
+        };
       };
     };
 
+    tunnel = {
+      enable = true;
+      meta."k8s/auth" = "authentik";
+    };
+
     loomDns.enable = true;
+    loom.enable = true;
     ntp.enable = true;
     ddns.enable = true;
     cuproxy.enable = true;

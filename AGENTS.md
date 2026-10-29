@@ -48,7 +48,7 @@ So `teammachine.users.team.languages.cpp.enable = true` in the host file becomes
 | `hosts/<host>/` | `configuration.nix` + `disko.nix`. Thin — hardware + toggles only |
 | `modules/` | Base modules applied to every host (`nix`, `security`, `sops`, `ssh`, `users`) |
 | `modules/teammachine/` | Contest laptop: greetd/loom-greeter, GNOME, nftables, printer, PXE, usbguard |
-| `modules/geproxy/` | Gateway: `network/` (bridges, dnsmasq/PXE, nftables, Caddy), cuproxy, imaged, balloons, fanout |
+| `modules/geproxy/` | Gateway: `network/` (bridges, dnsmasq/PXE, nftables, Caddy, wifi access points), loom backend, imaged, cuproxy, balloons, fanout, tunnelrs connector |
 | `modules/scoreboard-laptop/` | `cage` Wayland kiosk running the ICPC presentation client |
 | `users/common/` | HM `sharedModules`: declares `teammachine.languages.*`, firefox policy, nixvim |
 | `users/team/`, `users/gehack/` | Per-user HM profiles |
@@ -140,7 +140,7 @@ in {
 
 **Option namespaces**: system toggles under `teammachine.*` / `scoreboard.*`; the fanout mimics upstream naming as `services.buildFanout.*`. Home-manager options *also* live under `teammachine.*` — same prefix, different module system.
 
-**Naming is layered and deliberately inconsistent**: kebab-case files and dirs (`user-tools.nix`, `netboot.nix`), camelCase `let` bindings (`operatorKeys`), snake_case `specialArgs` (`dj_url`, `geproxy_ip`). Secrets are kebab-case (`loom-auth`) or dotted namespaces (`balloons.domjudge.user`, quoted in Nix).
+**Naming is layered and deliberately inconsistent**: kebab-case files and dirs (`user-tools.nix`, `netboot.nix`), camelCase `let` bindings (`operatorKeys`), snake_case `specialArgs` (`dj_url`, `geproxy_ip`). Secrets are kebab-case (`fanout-ssh-key`) or dotted namespaces (`balloons.domjudge.user`, quoted in Nix).
 
 **Contest facts flow via `specialArgs`, not options.** Changing `geproxy_ip` in `flake.nix` rewrites every laptop's firewall, geproxy's own ruleset, dnsmasq and the PXE chain.
 
@@ -169,8 +169,8 @@ in {
 | `modules/users.nix` | `mutableUsers = false`, the `gehack` admin, root keys from `../authorized_keys` |
 | `modules/teammachine/user-tools.nix` | `teammachine.users` → home-manager router |
 | `modules/geproxy/fanout.nix` | 250-line SSH forced-command deploy relay |
-| `modules/geproxy/network/` | Options (`options.nix`) and generators for bridges, per-network dnsmasq, the nftables ruleset, Caddy + ACME, internet toggle tools |
-| `hosts/geproxy/configuration.nix` | The geproxy overview: networks, reachability, internet mode, allowed services, and which proxy site is exposed on which port per network |
+| `modules/geproxy/network/` | Options (`options.nix`) and generators for bridges, per-network dnsmasq, the nftables ruleset, Caddy + ACME with the authentik login, wifi access points, internet toggle tools |
+| `hosts/geproxy/configuration.nix` | The geproxy overview: networks, reachability, internet mode, allowed services, which proxy site is exposed on which port per network, and which sites are tunnelled |
 | `users/team/languages.nix` | The real home of `mygcc`/`mygpp`/`mypython`/`myjavac`/`mykotlinc` |
 | `authorized_keys` | **Generated.** Edit `USERS` in `scripts/update_keys.sh` instead |
 | `fanout_pubkey` | Hand-maintained; grants geproxy root access to laptops |
@@ -180,7 +180,7 @@ in {
 
 ## Runtime/Tooling Preferences
 
-- **Nix with flakes**, `nixpkgs` pinned to `nixos-26.05`. Only 3 of 9 inputs `follow` nixpkgs — `disko`, `loom`, `cuproxy`, `balloons`, `imaged` carry their own. Adding `inputs.nixpkgs.follows` is a behaviour change, not a cleanup.
+- **Nix with flakes**, `nixpkgs` pinned to `nixos-26.05`. Only 5 of 11 inputs `follow` nixpkgs — `disko`, `loom`, `cuproxy`, `balloons`, `imaged` and `tunnelrs` (nixos-unstable) carry their own. Adding `inputs.nixpkgs.follows` is a behaviour change, not a cleanup.
 - `nixConfig` declares two substituters: `luukblankenstijn.cachix.org` and `gehack.cachix.org`. Only honoured for trusted Nix users; otherwise every Rust/Go input builds from source.
 - `sops` + an age key listed in `.sops.yaml` is required to touch secrets.
 - `nixos-anywhere` is pinned as `packages.x86_64-linux.nixos-anywhere` (nixpkgs' package). Its kexec step makes the *target* download the installer from GitHub, so run `enable-internet` on geproxy before installing a machine on the contest network. `disko` is still invoked ad-hoc via `nix run github:nix-community/disko`. There is no devShell.
@@ -212,6 +212,9 @@ Non-obvious traps, all verified against source:
 - **`enable-internet`/`disable-internet` are not declarative.** They mutate the live `chain <network>_inet` of every `internet = "switchable"` network; any `nixos-rebuild switch` reloads the ruleset and resets internet to disabled.
 - **The DNS kill switch matches dnsmasq by user name** (`meta skuid "dnsmasq-<network>"`). nft resolves the name when the ruleset loads; the build-time check substitutes `nobody` via `preCheckRuleset`. Renaming the dnsmasq users breaks both.
 - **A proxy site not listed in `expose` for a network answers 404 there**, even on a port other sites opened; Caddy guards on `remote_ip` of the network subnets. Clients on the uplink have no known subnet, so a site exposed on the uplink can only exclude LAN subnets.
+- **loom runs on geproxy, not in a cluster.** `loom.nixosModules.loom-backend` serves the dashboard, `/api`, `/rpc` and the station gRPC on `127.0.0.1:3010` with SQLite in `/var/lib/loom`. Laptops reach it as `loom.gehack.nl` because dnsmasq answers proxy hosts with geproxy's address; geproxy's own consumers (fanout inventory, cuproxy webhooks, `team.loom` DNS) get there through `networking.hosts`. A fresh deploy starts with an empty database.
+- **Sites with `login` are guarded by the GEWIS authentik** (`geproxy.proxy.authentik`), through Caddy `forward_auth` against its embedded outpost. The forward-auth provider for each host lives in authentik, not here. Caddy strips client-sent `X-Proxy-Authorized` and sets it after a login; loom's backend (`trustedProxyHeader`) treats it as admin. Station gRPC (`Content-Type: application/grpc`, bearer token) and `/api/*` skip the login, as in the old k8s ingress.
+- **`geproxy.tunnel` publishes sites with `tunnel` through tunnelrs** (server `5387b0ee…` behind `relay.luukblankenstijn.nl:8443`) with TLS passthrough to Caddy on loopback, so geproxy's own certificate is served and the edge cannot add HTTP middleware. The connector key is `tunnelrs.key`; a new key stays `pending` until `tunnelrs-ctl approve <id>` on the server. A route keeps the meta of its first announcement, so changing `geproxy.tunnel.meta` needs `tunnelrs-ctl forget <host>`.
 - **All hosts share one age identity at `/etc/sops/hostkey`, and nothing in the repo provisions it.** Stage it locally and pass `--extra-files` + `--chown`; `.gitignore` carries `tmp/` for exactly this. A host without it fails activation, because `hashed-password` is `neededForUsers = true`.
 - **`secrets.yaml` may only be edited with `sops secrets.yaml`.** It has a MAC; any other write corrupts it. `&kevin` is an `ssh-ed25519` key inside the `age:` group — intentional, do not normalise it to `age1…`.
 - **`users.mutableUsers = false`** everywhere: `passwd` on a host is a no-op.
