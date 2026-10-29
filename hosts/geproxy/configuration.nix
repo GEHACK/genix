@@ -28,6 +28,8 @@ in
         "ssh"
         "imaged"
         "printing"
+        "ntp"
+        "cache"
       ];
     };
 
