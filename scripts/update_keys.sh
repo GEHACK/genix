@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "mexdeloo" "kevinjil")
+USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "mexdeloo" "kevinjil" "tuupke" "nickygerritsen" "aarhunt")
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_FILE="$REPO_ROOT/authorized_keys"
 
