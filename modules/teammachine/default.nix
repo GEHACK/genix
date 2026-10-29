@@ -2,6 +2,7 @@ _: {
   imports = [
     ./boot.nix
     ./desktop.nix
+    ./geproxy.nix
     ./greeter.nix
     ./languages.nix
     ./locale.nix

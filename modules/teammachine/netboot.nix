@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  geproxy_ip,
   imaged_port,
   ...
 }:
@@ -39,15 +38,23 @@ let
       kexec-tools
       curl
       coreutils
+      gawk
       systemd
     ];
     text = ''
-      SERVER="http://${geproxy_ip}:${toString imaged_port}"
+      GEPROXY=${
+        if config.teammachine.geproxy.discover then
+          ''"$(resolvectl query --legend=no -4 ${config.teammachine.geproxy.host} | awk 'NR == 1 { print $2 }')"''
+        else
+          config.teammachine.geproxy.host
+      }
+      SERVER="http://$GEPROXY:${toString imaged_port}"
+      BOOT="$SERVER/boot/${pkgs.stdenv.hostPlatform.linuxArch}"
       WORKDIR="$(mktemp -d)"
       trap 'rm -rf "$WORKDIR"' EXIT
 
-      curl -fsSL "$SERVER/boot/${pkgs.stdenv.hostPlatform.linuxArch}/vmlinuz" -o "$WORKDIR/vmlinuz"
-      curl -fsSL "$SERVER/boot/${pkgs.stdenv.hostPlatform.linuxArch}/initramfs.cpio.xz" -o "$WORKDIR/initramfs.cpio.xz"
+      curl -fsSL "$BOOT/vmlinuz" -o "$WORKDIR/vmlinuz"
+      curl -fsSL "$BOOT/initramfs.cpio.xz" -o "$WORKDIR/initramfs.cpio.xz"
 
       kexec -s -l "$WORKDIR/vmlinuz" \
         --initrd="$WORKDIR/initramfs.cpio.xz" \

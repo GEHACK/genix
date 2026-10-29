@@ -6,7 +6,12 @@
   ...
 }:
 let
-  inherit (config.geproxy) networks dns proxy;
+  inherit (config.geproxy)
+    uplink
+    networks
+    dns
+    proxy
+    ;
 
   format = pkgs.formats.keyValue {
     mkKeyValue = name: value: if value == true then name else "${name}=${toString value}";
@@ -70,6 +75,29 @@ let
     // lib.optionalAttrs net.pxe.enable (pxeSettings net)
     // lib.optionalAttrs (net.domain != null) (domainSettings net);
 
+  uplinkSettings = {
+    bind-dynamic = true;
+    interface = uplink.interface;
+    except-interface = "lo";
+    no-resolv = true;
+    no-hosts = true;
+    interface-name = lib.mapAttrsToList (_: site: "${site.host},${uplink.interface}/4") (
+      lib.filterAttrs (_: site: site.expose ? uplink) proxy.sites
+    );
+  };
+
+  instances =
+    lib.mapAttrs (name: net: {
+      description = "the ${name} network";
+      settings = settings name net;
+    }) networks
+    // lib.optionalAttrs uplink.announce {
+      uplink = {
+        description = "the uplink";
+        settings = uplinkSettings;
+      };
+    };
+
   capabilities = [
     "CAP_NET_BIND_SERVICE"
     "CAP_NET_RAW"
@@ -83,17 +111,17 @@ in
       isSystemUser = true;
       group = "dnsmasq-${name}";
     }
-  ) networks;
+  ) instances;
 
-  users.groups = lib.mapAttrs' (name: _: lib.nameValuePair "dnsmasq-${name}" { }) networks;
+  users.groups = lib.mapAttrs' (name: _: lib.nameValuePair "dnsmasq-${name}" { }) instances;
 
   systemd.services = lib.mapAttrs' (
-    name: net:
+    name: instance:
     let
-      conf = format.generate "dnsmasq-${name}.conf" (settings name net);
+      conf = format.generate "dnsmasq-${name}.conf" instance.settings;
     in
     lib.nameValuePair "dnsmasq-${name}" {
-      description = "Dnsmasq for the ${name} network";
+      description = "Dnsmasq for ${instance.description}";
       after = [
         "network.target"
         "systemd-resolved.service"
@@ -114,5 +142,19 @@ in
         Restart = "on-failure";
       };
     }
-  ) networks;
+  ) instances;
+
+  geproxy = lib.mkIf uplink.announce {
+    ports = {
+      mdns.udp = [ 5353 ];
+      dns = {
+        tcp = [ 53 ];
+        udp = [ 53 ];
+      };
+    };
+    uplink.allow = [
+      "mdns"
+      "dns"
+    ];
+  };
 }
