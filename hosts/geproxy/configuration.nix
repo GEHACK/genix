@@ -109,8 +109,8 @@ in
           contest = [ 8443 ];
         };
         imaged = {
-          expose.admin = [ 3000 ];
-          tunnel = 3000;
+          expose.admin = [ 443 ];
+          tunnel = 443;
         };
       };
     };
