@@ -7,5 +7,6 @@ _: {
     ./options.nix
     ./proxy.nix
     ./tools.nix
+    ./wifi.nix
   ];
 }

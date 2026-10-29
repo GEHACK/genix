@@ -77,6 +77,23 @@ let
 
         pxe.enable = mkEnableOption "PXE boot into imaged";
 
+        wifi = mkOption {
+          type = types.nullOr (
+            types.submodule {
+              options = {
+                interface = mkOption {
+                  type = types.str;
+                  example = "wlp6s0";
+                  description = "Radio run as access point; hostapd adds it to the bridge.";
+                };
+                ssid = mkOption { type = types.str; };
+              };
+            }
+          );
+          default = null;
+          description = "Access point bridged into this network, protected by the sops secret `wifi.<network>`.";
+        };
+
         dhcp = {
           range = mkOption {
             type = types.listOf types.str;
