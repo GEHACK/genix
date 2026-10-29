@@ -135,7 +135,10 @@ in
     balloons.enable = true;
     devdocs.enable = true;
     cds.enable = true;
-    cache.enable = true;
+    cache = {
+      enable = true;
+      host = "geproxy.local";
+    };
   };
 
   networking.hostName = "geproxy";
