@@ -22,6 +22,7 @@ in
       listenAddress = backendAddr;
       authTokenFile = config.sops.secrets."loom.authToken".path;
       trustedProxyHeader = true;
+      video.multicastInterface = config.geproxy.multicastInterface;
       contestApi = {
         baseUrl = dj_url;
         username = "loom";
