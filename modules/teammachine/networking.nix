@@ -14,6 +14,7 @@ let
   set = ports: "{ ${lib.concatMapStringsSep ", " toString ports} }";
 
   rdp = config.teammachine.remoteDesktop or { enable = false; };
+  greeter = config.services.greetd.loom-greeter or { enable = false; };
   streams = lib.attrByPath [ "home-manager" "users" "team" "teammachine" "streams" ] null config;
 
   toGeproxy = {
@@ -73,6 +74,8 @@ in
                 udp dport 5353 accept comment "mdns"
                 ip saddr ${geproxy} tcp dport ${set fromTrusted} accept
                 ip saddr ${admin_subnet} tcp dport ${set fromTrusted} accept
+                ${lib.optionalString greeter.enable "ip saddr ${geproxy} udp dport ${toString greeter.videoStreamPort} accept comment \"loom video\""}
+                ip protocol igmp accept
             }
 
             chain forward {
@@ -84,6 +87,7 @@ in
                 oifname "lo" accept
                 ct state established,related accept
                 meta l4proto { icmp, ipv6-icmp } accept
+                ip protocol igmp accept
                 udp sport 68 udp dport 67 accept comment "dhcp"
                 ip daddr 224.0.0.251 udp dport 5353 accept comment "mdns"
                 ip daddr ${geproxy} tcp dport ${set toGeproxy.tcp} accept
