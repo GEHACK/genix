@@ -131,7 +131,10 @@ in
     ntp.enable = true;
     ddns.enable = true;
     cuproxy.enable = true;
-    imaged.enable = true;
+    imaged = {
+      enable = true;
+      multicastInterface = "eno1";
+    };
     balloons.enable = true;
     devdocs.enable = true;
     cds.enable = true;
