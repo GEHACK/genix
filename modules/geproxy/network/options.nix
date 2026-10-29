@@ -217,6 +217,13 @@ in
       description = "Named services a network can `allow`.";
     };
 
+    multicastInterface = mkOption {
+      type = types.str;
+      default = "br-contest";
+      example = "eno1";
+      description = "Interface imaged deploys and loom's video wallpaper are multicast on.";
+    };
+
     dns.forward = mkOption {
       type = types.attrsOf types.str;
       default = { };
