@@ -74,7 +74,10 @@ in
   config = lib.mkIf cfg.discover {
     services.resolved = {
       enable = true;
-      settings.Resolve.MulticastDNS = "resolve";
+      settings.Resolve = {
+        MulticastDNS = "resolve";
+        FallbackDNS = "";
+      };
     };
 
     networking.networkmanager = {
