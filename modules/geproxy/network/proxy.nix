@@ -34,11 +34,11 @@ let
 
   loginCheck = ''
     reverse_proxy /outpost.goauthentik.io/* ${proxy.authentik} {
-      header_up Host {upstream_hostport}
+      header_up Host {http.reverse_proxy.upstream.host}
     }
     forward_auth ${proxy.authentik} {
       uri /outpost.goauthentik.io/auth/caddy
-      header_up Host {upstream_hostport}
+      header_up Host {http.reverse_proxy.upstream.host}
     }
     request_header X-Proxy-Authorized true
   '';
