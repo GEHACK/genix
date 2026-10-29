@@ -24,7 +24,11 @@ in
     uplink = {
       interface = "eno1";
       announce = true;
-      allow = [ "ssh" ];
+      allow = [
+        "ssh"
+        "imaged"
+        "printing"
+      ];
     };
 
     networks = {
@@ -98,6 +102,7 @@ in
           expose = {
             contest = [ 443 ];
             admin = [ 443 ];
+            uplink = [ 443 ];
           };
           tunnel = 443;
         };
