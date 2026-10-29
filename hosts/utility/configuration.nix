@@ -7,6 +7,8 @@ _: {
 
   networking.hostName = "utility";
 
+  services.loomd.label = "utility";
+
   hardware.enableRedistributableFirmware = true;
 
   time.timeZone = "Europe/Amsterdam";

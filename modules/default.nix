@@ -1,5 +1,6 @@
 _: {
   imports = [
+    ./loomd.nix
     ./nix.nix
     ./security.nix
     ./sops.nix
