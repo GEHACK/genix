@@ -72,10 +72,6 @@ in
 
       admin = {
         interfaces = [ "eno2" ];
-        wifi = {
-          interface = "wlp6s0";
-          ssid = "gehack-admin";
-        };
         address = admin_ip;
         subnet = admin_subnet;
         internet = "always";
