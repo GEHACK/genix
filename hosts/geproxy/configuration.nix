@@ -23,6 +23,7 @@ in
   geproxy = {
     uplink = {
       interface = "eno1";
+      announce = true;
       allow = [ "ssh" ];
     };
 
