@@ -134,6 +134,37 @@ Use `nixos-anywhere` for initial setup — it partitions disks (via disko) and i
 nix run github:nix-community/nixos-anywhere -- --flake .#<TARGET> root@<IP>
 ```
 
+### Installing into an existing partition
+
+`.#teammachine-part` builds `result/teammachine.img.zst` from `teammachine-part-base` (`hosts/teammachine-part/base.nix`): a small teammachine for the venue machines with the desktop, greeter, loomd, the contest firewall, printer, usbguard, remote desktop and `imaged-boot`, but no IDEs, language toolchains or other contestant tools. It is a single btrfs filesystem with label `teammachine`, for an existing host whose own GRUB chainloads it, and is written to an existing partition with plain `dd`; nothing outside the partition is touched. The full system is `teammachine-part` (`hosts/teammachine-part/configuration.nix`: the laptop's features from `hosts/teammachine/features.nix` without the laptop's NVIDIA GPU and PXE helper); both share `hosts/teammachine-part/common.nix`.
+
+```bash
+nix build .#teammachine-part
+zstd -dc result/teammachine.img.zst | sudo dd of=/dev/<PARTITION> bs=4M conv=fsync status=progress
+```
+
+No other partition on the machine may carry the filesystem label `teammachine`, because root is mounted by that label. The filesystem grows to the partition on boot, and identical store files are hardlinked. The image itself stores files uncompressed so the `.zst` compresses well; everything written afterwards is zstd-compressed by btrfs (`compress=zstd`). The host GRUB needs this entry once (on Ubuntu/Debian in `/etc/grub.d/40_custom`, then `update-grub`), with Secure Boot off. Make it the default entry (`GRUB_DEFAULT` in `/etc/default/grub`): every reboot of the teammachine, including a reset, goes through the host's menu.
+
+```
+menuentry "Teammachine" {
+    search --no-floppy --label teammachine --set=root
+    chainloader /boot/teammachine.efi
+}
+```
+
+Every `switch-to-configuration boot|switch` rebuilds `/boot/teammachine.efi` inside the partition as a unified kernel image (kernel, initrd and kernel parameters), so the host entry never changes. There is no generation menu, so rollback means `nixos-rebuild switch --rollback` from the running system.
+
+The filesystem holds the subvolumes `root` (`/`), `nix` (`/nix`), `boot` (`/boot`) and `persist` (`/persist`, the sops hostkey and the SSH host keys). On its first boot the machine takes a read-only snapshot `snapshots/root-pristine` of `root`. `teammachine-reset` (as root) swaps `root` for a fresh copy of that snapshot and reboots, so everything in `/` outside `/nix`, `/boot` and `/persist` (home directories, `/var`, logs) returns to the first boot. The installed system, its generations and the machine's keys stay. The replaced `root` is kept as `root-previous` until the next reset; to undo a reset, mount the top level (`mount -o subvolid=5 /dev/disk/by-label/teammachine /mnt`) and swap the two back.
+
+The built image holds no secrets. Without a hostkey the system boots and root SSH by key works, but the greeter, loom and the user passwords have no secrets. Push the teammachine-only key afterwards:
+
+```bash
+sops -d --extract '["teammachine-hostkey"]' secrets.yaml |
+  ssh root@<IP> 'install -D -m 0400 /dev/stdin /persist/sops/hostkey && systemctl reboot'
+```
+
+Afterwards the machine gets the full system either through imaged (`imaged-boot` kexecs into the imaged agent from geproxy) or as a deploy: `./scripts/install.sh teammachine-part root@<IP>` or fanout. A deploy copies the whole difference over the network.
+
 ### Deploying updates
 
 From the `scripts/` directory:
