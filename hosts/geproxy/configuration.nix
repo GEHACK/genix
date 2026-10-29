@@ -132,10 +132,8 @@ in
     ntp.enable = true;
     ddns.enable = true;
     cuproxy.enable = true;
-    imaged = {
-      enable = true;
-      multicastInterface = if atVenue then "eno1" else "br-contest";
-    };
+    imaged.enable = true;
+    multicastInterface = if atVenue then "eno1" else "br-contest";
     balloons.enable = true;
     devdocs.enable = true;
     cds.enable = true;
