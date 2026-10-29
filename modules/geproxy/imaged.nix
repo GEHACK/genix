@@ -15,7 +15,7 @@ in
   config = lib.mkIf config.geproxy.imaged.enable {
     services.imaged.server = {
       enable = true;
-      bindAddress = machineAddr;
+      bindAddress = "0.0.0.0:${toString imaged_port}";
       publicUrl = "http://${machineAddr}";
       webBindAddress = webAddr;
       multicastInterface = "br-contest";
