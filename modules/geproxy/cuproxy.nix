@@ -2,7 +2,6 @@
   pkgs,
   lib,
   config,
-  geproxy_ip,
   ...
 }:
 {
@@ -12,7 +11,7 @@
     services.cuproxy = {
       enable = true;
       logLevel = "info";
-      listen = "${geproxy_ip}:631";
+      listen = "0.0.0.0:631";
       printerTo = "10.0.0.10:631/ipp/print";
       printerTls = false;
       # printerUsername = "<corporate-user>";
