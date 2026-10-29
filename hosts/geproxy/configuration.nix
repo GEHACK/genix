@@ -1,4 +1,5 @@
 {
+  lib,
   dj_url,
   geproxy_ip,
   contest_subnet,
@@ -7,6 +8,8 @@
   ...
 }:
 let
+  atVenue = false;
+
   everywhere = {
     contest = [ 443 ];
     admin = [ 443 ];
@@ -23,9 +26,11 @@ in
   geproxy = {
     uplink = {
       interface = "eno1";
-      announce = true;
+      announce = atVenue;
       allow = [
         "ssh"
+      ]
+      ++ lib.optionals atVenue [
         "imaged"
         "printing"
         "ntp"
@@ -100,8 +105,8 @@ in
           expose = {
             contest = [ 443 ];
             admin = [ 443 ];
-            uplink = [ 443 ];
-          };
+          }
+          // lib.optionalAttrs atVenue { uplink = [ 443 ]; };
           tunnel = 443;
         };
         docs.expose = everywhere;
@@ -129,14 +134,14 @@ in
     cuproxy.enable = true;
     imaged = {
       enable = true;
-      multicastInterface = "eno1";
+      multicastInterface = if atVenue then "eno1" else "br-contest";
     };
     balloons.enable = true;
     devdocs.enable = true;
     cds.enable = true;
     cache = {
       enable = true;
-      host = "geproxy.local";
+      host = if atVenue then "geproxy.local" else geproxy_ip;
     };
   };
 
