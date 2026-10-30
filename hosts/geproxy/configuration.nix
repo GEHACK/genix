@@ -105,12 +105,18 @@ in
           tunnel = 443;
         };
         balloons.expose.admin = [ 443 ];
-        cds.expose = {
-          admin = [
-            443
-            8443
-          ];
-          contest = [ 8443 ];
+        cds = {
+          expose = everywhere // {
+            contest = [
+              443
+              8443
+            ];
+            admin = [
+              443
+              8443
+            ];
+          };
+          tunnel = 443;
         };
         imaged = {
           expose.admin = [ 443 ];
