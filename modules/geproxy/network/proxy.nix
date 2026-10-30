@@ -87,6 +87,9 @@ in
         grace_period 10s
         servers {
           protocols h1 h2
+          timeouts {
+            read_body_idle 24h
+          }
         }
       '';
       virtualHosts = lib.listToAttrs (
