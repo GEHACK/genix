@@ -13,14 +13,22 @@ let
   balloonsHook = lib.optionalString config.geproxy.balloons.enable "&&printjob;POST;http://127.0.0.1:8090/api/cuproxy/print-job";
 in
 {
-  options.geproxy.cuproxy.enable = lib.mkEnableOption "the print proxy, reachable as `printing`";
+  options.geproxy.cuproxy = {
+    enable = lib.mkEnableOption "the print proxy, reachable as `printing`";
+    printerTo = lib.mkOption {
+      type = lib.types.str;
+      default = "10.0.0.10:631/ipp/print";
+      example = "ipp.example.org:631/printers/queue";
+      description = "IPP host:port/path cuproxy forwards prints to.";
+    };
+  };
 
   config = lib.mkIf config.geproxy.cuproxy.enable {
     services.cuproxy = {
       enable = true;
       logLevel = "info";
       listen = "0.0.0.0:631";
-      printerTo = "10.0.0.10:631/ipp/print";
+      inherit (config.geproxy.cuproxy) printerTo;
       printerTls = false;
       # printerUsername = "<corporate-user>";
       settings = {
