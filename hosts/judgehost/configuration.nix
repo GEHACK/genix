@@ -12,6 +12,7 @@ _: {
   services.loomd.label = "judgehost";
   monitoring.enable = true;
   teammachine.netboot.imaged.enable = true;
+  teammachine.geproxy.discover = true;
 
   hardware.enableRedistributableFirmware = true;
   hardware.bluetooth.enable = false;
