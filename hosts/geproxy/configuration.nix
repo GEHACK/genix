@@ -8,7 +8,7 @@
   ...
 }:
 let
-  atVenue = false;
+  atVenue = true;
 
   everywhere = {
     contest = [ 443 ];
