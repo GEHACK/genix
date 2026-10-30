@@ -71,11 +71,11 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1793208012,
-        "narHash": "sha256-8umEkA12r79PeD8YtFmvkr7hu5OkbBxubIfUqFO4gwM=",
+        "lastModified": 1793368983,
+        "narHash": "sha256-f/wLr7XY0s7SLKMwvUNHjNGiJPZp1HnlsgSSUy5qAWg=",
         "owner": "GEHACK",
         "repo": "cuproxy",
-        "rev": "4d03a4214b558fb201b933db4996a343e1b6983b",
+        "rev": "713891c8b692fb91a16b67056ce18f416ffd037c",
         "type": "github"
       },
       "original": {
