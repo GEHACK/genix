@@ -21,6 +21,12 @@ in
       example = "ipp.example.org:631/printers/queue";
       description = "IPP host:port/path cuproxy forwards prints to.";
     };
+    printerUsername = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "s1234567";
+      description = "User every forwarded print is owned by on the target printer; null keeps the requesting user.";
+    };
   };
 
   config = lib.mkIf config.geproxy.cuproxy.enable {
@@ -28,7 +34,7 @@ in
       enable = true;
       logLevel = "info";
       listen = "0.0.0.0:631";
-      inherit (config.geproxy.cuproxy) printerTo;
+      inherit (config.geproxy.cuproxy) printerTo printerUsername;
       printerTls = false;
       # printerUsername = "<corporate-user>";
       settings = {
