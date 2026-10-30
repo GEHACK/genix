@@ -9,7 +9,8 @@ COPY ./chroot/flake.nix ./users/team/languages.nix ./
 RUN nix profile install .#default
 
 # Create the needed chroot directories properly
-RUN mkdir -p /etc /lib /lib64 /dev/pts
+RUN mkdir -p /etc /lib /lib64 /dev/pts && \
+    touch /etc/shadow
 
 # Symlink Nix binaries into standard PATH so chroot finds them
 RUN mkdir -p /usr/local/bin && \
