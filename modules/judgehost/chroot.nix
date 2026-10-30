@@ -47,4 +47,5 @@ runCommand "domjudge-chroot" { closure = closureInfo { rootPaths = [ tools ]; };
   ln -s usr/bin $out/bin
   cp ${passwd} $out/etc/passwd
   cp ${group} $out/etc/group
+  touch $out/etc/resolv.conf
 ''
