@@ -48,7 +48,7 @@ let
       domain-needed = true;
       bogus-priv = true;
 
-      bind-interfaces = true;
+      bind-dynamic = true;
       interface = net.bridge;
       except-interface = "lo";
       listen-address = net.address;

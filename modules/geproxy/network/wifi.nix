@@ -24,7 +24,7 @@ in
   };
 
   systemd.services.hostapd = lib.mkIf (accessPoints != { }) {
-    after = lib.mapAttrsToList (_: net: "${net.bridge}-netdev.service") accessPoints;
-    requires = lib.mapAttrsToList (_: net: "${net.bridge}-netdev.service") accessPoints;
+    after = lib.mapAttrsToList (_: net: "sys-subsystem-net-devices-${net.bridge}.device") accessPoints;
+    bindsTo = lib.mapAttrsToList (_: net: "sys-subsystem-net-devices-${net.bridge}.device") accessPoints;
   };
 }

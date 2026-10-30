@@ -6,6 +6,7 @@ let
 in
 {
   networking = {
+    useNetworkd = true;
     useDHCP = false;
     bridges = lib.mapAttrs' (
       _: net: lib.nameValuePair net.bridge { inherit (net) interfaces; }
@@ -26,6 +27,17 @@ in
       // {
         ${uplink.interface}.useDHCP = true;
       };
+  };
+
+  systemd.network = {
+    wait-online.anyInterface = true;
+    networks = lib.mapAttrs' (
+      _: net:
+      lib.nameValuePair "40-${net.bridge}" {
+        networkConfig.ConfigureWithoutCarrier = true;
+        linkConfig.RequiredForOnline = "no";
+      }
+    ) networks;
   };
 
   boot.kernel.sysctl = {
