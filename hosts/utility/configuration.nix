@@ -8,6 +8,7 @@ _: {
   networking.hostName = "utility";
 
   services.loomd.label = "utility";
+  monitoring.enable = true;
 
   hardware.enableRedistributableFirmware = true;
 

@@ -26,6 +26,7 @@ in
     ./fanout.nix
     ./imaged.nix
     ./loom.nix
+    ./monitoring.nix
     ./network
     ./ntp.nix
     ./tunnel.nix
