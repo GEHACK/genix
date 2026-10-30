@@ -25,9 +25,5 @@ in
 
   systemd.services.hostapd = lib.mkIf (accessPoints != { }) {
     after = [ "systemd-networkd.service" ];
-    serviceConfig = {
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
   };
 }
