@@ -3,12 +3,15 @@ _: {
     ./disko.nix
     ../../modules
     ../../modules/utility
+    ../../modules/teammachine/geproxy.nix
+    ../../modules/teammachine/netboot.nix
   ];
 
   networking.hostName = "utility";
 
   services.loomd.label = "utility";
   monitoring.enable = true;
+  teammachine.netboot.imaged.enable = true;
 
   hardware.enableRedistributableFirmware = true;
 

@@ -6,6 +6,4 @@
     description = "age key that decrypts secrets.yaml";
     perMachine = false;
   };
-
-  boot.growPartition = false;
 }

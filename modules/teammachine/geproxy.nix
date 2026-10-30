@@ -26,10 +26,12 @@ let
         exit 1
       fi
 
-      nft -f - <<EOF
+      if nft list set inet filter geproxy >/dev/null 2>&1; then
+        nft -f - <<EOF
       flush set inet filter geproxy
       add element inet filter geproxy { $address }
       EOF
+      fi
 
       conf=/run/systemd/resolved.conf.d/geproxy.conf
       wanted="$(printf '[Resolve]\nDNS=%s\nDomains=~${domain}' "$address")"
@@ -72,6 +74,8 @@ in
   };
 
   config = lib.mkIf cfg.discover {
+    networking.firewall.allowedUDPPorts = [ 5353 ];
+
     services.resolved = {
       enable = true;
       settings.Resolve = {

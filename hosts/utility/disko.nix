@@ -4,7 +4,7 @@
       my-disk = {
         device = "/dev/nvme0n1";
         type = "disk";
-        imageSize = "101G";
+        imageSize = "16G";
         content = {
           type = "gpt";
           partitions = {
@@ -19,7 +19,7 @@
               };
             };
             root = {
-              size = "100G";
+              size = "100%";
               content = {
                 type = "filesystem";
                 format = "ext4";
