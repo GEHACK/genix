@@ -60,7 +60,14 @@ let
           ${lib.optionalString site.login "request_header -X-Proxy-Authorized"}
           ${site.extraConfig}
           ${lib.optionalString site.login loginCheck}
-          reverse_proxy ${site.upstream} ${lib.optionalString site.insecureUpstream "{\ntransport http {\ntls_insecure_skip_verify\n}\n}"}
+          reverse_proxy ${site.upstream} {
+            header_up Host {hostport}
+            ${lib.optionalString site.insecureUpstream ''
+              transport http {
+                tls_insecure_skip_verify
+              }
+            ''}
+          }
         }
       '';
     };
