@@ -1,5 +1,6 @@
 {
   lib,
+  pkgs,
   config,
   loom_url,
   ...
@@ -29,6 +30,8 @@ in
     ./ntp.nix
     ./tunnel.nix
   ];
+
+  environment.systemPackages = [ pkgs.waypipe ];
 
   sops.secrets.fanout-ssh-key = {
     owner = "deploy";
