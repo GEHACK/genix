@@ -1,5 +1,4 @@
 {
-  dj_url,
   geproxy_ip,
   contest_subnet,
   admin_ip,
@@ -87,11 +86,7 @@ in
     proxy = {
       authentik = "https://authentik.gewis.nl";
       sites = {
-        judge = {
-          upstream = dj_url;
-          rewriteContest = true;
-          expose = everywhere;
-        };
+        judge.expose = everywhere;
         loom = {
           expose = {
             contest = [ 443 ];
