@@ -23,7 +23,7 @@ graph LR
 
 Four layers, in evaluation order:
 
-1. **`flake.nix`** — declares contest-wide facts as `specialArgs`: `dj_url`, `loom_url`, `geproxy_ip = "10.0.0.1"`, `contest_subnet = "10.0.0.0/24"`, `admin_ip = "10.0.1.1"`, `admin_subnet = "10.0.1.0/24"`, `imaged_port = 8080`. Builds each system as `commonModules ++ <role-specific flake-input modules> ++ mkHomeManager {...} ++ ./hosts/<host>/configuration.nix`.
+1. **`flake.nix`** — declares contest-wide facts as `specialArgs`: `dj_url` (judgehosts, loom, balloons, CDS), `team_dj_url` (greeter, Firefox, `submit` on the teammachines), `loom_url`, `geproxy_ip = "10.0.0.1"`, `contest_subnet = "10.0.0.0/24"`, `admin_ip = "10.0.1.1"`, `admin_subnet = "10.0.1.0/24"`, `imaged_port = 8080`. Builds each system as `commonModules ++ <role-specific flake-input modules> ++ mkHomeManager {...} ++ ./hosts/<host>/configuration.nix`.
 2. **`hosts/<host>/configuration.nix`** — the *only* thing that imports `modules/`. Contains just `imports = [ ./disko.nix ../../modules ../../modules/<role> ];`, hardware facts, and a declarative toggle block. No logic.
 3. **`modules/`** — `modules/default.nix` is a barrel imported by every host; `modules/<role>/default.nix` is a barrel of single-concern files.
 4. **`users/`** — **home-manager modules only**, wired in `flake.nix` via `mkHomeManager`. They never contain `users.users.*`.

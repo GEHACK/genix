@@ -1,6 +1,6 @@
 {
   config,
-  dj_url,
+  team_dj_url,
   lib,
   ...
 }:
@@ -44,7 +44,7 @@
       Bookmarks = [
         {
           Title = "DOMjudge";
-          URL = dj_url;
+          URL = team_dj_url;
           Placement = "toolbar";
         }
         {
@@ -55,7 +55,7 @@
       ];
 
       Homepage = {
-        URL = dj_url;
+        URL = team_dj_url;
         StartPage = "homepage";
         Locked = true;
       };

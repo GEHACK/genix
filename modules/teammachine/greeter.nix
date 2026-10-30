@@ -1,4 +1,4 @@
-{ config, dj_url, ... }:
+{ config, team_dj_url, ... }:
 let
   greeter-user = config.services.greetd.settings.default_session.user;
 in
@@ -9,7 +9,7 @@ in
     enable = true;
     logLevel = "debug";
     backgroundSource = ../../assets/wallpaper.jpeg;
-    url = dj_url;
+    url = team_dj_url;
     username = "team";
     password.command = "cat ${config.sops.secrets.password.path}";
     chain.command = "cat ${config.sops.secrets.greeter-chain.path}";

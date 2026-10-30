@@ -71,7 +71,8 @@
       ...
     }:
     let
-      dj_url = "https://judge.bapc.eu";
+      dj_url = "https://judge.gehack.nl";
+      team_dj_url = "https://judge.bapc.eu";
       loom_url = "https://loom.gehack.nl";
       geproxy_ip = "10.0.0.1";
       contest_subnet = "10.0.0.0/24";
@@ -84,6 +85,7 @@
       specialArgs = {
         inherit
           dj_url
+          team_dj_url
           loom_url
           geproxy_ip
           contest_subnet
@@ -100,6 +102,7 @@
         # Live demo image points at the public DOMjudge demo instance instead of
         # the contest judge (judge.gehack.nl is only reachable on the contest network).
         dj_url = "https://www.domjudge.org/demoweb/";
+        team_dj_url = "https://www.domjudge.org/demoweb/";
       };
 
       packageOverlays =

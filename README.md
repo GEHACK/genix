@@ -35,7 +35,7 @@ The primary machine used by contestants during a competition.
 **Other features:**
 - GNOME desktop, no GDM — uses [`loom-greeter`](https://github.com/luukblankenstijn/loom) via greetd (from the loom flake input)
 - [`loomd`](https://github.com/luukblankenstijn/loom) service connects to the Loom contest platform for team management
-- [`submit`](https://github.com/DOMjudge/DOMjudge) CLI from the [`domjudge-submit`](https://github.com/GEHACK/domjudge-submit-nix) flake input, pre-configured to submit to DOMjudge (URL set via `dj_url` specialArgs in `flake.nix`)
+- [`submit`](https://github.com/DOMjudge/DOMjudge) CLI from the [`domjudge-submit`](https://github.com/GEHACK/domjudge-submit-nix) flake input, pre-configured to submit to DOMjudge (URL set via `team_dj_url` specialArgs in `flake.nix`)
 - [Devdocs](github.com/GEHACK/devdocs) served locally via Docker at `http://docs` (port 80)
 - Printing via CUPS, pre-configured to IPP printer on geproxy (`10.0.0.1:631`)
 - Webcam HTTP stream on port 8080 via VLC (`webcamstream.nix`) - by default disabled
@@ -79,7 +79,7 @@ Every service is behind a `geproxy.<service>.enable` toggle in the host file: `n
 | Site | Upstream | admin | contest | uplink | tunnel |
 |------|----------|-------|---------|--------|--------|
 | `judge.gehack.nl` | DOMjudge, `__CONTEST__` rewritten to `contest_id` | 443 | 443 | 443 | 443 |
-| `judge.bapc.eu` | the same DOMjudge, certificate from Caddy over the tunnel; `dj_url` | 443 | 443 | 443 | 443 |
+| `judge.bapc.eu` | the same DOMjudge, certificate from Caddy over the tunnel; `team_dj_url`, what the teammachines use | 443 | 443 | 443 | 443 |
 | `loom.gehack.nl` | loom-backend, behind the authentik login except station gRPC and `/api` | 443 | 443 | — | 443 |
 | `docs.gehack.nl` | DevDocs container | 443 | 443 | 443 | — |
 | `docs.bapc.eu` | the same DevDocs, certificate from Caddy over the tunnel; the Firefox bookmark | 443 | 443 | 443 | 443 |
