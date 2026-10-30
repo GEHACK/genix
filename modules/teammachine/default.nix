@@ -6,7 +6,7 @@ _: {
     ./greeter.nix
     ./languages.nix
     ./locale.nix
-    ./loom.nix
+    ./station.nix
     ./networking.nix
     ./printer.nix
     ./netboot.nix

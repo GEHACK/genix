@@ -100,6 +100,14 @@ in
           tunnel = 443;
         };
         docs.expose = everywhere;
+        metrics.expose = {
+          contest = [ 443 ];
+          admin = [ 443 ];
+        };
+        grafana = {
+          expose.admin = [ 443 ];
+          tunnel = 443;
+        };
         balloons.expose.admin = [ 443 ];
         cds.expose = {
           admin = [
@@ -119,6 +127,7 @@ in
 
     loomDns.enable = true;
     loom.enable = true;
+    monitoring.enable = true;
     ntp.enable = true;
     ddns.enable = true;
     cuproxy.enable = true;
