@@ -1,4 +1,7 @@
 { lib, config, ... }:
+let
+  upstream = "http://127.0.0.1:3002";
+in
 {
   options.geproxy.devdocs.enable = lib.mkEnableOption "DevDocs as proxy site `docs`";
 
@@ -13,10 +16,14 @@
           "--pull=always"
         ];
         ports = [ "127.0.0.1:3002:9292" ];
-        environment.PERMITTED_HOSTS = config.geproxy.proxy.sites.docs.host;
+        environment.PERMITTED_HOSTS = lib.concatStringsSep "," (
+          lib.mapAttrsToList (_: site: site.host) (
+            lib.filterAttrs (_: site: site.upstream == upstream) config.geproxy.proxy.sites
+          )
+        );
       };
     };
 
-    geproxy.proxy.sites.docs.upstream = "http://127.0.0.1:3002";
+    geproxy.proxy.sites.docs = { inherit upstream; };
   };
 }

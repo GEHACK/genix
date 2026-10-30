@@ -71,7 +71,7 @@
       ...
     }:
     let
-      dj_url = "https://judge.gehack.nl";
+      dj_url = "https://judge.bapc.eu";
       loom_url = "https://loom.gehack.nl";
       geproxy_ip = "10.0.0.1";
       contest_subnet = "10.0.0.0/24";

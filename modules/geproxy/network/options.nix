@@ -137,6 +137,20 @@ let
 
         insecureUpstream = mkEnableOption "skipping TLS verification of the upstream";
 
+        certificate = mkOption {
+          type = types.enum [
+            "dns"
+            "caddy"
+          ];
+          default = "dns";
+          description = ''
+            Where the certificate for `host` comes from. `dns` puts it on the shared certificate
+            issued over Cloudflare DNS, which only covers zones the `cloudflare-token` controls.
+            `caddy` lets Caddy obtain it over TLS-ALPN on 443, which needs `tunnel`, since only
+            the tunnel lets the CA reach geproxy for a name in someone else's zone.
+          '';
+        };
+
         expose = mkOption {
           type = types.attrsOf (types.listOf types.port);
           default = { };

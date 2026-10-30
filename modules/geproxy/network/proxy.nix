@@ -8,7 +8,9 @@ let
   inherit (config.geproxy) networks proxy;
 
   sites = lib.filterAttrs (_: site: site.expose != { } || site.tunnel != null) proxy.sites;
-  hosts = lib.unique (lib.mapAttrsToList (_: site: site.host) sites);
+  hosts = lib.unique (
+    lib.mapAttrsToList (_: site: site.host) (lib.filterAttrs (_: site: site.certificate == "dns") sites)
+  );
 
   zonesServing =
     port: site: lib.attrNames (lib.filterAttrs (_: ports: lib.elem port ports) site.expose);
@@ -52,7 +54,7 @@ let
   vhost = site: port: {
     name = "${site.host}:${toString port}";
     value = {
-      useACMEHost = "gehack";
+      useACMEHost = if site.certificate == "dns" then "gehack" else null;
       extraConfig = ''
         route {
           ${access port site}
@@ -90,6 +92,7 @@ in
 
     services.caddy = {
       enable = true;
+      email = config.security.acme.defaults.email;
       globalConfig = ''
         grace_period 10s
         servers {

@@ -49,7 +49,7 @@
         }
         {
           Title = "DevDocs";
-          URL = "https://docs.gehack.nl";
+          URL = "https://docs.bapc.eu";
           Placement = "toolbar";
         }
       ];

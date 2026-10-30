@@ -78,11 +78,13 @@ Every service is behind a `geproxy.<service>.enable` toggle in the host file: `n
 
 | Site | Upstream | admin | contest | uplink | tunnel |
 |------|----------|-------|---------|--------|--------|
-| `judge.gehack.nl` | DOMjudge, `__CONTEST__` rewritten to `contest_id` | 443 | 443 | 443 | — |
+| `judge.gehack.nl` | DOMjudge, `__CONTEST__` rewritten to `contest_id` | 443 | 443 | 443 | 443 |
+| `judge.bapc.eu` | the same DOMjudge, certificate from Caddy over the tunnel; `dj_url` | 443 | 443 | 443 | 443 |
 | `loom.gehack.nl` | loom-backend, behind the authentik login except station gRPC and `/api` | 443 | 443 | — | 443 |
 | `docs.gehack.nl` | DevDocs container | 443 | 443 | 443 | — |
+| `docs.bapc.eu` | the same DevDocs, certificate from Caddy over the tunnel; the Firefox bookmark | 443 | 443 | 443 | 443 |
 | `balloons.gehack.nl` | balloons dispatcher | 443 | — | — | — |
-| `cds.gehack.nl` | CDS at `cds.local:8443` over mDNS (`geproxy.cds.url`), certificate not verified | 443, 8443 | 8443 | — | — |
+| `cds.gehack.nl` | CDS at `10.0.1.155:8443` (`geproxy.cds.url`), certificate not verified | 443, 8443 | 443, 8443 | 443 | 443 |
 | `imaged.gehack.nl` | imaged UI, behind the authentik login | 443 | — | — | 443 |
 
 Teammachines drop 8443 outbound, so on the contest network only the utility machine reaches the CDS.

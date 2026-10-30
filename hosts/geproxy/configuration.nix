@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   geproxy_ip,
   contest_subnet,
@@ -104,6 +105,15 @@ in
           insecureUpstream = true;
           tunnel = 443;
         };
+        judge-bapc = {
+          host = "judge.bapc.eu";
+          inherit (config.geproxy.proxy.sites.judge) upstream;
+          rewriteContest = true;
+          insecureUpstream = true;
+          certificate = "caddy";
+          expose = everywhere;
+          tunnel = 443;
+        };
         loom = {
           expose = {
             contest = [ 443 ];
@@ -113,6 +123,13 @@ in
           tunnel = 443;
         };
         docs.expose = everywhere;
+        docs-bapc = {
+          host = "docs.bapc.eu";
+          inherit (config.geproxy.proxy.sites.docs) upstream;
+          certificate = "caddy";
+          expose = everywhere;
+          tunnel = 443;
+        };
         metrics.expose = {
           contest = [ 443 ];
           admin = [ 443 ];

@@ -87,7 +87,7 @@ submit-and-judge flow end to end.
   after a reboot.
 - **No contest printer, screen streaming or USB lockdown.** Those only exist on real team
   machines at a contest.
-- **The DevDocs bookmark** points at the contest's offline mirror (`docs.gehack.nl`); away
+- **The DevDocs bookmark** points at the contest's offline mirror (`docs.bapc.eu`); away
   from a contest, use [devdocs.io](https://devdocs.io/) instead.
 - **Hostname** is `gehack-iso`.
 - **This is NixOS, not Debian/Ubuntu.** Software is managed declaratively and everything you

@@ -145,7 +145,7 @@ $ lp solution.cpp
 
 | | |
 |---|---|
-| Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror at `https://docs.gehack.nl` (also on the Firefox bookmarks toolbar) — no internet needed |
+| Offline DevDocs | Full [DevDocs](https://devdocs.io/) mirror at `https://docs.bapc.eu` (also on the Firefox bookmarks toolbar) — no internet needed |
 | Games | GNOME games (Sudoku, Mines, Mahjongg…), SuperTux, SuperTuxKart, Neverball, plus terminal classics |
 
 ## Good to know

@@ -9,7 +9,10 @@ let
   cfg = config.teammachine.geproxy;
 
   name = "geproxy.local";
-  domain = "gehack.nl";
+  domains = [
+    "gehack.nl"
+    "bapc.eu"
+  ];
 
   discover = pkgs.writeShellApplication {
     name = "geproxy-discover";
@@ -41,7 +44,7 @@ let
       fi
 
       conf=/run/systemd/resolved.conf.d/geproxy.conf
-      wanted="$(printf '[Resolve]\nDNS=%s\nDomains=~${domain}' "$address")"
+      wanted="$(printf '[Resolve]\nDNS=%s\nDomains=%s' "$address" "${lib.concatMapStringsSep " " (domain: "~${domain}") domains}")"
       if [[ "$(cat "$conf" 2>/dev/null)" != "$wanted" ]]; then
         mkdir -p "$(dirname "$conf")"
         printf '%s\n' "$wanted" > "$conf"
@@ -55,7 +58,7 @@ in
   options.teammachine.geproxy = {
     discover = lib.mkEnableOption ''
       finding geproxy as `${name}` over mDNS instead of at its fixed contest
-      address. The firewall follows the address, and DNS for `${domain}` goes to it
+      address. The firewall follows the address, and DNS for ${lib.concatMapStringsSep " and " (domain: "`${domain}`") domains} goes to it
     '';
 
     trigger = lib.mkOption {
