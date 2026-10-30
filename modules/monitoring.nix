@@ -20,10 +20,9 @@ in
     };
 
     services.alloy.enable = true;
-    systemd.services.alloy.serviceConfig = {
-      LoadCredential = [ "token:${config.sops.secrets."monitoring.token".path}" ];
-      TimeoutStopSec = "5s";
-    };
+    systemd.services.alloy.serviceConfig.LoadCredential = [
+      "token:${config.sops.secrets."monitoring.token".path}"
+    ];
 
     environment.etc."alloy/config.alloy".text = ''
       local.file "machine_id" {
