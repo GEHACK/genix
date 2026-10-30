@@ -23,6 +23,14 @@ let
         sops --encrypt --age "$(age-keygen -y $out/key.txt)" plain.yaml > $out/secrets.yaml
       '';
 
+  upstreamCert =
+    pkgs.runCommand "geproxy-network-test-upstream-cert" { nativeBuildInputs = [ pkgs.openssl ]; }
+      ''
+        mkdir -p $out
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj /CN=${upstreamIp} \
+          -keyout $out/key.pem -out $out/cert.pem
+      '';
+
   staticAddress = iface: address: {
     networking.interfaces.${iface}.ipv4.addresses = lib.mkForce [
       {
@@ -118,7 +126,8 @@ pkgs.testers.runNixOSTest {
 
         proxy.sites = {
           judge = {
-            upstream = "http://${upstreamIp}";
+            upstream = "https://${upstreamIp}";
+            insecureUpstream = true;
             rewriteContest = true;
             expose = {
               contest = [ 443 ];
@@ -156,7 +165,10 @@ pkgs.testers.runNixOSTest {
         enable = true;
         virtualHosts.default = {
           default = true;
-          locations."/".return = "200 'upstream saw $request_uri'";
+          addSSL = true;
+          sslCertificate = upstreamCert + "/cert.pem";
+          sslCertificateKey = upstreamCert + "/key.pem";
+          locations."/".return = "200 'upstream saw $request_uri on $host'";
         };
       };
       services.dnsmasq = {
@@ -196,6 +208,10 @@ pkgs.testers.runNixOSTest {
     with subtest("the contest id is rewritten into the upstream path"):
       body = contest.succeed("curl -sk https://judge.gehack.nl/api/__CONTEST__/x")
       assert "upstream saw /api/${contestId}/x" in body, body
+
+    with subtest("the upstream sees the host the client asked for"):
+      body = contest.succeed("curl -sk https://judge.gehack.nl/")
+      assert "on judge.gehack.nl" in body, body
 
     with subtest("plain http redirects to https"):
       code = status(contest, "http://judge.gehack.nl/")

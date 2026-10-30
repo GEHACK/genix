@@ -22,4 +22,5 @@ Applies to `modules/geproxy/` (geproxy host only) and `modules/geproxy/network/`
 - `internet = "switchable"` creates empty chain `<net>_inet` in table `inet filter`; `network/tools.nix` hard-codes `inet filter` and `<net>_inet` in `enable-internet`/`disable-internet`. Rename the table or chain in both files.
 - A deploy that changes the nftables unit recreates every declared table (`flushRuleset = false`), so each `<net>_inet` is empty again: internet is off until `enable-internet` is rerun. A deploy that leaves the unit unchanged keeps the toggle.
 - Never name a network `uplink`: the name is the uplink's zone in `expose` and its dnsmasq instance under `uplink.announce`.
+- Every site sends the client's `Host` to its upstream (`header_up Host {hostport}` in `network/proxy.nix`), HTTPS upstreams included; Caddy's default for `https://` is the upstream address, which made DOMjudge redirect browsers to its IP. Removing it breaks `judge` and `cds`.
 - Not covered by the test, so only the toplevel eval checks them: `allow`/`ports`, `pxe`, `wifi`, `tunnel`, `login`/`proxy.authentik`, `domain`, `dns.forward`, `dhcp.reservations`, `uplink.announce`, `insecureUpstream`.
