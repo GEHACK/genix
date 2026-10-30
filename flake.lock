@@ -304,11 +304,11 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1793309496,
-        "narHash": "sha256-P2cPcOuDY+Ao0t0zcGD4vll+5qQnFaNXvALzrr7ShBY=",
+        "lastModified": 1793388866,
+        "narHash": "sha256-+DgeN91/8bbo808/sVbwiBViqvCsW09PyZVEJSU+fUE=",
         "owner": "LuukBlankenstijn",
         "repo": "loom",
-        "rev": "f2e36d94b313a0944b10bdaba911ce62d9527d63",
+        "rev": "0fa329d445fe441c05726e0da9dda8abc99ff3cd",
         "type": "github"
       },
       "original": {
