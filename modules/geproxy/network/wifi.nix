@@ -24,7 +24,10 @@ in
   };
 
   systemd.services.hostapd = lib.mkIf (accessPoints != { }) {
-    after = lib.mapAttrsToList (_: net: "sys-subsystem-net-devices-${net.bridge}.device") accessPoints;
-    bindsTo = lib.mapAttrsToList (_: net: "sys-subsystem-net-devices-${net.bridge}.device") accessPoints;
+    after = [ "systemd-networkd.service" ];
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
   };
 }
