@@ -3,11 +3,10 @@
   lib,
   pkgs,
   dj_url,
-  contestToolchain,
   ...
 }:
 let
-  version = "bleeding-gehack.1";
+  version = "bleeding-gehack.3";
 
   # Pinned by manifest digest so a re-pushed tag can never change what we judge on.
   # Refresh both fields together with:
@@ -15,8 +14,8 @@ let
   #     --arch amd64 --os linux
   image = pkgs.dockerTools.pullImage {
     imageName = "ghcr.io/gehack/judgehost";
-    imageDigest = "sha256:9f4c60c06f62ac04d2eb89474e3b79e10d62b0defd3c3976bb147dee08a0f920";
-    hash = "sha256-+RnZ+BFC91Yc+12ZFdqoySndW8MSfVWX/mbheO60Fu0=";
+    imageDigest = "sha256:5ae216ed437fccd360509926ba781753fa93fd9f50439db0082b81c1111895b4";
+    hash = "sha256-JhJnchK53M1hSYUvc3RCSKQY2UohrLYera++1VmivcU=";
     finalImageName = "ghcr.io/gehack/judgehost";
     finalImageTag = version;
     os = "linux";
@@ -24,15 +23,6 @@ let
   };
 
   runUid = core: 62860 + core;
-
-  resolvConf = core: "/run/judgehost/resolv.conf.${toString core}";
-
-  chroot = pkgs.callPackage ./chroot.nix {
-    inherit contestToolchain;
-    runUsers = lib.listToAttrs (
-      map (core: lib.nameValuePair "domjudge-run-${toString core}" (runUid core)) config.judgehost.cores
-    );
-  };
 
   # Requires= as well as After=, so a failed prerequisite keeps the daemons from
   # registering under a wrong name or judging on an untuned CPU.
@@ -63,9 +53,6 @@ let
       # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
       volumes = [
         "/sys/fs/cgroup:/sys/fs/cgroup"
-        "${chroot}:/chroot/domjudge:ro"
-        "${chroot}/nix:/nix:ro"
-        "${resolvConf core}:/chroot/domjudge/etc/resolv.conf"
       ];
       extraOptions = [
         "--privileged"
@@ -104,8 +91,6 @@ in
 
   systemd = {
     services = lib.listToAttrs (map unit config.judgehost.cores);
-
-    tmpfiles.rules = map (core: "f ${resolvConf core} 0644 root root -") config.judgehost.cores;
 
     # Keeps systemd realising the cpuset controller in the root cgroup, which
     # runguard needs to write cpuset.cpus and which a daemon-reload could otherwise

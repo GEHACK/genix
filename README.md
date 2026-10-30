@@ -167,7 +167,7 @@ Afterwards the machine gets the full system either through imaged (`imaged-boot`
 
 #### Judgehost
 
-`.#judgehost-part` (`hosts/judgehost-part/configuration.nix`) is the same judgehost as `.#judgehost`, in the same partition layout. There is no small base: the build is the full judgehost with the judging chroot and the judgehost container image, still named `result/teammachine.img.zst`, and it is written and chainloaded exactly as above. Its secrets are in `secrets-judgehost.yaml`, so it gets its own key:
+`.#judgehost-part` (`hosts/judgehost-part/configuration.nix`) is the same judgehost as `.#judgehost`, in the same partition layout. There is no small base: the build is the full judgehost with the judgehost container image, still named `result/teammachine.img.zst`, and it is written and chainloaded exactly as above. Its secrets are in `secrets-judgehost.yaml`, so it gets its own key:
 
 ```bash
 nix build .#judgehost-part
