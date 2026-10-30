@@ -123,12 +123,18 @@ in
           tunnel = 443;
         };
         balloons.expose.admin = [ 443 ];
-        cds.expose = {
-          admin = [
-            443
-            8443
-          ];
-          contest = [ 8443 ];
+        cds = {
+          expose = everywhere // {
+            contest = [
+              443
+              8443
+            ];
+            admin = [
+              443
+              8443
+            ];
+          };
+          tunnel = 443;
         };
         imaged = {
           expose.admin = [ 443 ];
@@ -155,7 +161,10 @@ in
     multicastInterface = if atVenue then "eno1" else "br-contest";
     balloons.enable = true;
     devdocs.enable = true;
-    cds.enable = true;
+    cds = {
+      enable = true;
+      url = "https://10.0.1.155:8443";
+    };
     cache = {
       enable = true;
       host = if atVenue then "geproxy.local" else geproxy_ip;
