@@ -1,6 +1,5 @@
 {
   lib,
-  dj_url,
   geproxy_ip,
   contest_subnet,
   admin_ip,
@@ -101,9 +100,9 @@ in
       authentik = "https://authentik.gewis.nl";
       sites = {
         judge = {
-          upstream = dj_url;
-          rewriteContest = true;
           expose = everywhere;
+          insecureUpstream = true;
+          tunnel = 443;
         };
         loom = {
           expose = {
@@ -139,6 +138,8 @@ in
     };
 
     tunnel.enable = true;
+
+    judge.upstream = "https://10.0.1.133";
 
     loomDns.enable = true;
     loom.enable = true;

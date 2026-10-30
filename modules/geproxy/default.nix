@@ -25,6 +25,7 @@ in
     ./devdocs.nix
     ./fanout.nix
     ./imaged.nix
+    ./judge.nix
     ./loom.nix
     ./monitoring.nix
     ./network
