@@ -3,12 +3,15 @@ _: {
     ./disko.nix
     ../../modules
     ../../modules/judgehost
+    ../../modules/teammachine/geproxy.nix
+    ../../modules/teammachine/netboot.nix
   ];
 
   judgehost.cores = [ 2 ];
 
   services.loomd.label = "judgehost";
   monitoring.enable = true;
+  teammachine.netboot.imaged.enable = true;
 
   hardware.enableRedistributableFirmware = true;
   hardware.bluetooth.enable = false;
