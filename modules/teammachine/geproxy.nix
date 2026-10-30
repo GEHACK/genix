@@ -20,6 +20,13 @@ let
       systemd
     ];
     text = ''
+      for dev in /sys/class/net/*; do
+        case "$(readlink -f "$dev")" in
+        */devices/virtual/*) continue ;;
+        esac
+        resolvectl mdns "$(basename "$dev")" resolve || true
+      done
+
       address="$(resolvectl query --legend=no -4 -p mdns ${name} 2>/dev/null | awk 'NR == 1 { print $2 }' || true)"
       if [[ ! "$address" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "geproxy-discover: ${name} does not resolve over mDNS" >&2
