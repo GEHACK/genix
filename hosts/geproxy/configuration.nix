@@ -145,7 +145,10 @@ in
     monitoring.enable = true;
     ntp.enable = true;
     ddns.enable = true;
-    cuproxy.enable = true;
+    cuproxy = {
+      enable = true;
+      printerTo = "ipp.liacs.nl:631/printers/lu-card";
+    };
     imaged.enable = true;
     multicastInterface = if atVenue then "eno1" else "br-contest";
     balloons.enable = true;
@@ -158,6 +161,8 @@ in
   };
 
   networking.hostName = "geproxy";
+
+  services.cuproxy.printerUsername = "s4024699";
 
   home-manager.users.gehack.teammachine.neovim.enable = true;
 
