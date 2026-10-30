@@ -25,6 +25,8 @@ let
 
   runUid = core: 62860 + core;
 
+  resolvConf = core: "/run/judgehost/resolv.conf.${toString core}";
+
   chroot = pkgs.callPackage ./chroot.nix {
     inherit contestToolchain;
     runUsers = lib.listToAttrs (
@@ -63,6 +65,7 @@ let
         "/sys/fs/cgroup:/sys/fs/cgroup"
         "${chroot}:/chroot/domjudge:ro"
         "${chroot}/nix:/nix:ro"
+        "${resolvConf core}:/chroot/domjudge/etc/resolv.conf"
       ];
       extraOptions = [
         "--privileged"
@@ -101,6 +104,8 @@ in
 
   systemd = {
     services = lib.listToAttrs (map unit config.judgehost.cores);
+
+    tmpfiles.rules = map (core: "f ${resolvConf core} 0644 root root -") config.judgehost.cores;
 
     # Keeps systemd realising the cpuset controller in the root cgroup, which
     # runguard needs to write cpuset.cpus and which a daemon-reload could otherwise

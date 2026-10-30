@@ -7,6 +7,7 @@
     ./judgedaemon.nix
     ./networking.nix
     ./quiet.nix
+    ./users.nix
   ];
 
   options.judgehost.cores = lib.mkOption {
