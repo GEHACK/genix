@@ -70,35 +70,7 @@ in
     imaged.enable = lib.mkEnableOption "imaged kexec helper (kexec into imaged kernel)";
   };
 
-  config = {
-    environment.systemPackages =
-      lib.optional cfg.pxe.enable pxeReboot ++ lib.optional cfg.imaged.enable imagedBoot;
-
-    systemd.services.nouveau-release = lib.mkIf cfg.imaged.enable {
-      description = "Release the GPUs from nouveau after the display manager, so GSP is torn down before a kexec";
-      wantedBy = [ "multi-user.target" ];
-      before = [
-        "display-manager.service"
-        "systemd-user-sessions.service"
-      ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        ExecStart = "${pkgs.coreutils}/bin/true";
-        ExecStop = pkgs.writeShellScript "nouveau-release" ''
-          ${lib.optionalString config.boot.plymouth.enable ''
-            if ${config.boot.plymouth.package}/bin/plymouth --ping; then
-              ${config.boot.plymouth.package}/bin/plymouth quit
-            fi
-          ''}
-          for device in /sys/bus/pci/drivers/nouveau/0000:*; do
-            if [ -e "$device" ]; then
-              echo "''${device##*/}" > /sys/bus/pci/drivers/nouveau/unbind
-            fi
-          done
-        '';
-      };
-    };
-  };
+  config.environment.systemPackages =
+    lib.optional cfg.pxe.enable pxeReboot ++ lib.optional cfg.imaged.enable imagedBoot;
 
 }
