@@ -34,10 +34,16 @@ in
     networks = lib.mapAttrs' (
       _: net:
       lib.nameValuePair "40-${net.bridge}" {
-        networkConfig.ConfigureWithoutCarrier = true;
+        networkConfig = {
+          ConfigureWithoutCarrier = true;
+          MulticastDNS = true;
+        };
         linkConfig.RequiredForOnline = "no";
       }
-    ) networks;
+    ) networks
+    // {
+      "40-${uplink.interface}".networkConfig.MulticastDNS = true;
+    };
   };
 
   boot.kernel.sysctl = {
