@@ -1,0 +1,17 @@
+FROM docker.io/nixos/nix
+
+ENV NIX_CONFIG="experimental-features = nix-command flakes"
+ENV PATH="/root/.nix-profile/bin:${PATH}"
+
+WORKDIR /install
+COPY ./chroot/flake.nix ./users/team/languages.nix ./
+
+RUN nix profile install .#default
+
+# Create the needed chroot directories properly
+RUN mkdir -p /etc /lib /dev/pts
+
+# Symlink Nix binaries into standard PATH so chroot finds them
+RUN mkdir -p /usr/local/bin && \
+    ln -s /nix/var/nix/profiles/default/bin/* /usr/local/bin/ && \
+    ln -s /bin/sh /bin/bash
