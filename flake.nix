@@ -178,6 +178,8 @@
             ./users/common
           ];
         })
+        imaged.nixosModules.image
+        ./modules/image.nix
         ./hosts/utility/configuration.nix
       ];
 
@@ -343,6 +345,7 @@
         cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
         utility-vm = utility-vm.config.system.build.vm;
+        utility-imaged = utility.config.system.build.images.imaged;
         teammachine-iso = teammachine-iso.config.system.build.isoImage;
         runtimes-iso = runtimes-iso.config.system.build.isoImage;
         nixos-anywhere = nixpkgs.legacyPackages.x86_64-linux.nixos-anywhere;
