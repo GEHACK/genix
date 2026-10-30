@@ -49,7 +49,7 @@ So `teammachine.users.team.languages.cpp.enable = true` in the host file becomes
 | `modules/` | Base modules applied to every host (`loomd`, `nix`, `security`, `sops`, `ssh`, `users`) |
 | `modules/teammachine/` | Contest laptop: greetd/loom-greeter, GNOME, nftables, printer, PXE, usbguard |
 | `modules/geproxy/` | Gateway: `network/` (bridges, dnsmasq/PXE, nftables, Caddy, wifi access points), loom backend, imaged, cuproxy, balloons, fanout, tunnelrs connector |
-| `modules/partition/` | Venue machines (`teammachine-part`, `teammachine-part-base`): one btrfs partition chainloaded by the host's GRUB, the dd-able image, `teammachine-reset` |
+| `modules/partition/` | Venue machines (`teammachine-part`, `teammachine-part-base`, `judgehost-part`): one btrfs partition chainloaded by the host's GRUB, the dd-able image, `teammachine-reset` |
 | `modules/scoreboard-laptop/` | `cage` Wayland kiosk running the ICPC presentation client |
 | `users/common/` | HM `sharedModules`: declares `teammachine.languages.*`, firefox policy, nixvim |
 | `users/team/`, `users/gehack/` | Per-user HM profiles |
@@ -94,6 +94,7 @@ nixos-rebuild switch --flake .#teammachine_arm \
 sops secrets.yaml                 # only legal way to edit
 sops updatekeys secrets.yaml      # after adding a recipient to .sops.yaml
 sops secrets-teammachine.yaml     # teammachine-part copies of the five teammachine secrets
+sops secrets-judgehost.yaml       # judgehost-part copies of the four judgehost secrets
 
 # SSH keys / inputs
 ./scripts/update_keys.sh
@@ -106,9 +107,9 @@ nix flake update
 
 ### Flake targets
 
-`nixosConfigurations`: `teammachine`, `teammachine-part`, `teammachine-part-base`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
+`nixosConfigurations`: `teammachine`, `teammachine-part`, `teammachine-part-base`, `judgehost-part`, `teammachine_arm`, `geproxy`, `scoreboard-laptop`, `scoreboard-laptop_arm`, `teammachine-iso`.
 
-`packages.x86_64-linux`: `teammachine`, `teammachine-part` (`teammachine.img.zst` of the small `teammachine-part-base`, a single-partition btrfs image written with plain `dd`; the full `teammachine-part` follows through imaged or a deploy), `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
+`packages.x86_64-linux`: `teammachine`, `teammachine-part` (`teammachine.img.zst` of the small `teammachine-part-base`, a single-partition btrfs image written with plain `dd`; the full `teammachine-part` follows through imaged or a deploy), `judgehost-part` (the same kind of image of the full `judgehost-part`, also named `teammachine.img.zst`), `geproxy`, `scoreboard-laptop`, `teammachine-vm`, `geproxy-vm`, `teammachine-iso`.
 `packages.aarch64-linux`: `teammachine-arm`, `scoreboard-laptop-arm`.
 
 Note the naming split: **underscore** in `nixosConfigurations` (`teammachine_arm`), **hyphen** in `packages` (`teammachine-arm`). The `*-vm` targets exist only as packages — `nixos-rebuild --flake .#teammachine-vm` fails.
@@ -157,7 +158,7 @@ in {
 - DOMjudge's `chroot-startstop.sh` bind-mounts only `etc usr lib bin lib64` into each judging; `/nix` needs the `ghcr.io/gehack/judgehost` image, which patches `nix` into that list and tolerates a read-only `/chroot/domjudge`. Upstream `domjudge/judgehost` cannot judge in this chroot.
 - Never add a contest language to `users/team/languages.nix` as `pkgs.<x>`; add it to `contestToolchain` so it reaches the chroot as well.
 
-**`mkForce` appears only in the ISO and the venue machines**: `modules/partition` disables GRUB, because the host's own GRUB chainloads the UKI that the `boot.loader.external` hook writes to `/boot/teammachine.efi`, and moves the sops key to `/persist/sops/hostkey`, so it survives `teammachine-reset`. `hosts/teammachine-part` overrides `sops.defaultSopsFile` with `secrets-teammachine.yaml`. `mkIf` is the standard conditional; `mkDefault` is unused.
+**`mkForce` appears only in the ISO and the venue machines**: `modules/partition` disables GRUB, because the host's own GRUB chainloads the UKI that the `boot.loader.external` hook writes to `/boot/teammachine.efi`, and moves the sops key to `/persist/sops/hostkey`, so it survives `teammachine-reset`. `hosts/teammachine-part` and `hosts/judgehost-part` override `sops.defaultSopsFile` with their own secrets file. `mkIf` is the standard conditional; `mkDefault` is unused.
 
 **Commits**: recent history uses Conventional Commits (`feat:`, `chore:`) without scopes; older history is free-form. Follow `feat:`/`fix:`/`chore:`. Branches are `<type>/<kebab-slug>`.
 
@@ -176,7 +177,7 @@ in {
 | `users/team/languages.nix` | The real home of `mygcc`/`mygpp`/`mypython`/`myjavac`/`mykotlinc` |
 | `authorized_keys` | **Generated.** Edit `USERS` in `scripts/update_keys.sh` instead |
 | `fanout_pubkey` | Hand-maintained; grants geproxy root access to laptops |
-| `.sops.yaml` | Operator recipients plus two host keys: `&host-key` for `secrets.yaml`, `&teammachine-key` for `secrets-teammachine.yaml` |
+| `.sops.yaml` | Operator recipients plus three host keys: `&host-key` for `secrets.yaml`, `&teammachine-key` for `secrets-teammachine.yaml`, `&judgehost-key` for `secrets-judgehost.yaml` |
 | `README.md` | Operator manual — accurate on intent, stale in several specifics (below) |
 | `bartjan.md` | Personal scratch notes with a hardcoded LAN IP. Not authoritative |
 
@@ -221,7 +222,7 @@ Non-obvious traps, all verified against source:
 - **Sites with `login` are guarded by the GEWIS authentik** (`geproxy.proxy.authentik`), through Caddy `forward_auth` against its embedded outpost. The forward-auth provider for each host lives in authentik, not here. Caddy strips client-sent `X-Proxy-Authorized` and sets it after a login; loom's backend (`trustedProxyHeader`) treats it as admin. Station gRPC (`Content-Type: application/grpc`, bearer token) and `/api/*` skip the login, as in the old k8s ingress.
 - **`geproxy.tunnel` publishes sites with `tunnel` through tunnelrs** (server `5387b0ee…` behind `relay.luukblankenstijn.nl:8443`) with TLS passthrough to Caddy on loopback, so geproxy's own certificate is served and the edge cannot add HTTP middleware. The connector key is `tunnelrs.key`; a new key stays `pending` until `tunnelrs-ctl approve <id>` on the server.
 - **All hosts share one age identity at `/etc/sops/hostkey`, and nothing in the repo provisions it**, except the venue machines, which have their own (next entry). Stage it locally and pass `--extra-files` + `--chown`; `.gitignore` carries `tmp/` for exactly this. Without it, the `setupSecretsForUsers` activation snippet fails and every user with `hashedPasswordFile` stays without a password. Boot still continues and root SSH by key works. Services that need secrets do not work.
-- **The venue machines use their own key at `/persist/sops/hostkey`**: `teammachine-part` reads `secrets-teammachine.yaml` with `&teammachine-key` (private half `teammachine-hostkey` in `secrets.yaml`), which does not decrypt `secrets.yaml`. The file holds copies of secrets from `secrets.yaml`, so changing one of those means editing both files. The built image carries no key; push it over SSH.
+- **The venue machines use their own keys at `/persist/sops/hostkey`**: `teammachine-part` reads `secrets-teammachine.yaml` with `&teammachine-key` (private half `teammachine-hostkey` in `secrets.yaml`), `judgehost-part` reads `secrets-judgehost.yaml` with `&judgehost-key` (private half `judgehost-hostkey`). Neither key decrypts `secrets.yaml` or the other file. Both files hold copies of secrets from `secrets.yaml`, so changing one of those means editing both files. The built images carry no key; push it over SSH. Switching a machine's role means pushing the other key.
 - **The venue machines must keep `systemd.gpt_auto=0`** (`modules/partition`). Without it, systemd auto-mounts the venue's ESP at `/efi` and `bootctl` creates `\loader\random-seed` there. After that, systemd-stub rewrites that file on every boot.
 - **The venue partition is one btrfs filesystem with label `teammachine`**, mounted by label, with subvolumes `root`, `nix`, `boot` and `persist`, grown on boot (`autoResize`). A second partition with that label on the same machine makes the root device ambiguous. GRUB resolves `/boot/teammachine.efi` from the top level, where it is the `boot` subvolume, so moving the UKI into `root` breaks the host entry. `teammachine-reset` replaces only `root` with `snapshots/root-pristine`; state that must survive a reset belongs in `/persist`, `/nix` or `/boot`.
 - **The image's files must be owned by root.** `mkfs.btrfs --rootdir` records the uid it sees, so the image build runs it under `unshare --map-root-user`; fakeroot does not reach it, and a uid-1000 store breaks sshd, dhcpcd and nscd.

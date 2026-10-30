@@ -5,8 +5,17 @@ keys:
   - &sandor ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIz78vI5CB7ECTqy8p0F3dRL/D5XNEQ+5DsbeWSw+3K/
   - &host-key age1d4w2zt5ky9dsrntetgtc62d0hchqxung99ckmkg36nvc738vdesq9z2aw6
   - &teammachine-key age1hztry5u9vxktwh872l8q5tttr8wyy449cz740atqzwkyrwrtvess4fmwns
+  - &judgehost-key age1vj43kkarmp3wmlw8huesq39dlkrt9hlvq7zcz7tsg5g3nh3zggtqwgky0z
 
 creation_rules:
+  - path_regex: secrets-judgehost.yaml
+    key_groups:
+      - age:
+          - *luuk
+          - *bartjan
+          - *kevin
+          - *sandor
+          - *judgehost-key
   - path_regex: secrets-teammachine.yaml
     key_groups:
       - age:

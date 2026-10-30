@@ -165,6 +165,19 @@ sops -d --extract '["teammachine-hostkey"]' secrets.yaml |
 
 Afterwards the machine gets the full system either through imaged (`imaged-boot` kexecs into the imaged agent from geproxy) or as a deploy: `./scripts/install.sh teammachine-part root@<IP>` or fanout. A deploy copies the whole difference over the network.
 
+#### Judgehost
+
+`.#judgehost-part` (`hosts/judgehost-part/configuration.nix`) is the same judgehost as `.#judgehost`, in the same partition layout. There is no small base: the build is the full judgehost with the judging chroot and the judgehost container image, still named `result/teammachine.img.zst`, and it is written and chainloaded exactly as above. Its secrets are in `secrets-judgehost.yaml`, so it gets its own key:
+
+```bash
+nix build .#judgehost-part
+zstd -dc result/teammachine.img.zst | sudo dd of=/dev/<PARTITION> bs=4M conv=fsync status=progress
+sops -d --extract '["judgehost-hostkey"]' secrets.yaml |
+  ssh root@<IP> 'install -D -m 0400 /dev/stdin /persist/sops/hostkey && systemctl reboot'
+```
+
+A machine that already runs `teammachine-part` becomes a judgehost by pushing this key and then `./scripts/install.sh judgehost-part root@<IP>`, and turns back by pushing the `teammachine-hostkey` and deploying `teammachine-part`. Check that `judgehost.cores` exists on that machine's CPU first: `judgehost-tune-cpu` asserts it at boot.
+
 ### Deploying updates
 
 From the `scripts/` directory:

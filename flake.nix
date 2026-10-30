@@ -266,6 +266,12 @@
         modules = judgehostModules;
       };
 
+      judgehost-part = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        inherit specialArgs;
+        modules = judgehostModules ++ [ ./hosts/judgehost-part/configuration.nix ];
+      };
+
       cds = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         inherit specialArgs;
@@ -328,6 +334,7 @@
           geproxy
           utility
           judgehost
+          judgehost-part
           cds
           teammachine-iso
           runtimes-iso
@@ -342,6 +349,7 @@
         teammachine-vm = teammachine-vm.config.system.build.vm;
         geproxy-vm = geproxy-vm.config.system.build.vm;
         judgehost = judgehost.config.system.build.toplevel;
+        judgehost-part = judgehost-part.config.system.build.partitionImage;
         cds = cds.config.system.build.toplevel;
         judgehost-vm = judgehost-vm.config.system.build.vm;
         utility-vm = utility-vm.config.system.build.vm;
