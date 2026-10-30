@@ -36,7 +36,6 @@ in
       listen = "0.0.0.0:631";
       inherit (config.geproxy.cuproxy) printerTo printerUsername;
       printerTls = false;
-      # printerUsername = "<corporate-user>";
       settings = {
         WEBHOOKS_TO_CALL = "info;GET;https://loom.gehack.nl/api/team-info/{{requesting_ip}}&&map;GET;https://loom.gehack.nl/api/map-image?ip={{requesting_ip}}${balloonsHook}";
         TYPST_TEMPLATE = "${./assets/print_template.typ}";
