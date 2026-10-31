@@ -5,6 +5,8 @@ let
   activeKeyboards = [ 
     "us" 
     "nl"
+    "us+dvorak"
+    "us+dvp"
     # Right now, most are disabled
     # "de"
     # "fr"
