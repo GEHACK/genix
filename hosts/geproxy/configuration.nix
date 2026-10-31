@@ -41,9 +41,6 @@ in
     networks = {
       contest = {
         interfaces = [
-          "eno3"
-          "eno4"
-          "eno5"
           "eno6"
         ];
         address = geproxy_ip;
@@ -76,7 +73,12 @@ in
       };
 
       admin = {
-        interfaces = [ "eno2" ];
+        interfaces = [
+          "eno2"
+          "eno3"
+          "eno4"
+          "eno5"
+        ];
         wifi = {
           interface = "wlp6s0";
           ssid = "gehack-admin";
@@ -172,7 +174,7 @@ in
     cuproxy = {
       enable = true;
       printerTo = "ipp.liacs.nl:631/printers/lu-card";
-      printerUsername = "s4024699";
+      printerUsername = "s3902269";
     };
     imaged.enable = true;
     multicastInterface = if atVenue then "eno1" else "br-contest";
