@@ -7,6 +7,7 @@ let
     "nl"
     "us+dvorak"
     "us+dvp"
+    "be"
     # Right now, most are disabled
     # "de"
     # "fr"
