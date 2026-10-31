@@ -134,7 +134,7 @@ homepage and the first bookmark on the toolbar.
 
 ## Printing
 
-The contest printer, **PSGEWIS1**, is set up as the default printer. Print from any
+The contest printer, **printer**, is set up as the default printer. Print from any
 application with <kbd>Ctrl</kbd>+<kbd>P</kbd>, or from the terminal:
 
 ```console

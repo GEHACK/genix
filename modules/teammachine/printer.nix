@@ -9,7 +9,7 @@ let
 in
 {
   options.teammachine.printer.enable =
-    lib.mkEnableOption "contest CUPS printer (PSGEWIS1)";
+    lib.mkEnableOption "contest CUPS printer";
 
   config = lib.mkIf cfg.enable {
     services.printing = {
@@ -17,8 +17,8 @@ in
       drivers = lib.singleton (
         pkgs.linkFarm "drivers" [
           {
-            name = "share/cups/model/PSGEWIS1.ppd";
-            path = ./assets/PSGEWIS1.ppd;
+            name = "share/cups/model/printer.ppd";
+            path = ./assets/printer.ppd;
           }
         ]
       );
@@ -27,9 +27,9 @@ in
     hardware.printers = {
       ensurePrinters = [
         {
-          name = "PSGEWIS1";
+          name = "printer";
           deviceUri = "ipp://${config.teammachine.geproxy.host}:631/ipp/print";
-          model = "PSGEWIS1.ppd";
+          model = "printer.ppd";
           # Send `sides=one-sided` with every job: cuproxy forwards it as is,
           # and the upstream queue duplexes jobs that leave it out.
           ppdOptions = {
@@ -38,7 +38,7 @@ in
           };
         }
       ];
-      ensureDefaultPrinter = "PSGEWIS1";
+      ensureDefaultPrinter = "printer";
     };
 
     systemd.services.ensure-printers = {
