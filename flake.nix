@@ -81,7 +81,7 @@
       runtimes_host = "runtimes.gehack.nl";
       imaged_port = 8080;
       cds_port = 8443;
-      contest_id = "main";
+      contest_id = "bapc2026test";
       specialArgs = {
         inherit
           dj_url
