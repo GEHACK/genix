@@ -65,5 +65,10 @@ in
     };
   };
 
+  systemd.services.alloy = {
+    after = [ "judgehost-hostname.service" ];
+    wants = [ "judgehost-hostname.service" ];
+  };
+
   services.timesyncd.servers = [ geproxy_ip ];
 }

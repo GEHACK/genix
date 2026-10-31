@@ -31,7 +31,7 @@ in
       }
 
       prometheus.scrape "node" {
-        targets         = [{ "__address__" = "127.0.0.1:${toString config.services.prometheus.exporters.node.port}", "host" = "${config.networking.hostName}", "machine" = string.trim_space(local.file.machine_id.content) }]
+        targets         = [{ "__address__" = "127.0.0.1:${toString config.services.prometheus.exporters.node.port}", "host" = constants.hostname, "machine" = string.trim_space(local.file.machine_id.content) }]
         scrape_interval = "15s"
         forward_to      = [prometheus.remote_write.geproxy.receiver]
       }
@@ -44,7 +44,7 @@ in
       }
 
       loki.source.journal "journal" {
-        labels     = { "host" = "${config.networking.hostName}", "machine" = string.trim_space(local.file.machine_id.content) }
+        labels     = { "host" = constants.hostname, "machine" = string.trim_space(local.file.machine_id.content) }
         forward_to = [loki.write.geproxy.receiver]
       }
 
