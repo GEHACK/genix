@@ -1,3 +1,6 @@
 _: {
-  users.users.root.openssh.authorizedKeys.keyFiles = [ ../../fanout_pubkey ];
+  users.users.root.openssh.authorizedKeys.keyFiles = [
+    ../../fanout_pubkey
+    ../../judgehost_authorized_keys
+  ];
 }

@@ -2,31 +2,40 @@
 set -euo pipefail
 
 USERS=("LuukBlankenstijn" "BHenkemans" "gewoonsandor" "mexdeloo" "kevinjil" "tuupke" "nickygerritsen" "aarhunt")
+JUDGEHOST_USERS=("eldering")
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-OUTPUT_FILE="$REPO_ROOT/authorized_keys"
 
-TEMP_FILE=$(mktemp)
-trap 'rm -f "$TEMP_FILE"' EXIT
+write_keys() {
+    local output_file="$1"
+    shift
+    local temp_file
+    temp_file=$(mktemp)
+    trap 'rm -f "$temp_file"' RETURN
 
-for USER in "${USERS[@]}"; do
-    echo "Fetching keys for $USER..."
-    KEYS=$(curl -sf "https://github.com/${USER}.keys" || true)
+    for user in "$@"; do
+        echo "Fetching keys for $user..."
+        local keys
+        keys=$(curl -sf "https://github.com/${user}.keys" || true)
 
-    if [[ -z "$KEYS" || ! "$KEYS" == *"ssh-"* ]]; then
-        echo "ERROR: No public keys found for user: $USER" >&2
-        exit 1
+        if [[ -z "$keys" || ! "$keys" == *"ssh-"* ]]; then
+            echo "ERROR: No public keys found for user: $user" >&2
+            exit 1
+        fi
+
+        {
+            echo "# $user"
+            echo "$keys"
+            echo ""
+        } >> "$temp_file"
+    done
+
+    mv "$temp_file" "$output_file"
+
+    if [ -e "$REPO_ROOT/.git" ]; then
+        git -C "$REPO_ROOT" add "$output_file"
+        echo "Staged $output_file in Git."
     fi
+}
 
-    {
-        echo "# $USER"
-        echo "$KEYS"
-        echo ""
-    } >> "$TEMP_FILE"
-done
-
-mv "$TEMP_FILE" "$OUTPUT_FILE"
-
-if [ -d "$REPO_ROOT/.git" ]; then
-    git -C "$REPO_ROOT" add "$OUTPUT_FILE"
-    echo "Staged $OUTPUT_FILE in Git."
-fi
+write_keys "$REPO_ROOT/authorized_keys" "${USERS[@]}"
+write_keys "$REPO_ROOT/judgehost_authorized_keys" "${JUDGEHOST_USERS[@]}"

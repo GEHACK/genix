@@ -175,6 +175,7 @@ in {
 | `hosts/geproxy/configuration.nix` | The geproxy overview: networks, reachability, internet mode, allowed services, which proxy site is exposed on which port per network, and which sites are tunnelled |
 | `users/team/languages.nix` | The real home of `mygcc`/`mygpp`/`mypython`/`myjavac`/`mykotlinc` |
 | `authorized_keys` | **Generated.** Edit `USERS` in `scripts/update_keys.sh` instead |
+| `judgehost_authorized_keys` | **Generated.** Extra root keys for the judgehosts only; edit `JUDGEHOST_USERS` in `scripts/update_keys.sh`. geproxy's fanout does not accept them |
 | `fanout_pubkey` | Hand-maintained; grants geproxy root access to laptops |
 | `.sops.yaml` | Operator recipients plus three host keys: `&host-key` for `secrets.yaml`, `&teammachine-key` for `secrets-teammachine.yaml`, `&judgehost-key` for `secrets-judgehost.yaml` |
 | `README.md` | Operator manual — accurate on intent, stale in several specifics (below) |
