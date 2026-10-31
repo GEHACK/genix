@@ -42,6 +42,7 @@ in
     };
 
     systemd.services.ensure-printers = {
+      restartTriggers = [ ./assets/printer.ppd ];
       serviceConfig = {
         Restart = "on-failure";
         RestartSec = 10;
