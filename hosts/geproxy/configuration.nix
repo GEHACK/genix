@@ -75,6 +75,7 @@ in
           "ssh"
           "ntp"
           "cache"
+          "printing"
         ];
         dhcp.range = [
           "10.0.1.50"
