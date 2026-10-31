@@ -89,7 +89,7 @@ in
     presentation = {
       cdsUrl = lib.mkOption {
         type = lib.types.str;
-        default = "https://cds.gehack.nl:${toString cds_port}";
+        default = "https://cds.gehack.nl";
         description = "Base URL of the Contest Data Server, without trailing slash.";
       };
 
