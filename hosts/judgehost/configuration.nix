@@ -10,6 +10,7 @@ _: {
   judgehost.cores = [ 2 ];
 
   services.loomd.label = "judgehost";
+  networking.hostName = "judgehost";
   monitoring.enable = true;
   teammachine.netboot.imaged.enable = true;
 
