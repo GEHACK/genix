@@ -7,7 +7,7 @@
   ...
 }:
 let
-  escposAddr = "10.0.0.11:9100";
+  escposAddr = "10.0.1.11:9100";
   escposWidth = "576";
   # DOMjudge group ids. `system` holds the internal GEHACK team, whose balloons
   # must never reach the printer; `observers` still gets balloons but is skipped
