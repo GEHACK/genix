@@ -30,6 +30,12 @@ in
           name = "PSGEWIS1";
           deviceUri = "ipp://${config.teammachine.geproxy.host}:631/ipp/print";
           model = "PSGEWIS1.ppd";
+          # Send `sides=one-sided` with every job: cuproxy forwards it as is,
+          # and the upstream queue duplexes jobs that leave it out.
+          ppdOptions = {
+            Duplex = "None";
+            sides-default = "one-sided";
+          };
         }
       ];
       ensureDefaultPrinter = "PSGEWIS1";
