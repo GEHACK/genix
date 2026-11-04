@@ -31,39 +31,34 @@ let
       "lib/girepository-1.0"
       gstPackages;
 
-  pyPackages = pkgs.python3.withPackages (ps: with ps; [
-    aiohttp
-    dbus-next
-    pygobject3
-  ]);
+  gestreamer = pkgs.rustPlatform.buildRustPackage rec {
+    pname = "cargo-aoc";
+    version = "0.3.5";
 
-
-  streams = pkgs.python3Packages.buildPythonApplication {
-    pname = "streams";
-    version = "0.0";
-    format = "other";
-
-    src = ./streams;
-
-    propagatedBuildInputs = gstPackages ++ [
-      pyPackages
+    nativeBuildInputs = with pkgs; [
+      rustPlatform.bindgenHook
+      pkg-config
     ];
-
-    dontBuild = true;
-    dontConfigure = true;
-
-    installPhase = ''
-      install -Dm755 streams.py $out/bin/streams
-    '';
-
-    meta = with lib; {
-      mainProgram = "streams";
+    buildInputs = with pkgs; [
+      dbus
+    ] ++ gstPackages;
+    src = pkgs.fetchFromGitHub {
+      owner = "GEHACK";
+      repo = "contest-tools";
+      rev = "967eb0d769fedd3dce73ae87fed2eec97f9cac19";
+      hash = "sha256-Hu1rN6P0HHlTHEbXS3iOCbPcV48QpYrCxyi0ATPDgdE=";
     };
+    cargoBuildFlags = [
+      "--package"
+      "gestreamer"
+    ];
+    cargoHash = "sha256-LbrhRvVrB9Fp02zLC13D30IGQOUSHRgTtivOLdHCIdU=";
+    doCheck = false;
   };
 in
 {
   options.teammachine.streams = {
-    enable = lib.mkEnableOption "Python streams server";
+    enable = lib.mkEnableOption "The gestreamer streams server";
 
     port = lib.mkOption {
       type = lib.types.port;
@@ -93,11 +88,11 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ streams ];
+    home.packages = [ gestreamer ];
 
-    systemd.user.services.streams = {
+    systemd.user.services.gestreamer = {
       Unit = {
-        Description = "Python stream service";
+        Description = "The gestreamer stream service";
         After = [
           "network.target"
           "dbus.socket"
@@ -106,7 +101,7 @@ in
       };
 
       Service = {
-        ExecStart = "${streams}/bin/streams -p ${toString cfg.port} -w '${cfg.webcam}' -e '${cfg.encoder}'";
+        ExecStart = "${gestreamer}/bin/gestreamer -p ${toString cfg.port} -w '${cfg.webcam}' -e '${cfg.encoder}'";
         Restart = "always";
         RestartSec = "5s";
         PrivateDevices = false;
