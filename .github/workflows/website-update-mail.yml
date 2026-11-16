@@ -1,0 +1,44 @@
+name: Mail website update
+
+on:
+  push:
+    branches: [main]
+    paths: ['docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Write mail body
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+          COMPARE: ${{ github.event.compare }}
+        run: |
+          {
+            echo "The contestant website https://$(cat docs/CNAME) was updated by these commits:"
+            echo
+            git log --format='- %s (%an, %h)' "$BEFORE..$AFTER" -- docs/
+            echo
+            echo "Changed files:"
+            git diff --stat "$BEFORE" "$AFTER" -- docs/
+            echo
+            echo "Full diff: $COMPARE"
+          } > mail.txt
+
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v24
+        with:
+          connection_url: ${{ secrets.MAIL_CONNECTION }}
+          from: ${{ secrets.MAIL_FROM }}
+          to: contestdiretor.euc2027@tue.nl
+          subject: GEHACK contestant website updated
+          body: file://mail.txt
