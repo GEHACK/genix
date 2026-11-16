@@ -5,7 +5,7 @@ description: What you get on a team workstation — editors, compilers, tooling,
 
 A standard **GNOME desktop on NixOS 26.05**. Firefox is the browser: it sits in the dock
 and opens on the contest judge when you log in. Everything below is installed and ready the
-moment you log in — nothing to set up.
+moment you log in — nothing to set up!
 
 > Want to run this environment yourself? See **[The GEHACK Live Image](build.md)**.
 
