@@ -154,7 +154,15 @@
             ./users/common
           ];
         })
-        ({ ... }: { _module.args.balloons-pkg = inputs.balloons.packages.x86_64-linux.default; })
+        (
+          { ... }:
+          {
+            _module.args = {
+              balloons-pkg = inputs.balloons.packages.x86_64-linux.default;
+              imaged-pkgs = imaged.packages.x86_64-linux;
+            };
+          }
+        )
       ];
 
       geproxyModules = geproxyRoleModules ++ [ ./hosts/geproxy/configuration.nix ];

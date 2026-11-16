@@ -3,6 +3,7 @@
   config,
   geproxy_ip,
   imaged_port,
+  imaged-pkgs,
   ...
 }:
 let
@@ -21,6 +22,10 @@ in
       inherit (config.geproxy) multicastInterface;
       dataDir = "/var/lib/imaged";
       logLevel = "info";
+      boot.profiles.x86_64 = {
+        arch = "x86_64";
+        initrds = [ imaged-pkgs.display-intel ];
+      };
     };
 
     geproxy.ports.imaged = {
