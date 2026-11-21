@@ -15,10 +15,10 @@ The primary machine used by contestants during a competition.
 - `team` — restricted contest user; all nix commands blocked, Firefox locked to contest homepage, WiFi and Bluetooth disabled at the kernel module level (`iwlwifi`, `btusb`)
 
 **Contest toolchains** (via `modules/teammachine/languages.nix`):
-- `mygcc` — C with `-std=gnu17 -O2 -static`
-- `mygpp` — C++ with `-std=gnu++20 -O2 -static`
+- `mygcc` — C with `-std=gnu23 -O2 -static`
+- `mygpp` — C++ with `-std=gnu++23 -O2 -static`
 - `mypython` — PyPy3
-- `myjavac` — Java 21
+- `myjavac` — Java 25
 - `mykotlinc` — Kotlin
 
 **IDEs and editors:**

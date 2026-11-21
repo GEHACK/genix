@@ -17,7 +17,7 @@
           cmake
           pypy3
           python3
-          jdk21
+          jdk25
           kotlin
         ];
       };
