@@ -11,7 +11,7 @@ Applies to `modules/teammachine/`: the contestant laptop role. Single files are 
 - An inbound TCP service needs its port in `fromTrusted` (accepted only from geproxy and `admin_subnet`). Inbound UDP has no list, so write a rule like the loom video one.
 - In the ruleset, use the `geproxy` let-binding, never a literal `@geproxy`: `set geproxy` exists only when `teammachine.geproxy.discover` is on.
 - Services reach geproxy via `config.teammachine.geproxy.host` (mDNS name or IP), never `geproxy_ip` directly; with discover on, `geproxy_ip` is wrong and the `judge` extraHosts entry is gone.
-- Build `contestToolchain` from `final`, never `prev`: `prev.gcc` is a different gcc from the `pkgs.gcc` the machines run, and `prev.kotlin` misses the kotlin pin overlay, which is merged after it.
+- Build `contestToolchain` from `final.toolchainPkgs` (the `nixpkgs-toolchain` input, exposed by `packageOverlays` in `flake.nix`), never from `final` or `prev` directly: the system nixpkgs must not decide contest compiler versions. The kotlin pin is applied inside `contestToolchain`; `pkgs.kotlin` is the unpinned system one.
 - Every attr of `contestToolchain` lands in the judge chroot (`modules/judgehost/chroot.nix` takes `lib.attrValues`, passed in by `flake.nix`). Adding or renaming an attr changes what the judge runs.
 - Keep the lockdown: `iwlwifi`/`btusb` blacklist and NetworkManager polkit deny (`networking.nix`), disabled sleep/suspend/hibernate targets (`desktop.nix`), `teammachine.usbguard.enable` (`usbguard.nix`, on in `hosts/teammachine/configuration.nix`).
 

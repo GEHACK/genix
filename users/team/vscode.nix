@@ -57,8 +57,8 @@ in
 
           # C/C++ compiler & IntelliSense
           "C_Cpp.default.compilerPath" = "${pkgs.contestToolchain.gcc}/bin/g++";
-          "C_Cpp.default.cStandard" = "c17";
-          "C_Cpp.default.cppStandard" = "c++23";
+          "C_Cpp.default.cStandard" = "gnu23";
+          "C_Cpp.default.cppStandard" = "gnu++23";
           "C_Cpp.default.intelliSenseMode" = "linux-gcc-x64";
 
           # compiler args surfaced in IntelliSense
@@ -98,7 +98,7 @@ in
             type = "shell";
             command = "${pkgs.contestToolchain.gcc}/bin/g++";
             args = [
-              "-std=c++23"
+              "-std=gnu++23"
               "-Wall"
               "-Wextra"
               "-Wpedantic"
@@ -119,7 +119,7 @@ in
             type = "shell";
             command = "${pkgs.contestToolchain.gcc}/bin/gcc";
             args = [
-              "-std=c17"
+              "-std=gnu23"
               "-Wall"
               "-Wextra"
               "-Wpedantic"

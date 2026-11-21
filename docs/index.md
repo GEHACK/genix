@@ -24,11 +24,11 @@ moment you log in — nothing to set up.
 
 | Language | Toolchain | Notes |
 |----------|-----------|-------|
-| C | GCC | `gnu17` standard; `gdb` and `cmake` included |
-| C++ | GCC (g++) | `gnu++20` standard; `gdb` and `cmake` included |
+| C | GCC | `gnu23` standard; `gdb` and `cmake` included |
+| C++ | GCC (g++) | `gnu++23` standard; `gdb` and `cmake` included |
 | Python | CPython 3 & PyPy 3 | Both interpreters installed; PyPy for speed |
-| Java | JDK 21 | `JAVA_HOME` preset |
-| Kotlin | Kotlin compiler | JVM-based; runs on JDK 21 |
+| Java | JDK 25 | `JAVA_HOME` preset |
+| Kotlin | Kotlin compiler | JVM-based; runs on JDK 25 |
 
 ## Compile helpers
 
@@ -37,11 +37,11 @@ remember them. Each takes the source basename.
 
 | Command | Runs |
 |---------|------|
-| `mygcc sol` | gcc `-std=gnu17 -Wall -O2 -static` → `sol.c` to `sol` |
-| `mygpp sol` | g++ `-std=gnu++20 -Wall -O2 -static` → `sol.cpp` to `sol` |
+| `mygcc sol` | gcc `-std=gnu23 -Wall -O2 -static` → `sol.c` to `sol` |
+| `mygpp sol` | g++ `-std=gnu++23 -Wall -O2 -static` → `sol.cpp` to `sol` |
 | `mypython sol.py` | PyPy 3 interpreter |
-| `myjavac Sol.java` | javac (JDK 21, UTF-8) |
-| `mykotlinc Sol.kt` | kotlinc (JDK 21) → JVM classes in the current dir |
+| `myjavac Sol.java` | javac (JDK 25, UTF-8) |
+| `mykotlinc Sol.kt` | kotlinc (JDK 25) → JVM classes in the current dir |
 
 ```console
 $ mygpp solution      # compiles solution.cpp → ./solution
@@ -53,7 +53,7 @@ $ ./solution < in     # run it
 Pick whatever you're fastest in — all are installed.
 
 - **VS Code** — with C/C++ (plus CMake Tools), Python and Java extensions; build & debug
-  tasks pre-wired for C/C++ (g++ `-std=c++23` / gcc `-std=c17`, gdb). AI/Copilot features,
+  tasks pre-wired for C/C++ (g++ `-std=gnu++23` / gcc `-std=gnu23`, gdb). AI/Copilot features,
   the welcome page and update prompts are switched off. The Vim extension is installed but
   off by default: run **Vim: Toggle Vim Mode** from the Command Palette
   (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>) to turn it on.
@@ -109,7 +109,7 @@ The leader key is <kbd>Space</kbd>. Preset key bindings:
 ### JetBrains IDEs
 
 PyCharm, IntelliJ IDEA and CLion come with their standard bundled plugins only. IntelliJ
-IDEA has JDK 21 preconfigured as the project SDK, so new Java and Kotlin projects build
+IDEA has JDK 25 preconfigured as the project SDK, so new Java and Kotlin projects build
 straight away.
 
 ## Command-line tools

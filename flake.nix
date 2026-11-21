@@ -14,6 +14,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    nixpkgs-toolchain.url = "github:NixOS/nixpkgs/cf9d2fb3e50fa1cd5114c47505ea9177f7ff5f49";
 
     disko.url = "github:nix-community/disko";
 
@@ -52,6 +53,7 @@
   outputs =
     inputs@{
       nixpkgs,
+      nixpkgs-toolchain,
       disko,
       home-manager,
       loom,
@@ -100,6 +102,9 @@
           nixpkgs.overlays = [
             domjudge-submit.overlays.default
             icpc-tools.overlays.default
+            (final: _prev: {
+              toolchainPkgs = nixpkgs-toolchain.legacyPackages.${final.stdenv.hostPlatform.system};
+            })
           ];
         };
 

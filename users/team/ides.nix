@@ -73,10 +73,10 @@ in
       ++ lib.optionals (langs.python.enable && cfg.jetbrains.enable) [ pycharmAutoDetect ]
       ++ lib.optionals ((langs.java.enable || langs.kotlin.enable) && cfg.jetbrains.enable) [ pkgs.jetbrains.idea ]
       ++ lib.optionals (langs.cpp.enable && cfg.jetbrains.enable) [ pkgs.jetbrains.clion ]
-      ++ lib.optionals langs.java.enable (with pkgs; [
-        eclipses.eclipse-java
-        netbeans
-      ])
+      ++ lib.optionals langs.java.enable [
+        (pkgs.eclipses.override { inherit (pkgs.contestToolchain) jdk; }).eclipse-java
+        (pkgs.netbeans.override { jdk21 = pkgs.contestToolchain.jdk; })
+      ]
       ++ lib.optionals langs.cpp.enable [ pkgs.codeblocksFull ]
       ++ lib.optionals langs.c.enable [ pkgs.codeblocksFull ];
 

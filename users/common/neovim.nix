@@ -58,7 +58,10 @@ in
         servers = {
           clangd.enable = langs.c.enable || langs.cpp.enable;
           pyright.enable = langs.python.enable;
-          jdtls.enable = langs.java.enable;
+          jdtls = lib.mkIf langs.java.enable {
+            enable = true;
+            package = pkgs.jdt-language-server.override { inherit (pkgs.contestToolchain) jdk; };
+          };
           kotlin_language_server = lib.mkIf langs.kotlin.enable {
             enable = true;
             package = pkgs.kotlin-language-server;

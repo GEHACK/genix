@@ -7,7 +7,7 @@ Applies to `docs/`: the public contestant site (`docs/CNAME`), a Jekyll site on 
 - Published to everyone: never add internal IPs, operator names, ssh/deploy details, key holders or secrets.
 - Every contestant-facing claim mirrors Nix; change both in the same commit, and check the Nix side before editing text:
   - `mygcc`/`mygpp` flags in `docs/index.md` ↔ `users/team/languages.nix`.
-  - VS Code `-std=c++23` / `-std=c17` ↔ `users/team/vscode.nix`; JDK 21 ↔ `jdk = final.jdk21` in `modules/teammachine/languages.nix`.
+  - VS Code `-std=gnu++23` / `-std=gnu23` ↔ `users/team/vscode.nix`; JDK 25 ↔ `jdk = toolchainPkgs.jdk25` in `modules/teammachine/languages.nix`.
   - "Good to know": Nix commands blocked ↔ `users/team/nix-block.nix`; WiFi/Bluetooth off ↔ `boot.blacklistedKernelModules` in `modules/teammachine/networking.nix`; USB ↔ `modules/teammachine/usbguard.nix`; locked homepage ↔ `users/common/firefox.nix`.
   - `docs/build.md` ISO facts (filename, hostname `gehack-iso`, GDM autologin, wifi/bluetooth on, sudo rules) ↔ `hosts/teammachine-iso/configuration.nix`; DOMjudge demo URL ↔ `isoSpecialArgs.dj_url` in `flake.nix`.
 - `docs/build.md` calls the ISO "the same" system as a real team machine; it is a fork (GDM instead of the greeter, no printer, trackpad toggle, usbguard, streams or remote desktop). Check `hosts/teammachine-iso/configuration.nix` before describing a teammachine feature there.
