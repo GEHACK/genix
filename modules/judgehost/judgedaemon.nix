@@ -112,6 +112,15 @@ let
           # Writable bind-mount sources.
           mkdir -p "$state/log" "$state/run" "$state/judgings"
           chown domjudge:domjudge "$state/log" "$state/run" "$state/judgings"
+
+          # Re-install the sudoers file
+          install -D -oroot -groot -m0400 ${domjudgeJudgehost}/judgehost/etc/sudoers-domjudge /etc/sudoers.d/domjudge
+          # Fix the `/bin` path for nixos
+          sed -i 's|NOPASSWD: /bin/cp|NOPASSWD: /run/current-system/sw/bin/cp|' /etc/sudoers.d/domjudge
+          sed -i 's|NOPASSWD: /bin/chmod|NOPASSWD: /run/current-system/sw/bin/chmod|' /etc/sudoers.d/domjudge
+          sed -i 's|NOPASSWD: /bin/chown|NOPASSWD: /run/current-system/sw/bin/chown|' /etc/sudoers.d/domjudge
+          sed -i 's|NOPASSWD: /bin/mount|NOPASSWD: ${config.security.wrapperDir}/mount|' /etc/sudoers.d/domjudge
+          sed -i 's|NOPASSWD: /bin/umount|NOPASSWD: ${config.security.wrapperDir}/umount|' /etc/sudoers.d/domjudge
         '';
       };
     };
@@ -150,7 +159,7 @@ let
         # Needs a custom `PATH=` as the `wrapperDir` breaks in the nix `path=` syntax.
         Environment = [
           "DJ_SUBDIRMOUNTS=nix"
-          "PATH=${config.security.wrapperDir}:/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin"
+          "PATH=${config.security.wrapperDir}:/bin:/run/current-system/sw/bin"
         ];
 
         RuntimeDirectory = name;
@@ -185,9 +194,8 @@ let
 in
 {
   security.sudo = {
-    # TODO: use proper sudoers rules
     extraConfig = ''
-      domjudge ALL=(root) NOPASSWD: ALL
+      @includedir /etc/sudoers.d
     '';
     enable = true;
   };
