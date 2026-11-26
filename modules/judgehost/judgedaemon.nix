@@ -6,113 +6,259 @@
   contestToolchain,
   ...
 }:
+
 let
   version = "bleeding-gehack.1";
 
-  # Pinned by manifest digest so a re-pushed tag can never change what we judge on.
-  # Refresh both fields together with:
-  #   nix-prefetch-docker --image-name ghcr.io/gehack/judgehost --image-tag <version> \
-  #     --arch amd64 --os linux
-  image = pkgs.dockerTools.pullImage {
-    imageName = "ghcr.io/gehack/judgehost";
-    imageDigest = "sha256:9f4c60c06f62ac04d2eb89474e3b79e10d62b0defd3c3976bb147dee08a0f920";
-    hash = "sha256-+RnZ+BFC91Yc+12ZFdqoySndW8MSfVWX/mbheO60Fu0=";
-    finalImageName = "ghcr.io/gehack/judgehost";
-    finalImageTag = version;
-    os = "linux";
-    arch = "amd64";
+  runUid = core: 62860 + core;
+  runUser = core: "domjudge-run-${toString core}";
+  serviceName = core: "domjudge-judgehost-${toString core}";
+  stateDir = core: "/var/lib/${serviceName core}";
+  runtimeDir = core: "/run/${serviceName core}";
+  prepareServiceName = core: "${serviceName core}-prepare";
+
+  domjudgeSrc = pkgs.fetchFromGitHub {
+    owner = "DOMjudge";
+    repo = "domjudge";
+    rev = "main";
+    hash = "sha256-P0Uuj1cAsfyn2hTRzI/VfvCN2Hj5SG/e4r++yOH1OOk=";
   };
 
-  runUid = core: 62860 + core;
+  domjudgeJudgehost = pkgs.stdenv.mkDerivation {
+    pname = "domjudge-judgehost";
+    inherit version;
+    src = domjudgeSrc;
 
-  resolvConf = core: "/run/judgehost/resolv.conf.${toString core}";
+    nativeBuildInputs = with pkgs; [
+      gnumake
+      pkg-config
+      autoreconfHook
+      autoconf-archive
+    ];
+
+    buildInputs =
+      with pkgs;
+      [
+        php
+        php.packages.composer
+        libxml2
+        libzip
+        curl
+        openssl
+        zlib
+        libcgroup
+      ];
+
+    configurePhase = ''
+      runHook preConfigure
+      ./configure \
+        --prefix="$out" \
+        --with-baseurl="${dj_url}" \
+        --with-domjudge-user=domjudge \
+        --with-webserver-group=www-data
+      runHook postConfigure
+    '';
+
+    buildPhase = ''
+      runHook preBuild
+      export LIBRARY_PATH="${pkgs.glibc.static}/lib''${LIBRARY_PATH:+:$LIBRARY_PATH}"
+      make judgehost
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      make install-judgehost
+      touch $out/judgehost/etc/restapi.secret
+      runHook postInstall
+    '';
+  };
 
   chroot = pkgs.callPackage ./chroot.nix {
     inherit contestToolchain;
     runUsers = lib.listToAttrs (
-      map (core: lib.nameValuePair "domjudge-run-${toString core}" (runUid core)) config.judgehost.cores
+      map
+        (core: lib.nameValuePair (runUser core) (runUid core))
+        config.judgehost.cores
     );
   };
 
-  # Requires= as well as After=, so a failed prerequisite keeps the daemons from
-  # registering under a wrong name or judging on an untuned CPU.
-  ordering = [
-    "judgehost-hostname.service"
-    "judgehost-tune-cpu.service"
-  ];
+  prepareServiceFor = core:
+    let
+      name = serviceName core;
+      prepareName = prepareServiceName core;
+      state = stateDir core;
+    in
+    lib.nameValuePair prepareName {
+      description = "Prepare ${name} installation";
+      before = [ "${name}.service" ];
+      requiredBy = [ "${name}.service" ];
 
-  container =
-    core:
-    lib.nameValuePair "judgehost-${toString core}" {
-      imageFile = image;
-      image = "ghcr.io/gehack/judgehost:${version}";
-      autoStart = true;
-
-      environment = {
-        DAEMON_ID = toString core;
-        RUN_USER_UID_GID = toString (runUid core);
-        DOMSERVER_BASEURL = "${dj_url}/";
-        JUDGEDAEMON_USERNAME = "judgehost";
-        CONTAINER_TIMEZONE = config.time.timeZone;
-      };
-
-      environmentFiles = [ config.sops.templates."judgehost.env".path ];
-
-      # create_cgroups writes to the root cgroup.subtree_control, so the mount must be
-      # writable and the host cgroup namespace must be visible. runguard additionally
-      # chroots, bind-mounts /proc and unshares namespaces, which needs full privilege.
-      volumes = [
-        "/sys/fs/cgroup:/sys/fs/cgroup"
-        "${chroot}:/chroot/domjudge:ro"
-        "${chroot}/nix:/nix:ro"
-        "${resolvConf core}:/chroot/domjudge/etc/resolv.conf"
-      ];
-      extraOptions = [
-        "--privileged"
-        "--cgroupns=host"
-        "--network=host"
-        "--uts=host"
-      ];
-    };
-
-  unit =
-    core:
-    lib.nameValuePair "docker-judgehost-${toString core}" {
-      after = ordering;
-      requires = ordering;
       serviceConfig = {
-        Slice = "judgehost.slice";
-        Restart = lib.mkForce "always";
-        RestartSec = lib.mkForce 3;
-        # judgedaemon needs time to finish the judging it is holding, as upstream's
-        # own domjudge-judgedaemon@.service allows.
-        TimeoutStopSec = lib.mkForce 180;
+        Type = "oneshot";
+        User = "root";
+        RemainAfterExit = true;
+
+        ExecStart = pkgs.writeShellScript "prepare-${name}" ''
+          set -eu
+
+          state=${lib.escapeShellArg state}
+          install=${lib.escapeShellArg "${domjudgeJudgehost}"}
+
+          # Create the writable copy so bind-mount destinations exist before
+          # systemd sets up the judgehost service's mount namespace.
+          mkdir -p "$state"
+
+          # Writable bind-mount sources.
+          mkdir -p "$state/log" "$state/run" "$state/judgings"
+          chown domjudge:domjudge "$state/log" "$state/run" "$state/judgings"
+        '';
       };
     };
+
+  serviceFor = core:
+    let
+      n = toString core;
+      name = serviceName core;
+      prepareName = prepareServiceName core;
+      state = stateDir core;
+      runtime = runtimeDir core;
+    in
+    lib.nameValuePair name {
+      description = "DOMjudge judgehost ${n}";
+      wantedBy = [ "multi-user.target" ];
+      wants = [ "network-online.target" ];
+      requires = [
+        "${prepareName}.service"
+        "judgehost-hostname.service"
+        "judgehost-tune-cpu.service"
+        "domjudge-create-cgroups.service"
+      ];
+      after = [
+        "network-online.target"
+        "${prepareName}.service"
+        "judgehost-hostname.service"
+        "judgehost-tune-cpu.service"
+        "domjudge-create-cgroups.service"
+      ];
+
+
+      serviceConfig = {
+        Type = "simple";
+        Slice = "judgehost.slice";
+        
+        # Needs a custom `PATH=` as the `wrapperDir` breaks in the nix `path=` syntax.
+        Environment = [
+          "DJ_SUBDIRMOUNTS=nix"
+          "PATH=${config.security.wrapperDir}:/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin"
+        ];
+
+        RuntimeDirectory = name;
+        RuntimeDirectoryMode = "0700";
+
+        # We bind mount restapi secret the writable state directories over the nix store.
+        BindPaths = [
+          "${config.sops.templates."judgehost-restapi".path}:${domjudgeJudgehost}/judgehost/etc/restapi.secret"
+          "${state}/log:${domjudgeJudgehost}/judgehost/log"
+          "${state}/run:${domjudgeJudgehost}/judgehost/run"
+          "${state}/judgings:${domjudgeJudgehost}/judgehost/judgings"
+        ];
+
+        WorkingDirectory = domjudgeJudgehost;
+        ExecStart = "${domjudgeJudgehost}/judgehost/bin/judgedaemon -n ${n}";
+        Restart = "always";
+        RestartSec = 3;
+        TimeoutStopSec = 180;
+
+        User = "domjudge";
+        Group = "domjudge";
+
+        NoNewPrivileges = false;
+        PrivateUsers = false;
+        ProtectControlGroups = false;
+        ProtectKernelTunables = false;
+
+        BindReadOnlyPaths = [ "${chroot}:/chroot/domjudge" ];
+      };
+    };
+
 in
 {
+  security.sudo = {
+    # TODO: use proper sudoers rules
+    extraConfig = ''
+      domjudge ALL=(root) NOPASSWD: ALL
+    '';
+    enable = true;
+  };
   sops.secrets."judgehost.password" = { };
 
-  sops.templates."judgehost.env".content = ''
-    JUDGEDAEMON_PASSWORD=${config.sops.placeholder."judgehost.password"}
-  '';
-
-  virtualisation.oci-containers = {
-    backend = "docker";
-    containers = lib.listToAttrs (map container config.judgehost.cores);
+  # Template the `restapi.secret` such that it does not end up in the nix store.
+  sops.templates."judgehost-restapi" = {
+    owner = "domjudge";
+    group = "domjudge";
+    mode = "0600";
+    content = ''
+      default ${dj_url}/api judgehost ${config.sops.placeholder."judgehost.password"}
+    '';
   };
 
-  systemd = {
-    services = lib.listToAttrs (map unit config.judgehost.cores);
+  users.groups = {
+    domjudge-run = { };
+    domjudge = { };
+  };
 
-    tmpfiles.rules = map (core: "f ${resolvConf core} 0644 root root -") config.judgehost.cores;
-
-    # Keeps systemd realising the cpuset controller in the root cgroup, which
-    # runguard needs to write cpuset.cpus and which a daemon-reload could otherwise
-    # strip back out from under a running judging.
-    slices.judgehost = {
-      description = "DOMjudge judgedaemon containers";
-      sliceConfig.AllowedCPUs = lib.concatMapStringsSep " " toString config.judgehost.cores;
+  users.users =
+    lib.listToAttrs (
+      map
+        (core:
+          lib.nameValuePair (runUser core) {
+            isSystemUser = true;
+            group = "domjudge-run";
+            uid = runUid core;
+            home = "/var/empty";
+            createHome = false;
+            shell = pkgs.shadow;
+          })
+        config.judgehost.cores
+    )
+    // {
+      domjudge = {
+        isSystemUser = true;
+        group = "domjudge";
+        home = "/var/empty";
+        createHome = false;
+        shell = pkgs.shadow;
+      };
     };
+
+  systemd.services =
+    lib.listToAttrs (
+      map prepareServiceFor config.judgehost.cores
+    )
+    // lib.listToAttrs (
+      map serviceFor config.judgehost.cores
+    )
+    // {
+      domjudge-create-cgroups = {
+        description = "Create DOMjudge cgroups";
+        wantedBy = [ "multi-user.target" ];
+        path = [ pkgs.gawk ];
+        before = map
+          (core: "${serviceName core}.service")
+          config.judgehost.cores;
+
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${domjudgeJudgehost}/judgehost/bin/create_cgroups";
+        };
+      };
+    };
+
+  systemd.slices.judgehost = {
+    description = "DOMjudge native judgehost services";
+    sliceConfig.AllowedCPUs =
+      lib.concatMapStringsSep " " toString config.judgehost.cores;
   };
 }
