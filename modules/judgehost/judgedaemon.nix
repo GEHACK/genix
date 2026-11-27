@@ -80,6 +80,10 @@ let
     );
   };
 
+  # DOMjudge compare scripts need some packages on the host system,
+  # and included in the PATH of the judgedaemon.
+  comparePath = "${pkgs.openjdk_headless}/bin:${pkgs.python3}/bin";
+
   prepareServiceTemplate = {
     description = "Prepare DOMjudge judgehost instance %i";
     before = [ "domjudge-judgedaemon@%i.service" ];
@@ -142,7 +146,7 @@ let
 
       Environment = [
         "DJ_SUBDIRMOUNTS=nix"
-        "PATH=${config.security.wrapperDir}:/bin:/run/current-system/sw/bin"
+        "PATH=${config.security.wrapperDir}:/bin:/run/current-system/sw/bin:${comparePath}"
       ];
 
       RuntimeDirectory = "domjudge-judgehost-%i";
